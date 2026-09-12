@@ -1,0 +1,32 @@
+@use "variables" as *;
+
+#main-nav {
+    &:hover {
+        li.active>a {
+            background: none;
+            color: inherit;
+        }
+    }
+
+    a {
+        display: block;
+        padding: 10px 20px;
+        transition: all 0.3s ease;
+    }
+
+    >li>a {
+        border-radius: 30px;
+    }
+
+    >li.active>a {
+        background: $color-primary;
+        color: #fff;
+    }
+
+    >li:hover {
+        >a {
+            background: $color-primary !important;
+            color: #fff !important;
+        }
+    }
+}

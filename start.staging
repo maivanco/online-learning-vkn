@@ -1,0 +1,60 @@
+#!/bin/bash
+set -e  # exit on first error
+
+# Start script for Staging environment (backend + frontend)
+COMPOSE_FILE="docker-compose.staging.yml"
+
+echo "========================================="
+echo " Starting Staging Environment"
+echo " Compose File: $COMPOSE_FILE"
+echo "========================================="
+
+# 1. Ensure .env exists
+if [ ! -f .env ]; then
+  if [ -f .env.staging ]; then
+    echo "Notice: .env not found. Copying .env.staging to .env..."
+    cp .env.staging .env
+  elif [ -f .env.staging.example ]; then
+    echo "Notice: .env not found. Copying .env.staging.example to .env..."
+    cp .env.staging.example .env
+  else
+    echo "Error: No .env or .env.staging found!"
+    exit 1
+  fi
+fi
+
+# 2. Load nvm and Node version (if nvm is available)
+export NVM_DIR="$HOME/.nvm"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  \. "$NVM_DIR/nvm.sh"
+  nvm use 22 || echo "Warning: Node 22 not found in nvm, using current node version."
+fi
+
+# 3. Start Backend via Staging Docker Compose
+echo "Starting backend containers (Staging)..."
+docker compose -f "$COMPOSE_FILE" up -d
+
+# 4. Build Frontend Assets
+echo "Installing frontend dependencies..."
+npm install
+
+echo "Building frontend assets for staging..."
+npm run build
+
+# 5. Run Database Migrations & Optimize in container
+echo "Running database migrations..."
+docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan migrate --force
+
+echo "Clearing and caching configuration..."
+docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan config:clear
+docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan route:clear
+docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan view:clear
+
+# Read configured APP_PORT from .env or fallback to 8080
+APP_PORT=$(grep -E "^APP_PORT=" .env | cut -d '=' -f2 || true)
+APP_PORT=${APP_PORT:-8080}
+
+echo "========================================="
+echo " Staging environment is ready!"
+echo " URL: http://localhost:${APP_PORT}"
+echo "========================================="

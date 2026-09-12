@@ -1,0 +1,63 @@
+services:
+    laravel.app:
+        build:
+            context: ./vendor/laravel/sail/runtimes/8.3
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: '${WWWGROUP:-1000}'
+        image: sail-8.3/app
+        container_name: online-learning-staging-app
+        restart: unless-stopped
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        ports:
+            # Port 80 is occupied on the Staging host, so default to 8080 (customizable via APP_PORT in .env)
+            - '${APP_PORT:-8080}:80'
+        environment:
+            WWWUSER: '${WWWUSER:-1000}'
+            LARAVEL_SAIL: 1
+            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
+            IGNITION_LOCAL_SITES_PATH: '${PWD}'
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail-staging
+        depends_on:
+            mysql:
+                condition: service_healthy
+
+    mysql:
+        image: 'mysql/mysql-server:8.0'
+        container_name: online-learning-staging-mysql
+        restart: unless-stopped
+        ports:
+            # Default host port mapped to 3307 to avoid conflicts with host MySQL instances (customizable via FORWARD_DB_PORT)
+            - '${FORWARD_DB_PORT:-3307}:3306'
+        environment:
+            MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+            MYSQL_ROOT_HOST: '%'
+            MYSQL_DATABASE: '${DB_DATABASE:-laravel}'
+            MYSQL_USER: '${DB_USERNAME:-sail}'
+            MYSQL_PASSWORD: '${DB_PASSWORD}'
+            MYSQL_ALLOW_EMPTY_PASSWORD: 1
+        volumes:
+            - 'sail-mysql-staging:/var/lib/mysql'
+            - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
+        networks:
+            - sail-staging
+        healthcheck:
+            test:
+                - CMD
+                - mysqladmin
+                - ping
+                - '-p${DB_PASSWORD}'
+            retries: 3
+            timeout: 5s
+
+networks:
+    sail-staging:
+        driver: bridge
+
+volumes:
+    sail-mysql-staging:
+        driver: local
