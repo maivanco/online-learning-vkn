@@ -35,11 +35,19 @@ echo "Starting backend containers (Staging)..."
 docker compose -f "$COMPOSE_FILE" up -d
 
 # 4. Build Frontend Assets
-echo "Installing frontend dependencies..."
-npm install
+if command -v npm >/dev/null 2>&1; then
+  echo "Installing frontend dependencies on host..."
+  npm install
 
-echo "Building frontend assets for staging..."
-npm run build
+  echo "Building frontend assets for staging on host..."
+  npm run build
+else
+  echo "npm not found on host. Installing dependencies and building frontend assets inside laravel.app container..."
+  docker compose -f "$COMPOSE_FILE" exec -T laravel.app npm install
+
+  echo "Building frontend assets for staging inside laravel.app container..."
+  docker compose -f "$COMPOSE_FILE" exec -T laravel.app npm run build
+fi
 
 # 5. Run Database Migrations & Optimize in container
 echo "Running database migrations..."
