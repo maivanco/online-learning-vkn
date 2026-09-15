@@ -30,9 +30,25 @@ if [ -s "$NVM_DIR/nvm.sh" ]; then
   nvm use 22 || echo "Warning: Node 22 not found in nvm, using current node version."
 fi
 
+# Ensure current host user ID and group ID are passed to Docker Sail
+export WWWUSER=${WWWUSER:-$(id -u)}
+export WWWGROUP=${WWWGROUP:-$(id -g)}
+
+# Ensure local directories exist before mounting
+mkdir -p storage/framework/{cache/data,sessions,views,testing} storage/logs bootstrap/cache
+chmod -R 777 storage bootstrap/cache 2>/dev/null || true
+
 # 3. Start Backend via Staging Docker Compose
 echo "Starting backend containers (Staging)..."
 docker compose -f "$COMPOSE_FILE" up -d
+
+# Ensure proper ownership and permissions inside the container
+echo "Fixing permissions for storage and bootstrap/cache..."
+docker compose -f "$COMPOSE_FILE" exec -T -u root laravel.app bash -c "
+  mkdir -p storage/framework/{cache/data,sessions,views,testing} storage/logs bootstrap/cache
+  chown -R sail:sail storage bootstrap/cache 2>/dev/null || true
+  chmod -R 777 storage bootstrap/cache
+"
 
 # 4. Build Frontend Assets
 if command -v npm >/dev/null 2>&1; then
@@ -57,6 +73,11 @@ echo "Clearing and caching configuration..."
 docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan config:clear
 docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan route:clear
 docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan view:clear
+echo "Caching Blade views..."
+docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan view:cache
+
+# Re-apply 777 to storage & bootstrap/cache after artisan commands run
+docker compose -f "$COMPOSE_FILE" exec -T -u root laravel.app chmod -R 777 storage bootstrap/cache
 
 # Read configured APP_PORT from .env or fallback to 8080
 APP_PORT=$(grep -E "^APP_PORT=" .env | cut -d '=' -f2 || true)
