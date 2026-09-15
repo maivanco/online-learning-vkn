@@ -12,7 +12,7 @@ The platform enforces a strict **5-step sequential learning progression** for st
 - **Frontend**: React 19, Inertia.js 3, TypeScript 5, Vite 5
 - **Styling**: Tailwind CSS, SCSS, Headless UI, Heroicons
 - **Database**: MySQL 8.0 (with SQLite in-memory support for testing)
-- **Authentication**: Session-based auth supporting Citizen ID (`CCCD`) and email credentials with role-based access control (`role:admin,teacher` vs. `student`).
+- **Authentication**: Session-based auth supporting standard username and email credentials with role-based access control (`role:admin,teacher` vs. `student`).
 
 ---
 
@@ -31,10 +31,10 @@ Pre-seeded into 4 core Buddhist academic divisions as defined by monastic guidel
 
 ## 3. Core Business Logics & Workflows
 
-### A. Authentication & Citizen ID (`CCCD`) Credentials
-- **Primary Identifier**: Citizen Identity Card (`CCCD` - *Căn Cước Công Dân*).
+### A. Authentication Credentials
+- **Primary Identifier**: Standard `username` or `email`.
 - **Password**: Provided and managed by the monastery administrator/class manager.
-- **Login Form**: Accepts either `CCCD` or `email` seamlessly (via `LoginRequest::prepareForValidation`).
+- **Login Form**: Accepts either `username` or `email` seamlessly (via `LoginRequest::prepareForValidation`).
 - **Post-Login Redirection**:
   - `admin` or `teacher` $\rightarrow$ Redirected to `/admin/dashboard`.
   - `student` $\rightarrow$ Redirected to `/student/dashboard`.
@@ -45,7 +45,7 @@ Pre-seeded into 4 core Buddhist academic divisions as defined by monastic guidel
    - **Class Lock / Unlock**: Instructors can lock or unlock any class (e.g. after the 3-month course period expires). Locked classes prevent students from making further progress.
    - **Completed Classes (*Các lớp đã hoàn thành*)**: Tracks graduated students, incomplete modules, and completion percentage.
    - **Upcoming Classes (*Các lớp sắp mở*)**: Displays registered prospective students.
-   - **Roster Controls**: Add students to class (by dropdown/CCCD) or remove enrolled students.
+   - **Roster Controls**: Add students to class (by dropdown/username) or remove enrolled students.
 2. **Materials & Video Management (`/admin/materials`)**:
    - Upload/edit self-study reading materials (Markdown + optional PDF file URLs) and lecture video URLs (YouTube/embeds).
    - **Student Feedback Inbox**: Displays error reports and typo corrections submitted by learners directly beneath reading materials. Instructors can mark reports as `pending`, `reviewed`, or `resolved`.
@@ -53,7 +53,7 @@ Pre-seeded into 4 core Buddhist academic divisions as defined by monastic guidel
    - Multiple-choice questions (Options A, B, C, D) with designated correct option and canonical scripture explanations.
    - Usable for both review quizzes and final exams.
 4. **Student Account Issuance (`/admin/students`)**:
-   - Administrators register student accounts with Name, CCCD, Email, Phone, and provide their initial password.
+   - Administrators register student accounts with Name, Username, Email, Phone, and provide their initial password.
    - Ability to reset any student's password or assign them directly to an active class.
 
 ### C. Student Portal & Strict 5-Step Learning Pipeline (`/student/...`)
@@ -139,7 +139,7 @@ erDiagram
 ```
 
 ### Table Details
-1. `users`: `id`, `cccd` (string, unique), `name`, `email`, `password`, `role` (`admin`|`teacher`|`student`), `phone`, `status`.
+1. `users`: `id`, `username` (string, unique), `name`, `email`, `password`, `role` (`admin`|`teacher`|`student`), `phone`, `status`.
 2. `courses`: `id`, `title`, `slug`, `category` (`dhamma`|`vinaya`|`abhidhamma`|`pali`), `target_audience`, `description`, `order`.
 3. `classes`: `id`, `course_id`, `name`, `code` (unique), `duration_months` (default 3), `start_date`, `end_date`, `status` (`upcoming`|`active`|`completed`), `is_locked` (boolean).
 4. `class_user` (pivot): `class_id`, `user_id`, `enrolled_at`, `status` (`enrolled`|`completed`|`dropped`), `final_grade`, `completed_at`.
@@ -155,8 +155,8 @@ erDiagram
 ## 5. Web Routes & API Endpoints
 
 ### Public & Auth Routes
-- `GET /`: Public monastery landing page (displays curriculum, monastery address, Facebook link, and CCCD login button).
-- `GET /login` | `POST /login`: CCCD or Email login.
+- `GET /`: Public monastery landing page (displays curriculum, monastery address, Facebook link, and login button).
+- `GET /login` | `POST /login`: Username or Email login.
 - `POST /logout`: Sign out.
 - `GET /dashboard`: Role-based redirector (`admin`/`teacher` $\rightarrow$ `/admin/dashboard`; `student` $\rightarrow$ `/student/dashboard`).
 
@@ -166,7 +166,7 @@ erDiagram
 - `POST /admin/classes`: Create a new class cohort.
 - `PUT /admin/classes/{id}`: Update class information.
 - `POST /admin/classes/{id}/toggle-lock`: Toggle class lock status (lock/unlock after duration expires).
-- `POST /admin/classes/{id}/students`: Enroll student into class by ID or CCCD.
+- `POST /admin/classes/{id}/students`: Enroll student into class by ID or username.
 - `DELETE /admin/classes/{id}/students/{userId}`: Remove student from class.
 - `GET /admin/materials`: View/edit reading materials and lecture videos.
 - `POST /admin/materials`: Create new lesson reading material & video link.
@@ -174,8 +174,8 @@ erDiagram
 - `PUT /admin/feedbacks/{id}`: Update student feedback report status (`pending` $\rightarrow$ `reviewed` / `resolved`).
 - `GET /admin/questions`: View question bank filtered by course.
 - `POST /admin/questions` | `PUT /admin/questions/{id}` | `DELETE /admin/questions/{id}`: Question bank CRUD.
-- `GET /admin/students`: Student accounts list with CCCD and enrolled classes.
-- `POST /admin/students`: Register student account with CCCD and password.
+- `GET /admin/students`: Student accounts list with username and enrolled classes.
+- `POST /admin/students`: Register student account with username and password.
 - `PUT /admin/students/{id}/password`: Reset/update student password.
 
 ### Student Routes (`middleware: auth`)
@@ -195,13 +195,13 @@ erDiagram
 
 The database seeder (`php artisan db:seed`) provides pre-configured accounts:
 
-| Role | Name | Citizen ID (`CCCD`) | Password | Default Redirect |
+| Role | Name | Username | Password | Default Redirect |
 | :--- | :--- | :--- | :--- | :--- |
-| **Manager / Admin** | Abbot Admin (Viên Chủ) | `001099000001` | `password` | `/admin/dashboard` |
-| **Teacher** | Sayalay Dhammananda | `001099000002` | `password` | `/admin/dashboard` |
-| **Student 1** | Bhikkhuni Vien Tue | `079199000001` | `password` | `/student/dashboard` |
-| **Student 2** | Samaneri Tinh Nhu | `079199000002` | `password` | `/student/dashboard` |
-| **Student 3 (Lay)** | Nguyen Van An | `079199000003` | `password` | `/student/dashboard` |
+| **Manager / Admin** | Abbot Admin (Viên Chủ) | `admin_01` | `password` | `/admin/dashboard` |
+| **Teacher** | Sayalay Dhammananda | `teacher_01` | `password` | `/admin/dashboard` |
+| **Student 1** | Bhikkhuni Vien Tue | `student_01` | `password` | `/student/dashboard` |
+| **Student 2** | Samaneri Tinh Nhu | `student_02` | `password` | `/student/dashboard` |
+| **Student 3 (Lay)** | Nguyen Van An | `student_03` | `password` | `/student/dashboard` |
 
 ---
 
