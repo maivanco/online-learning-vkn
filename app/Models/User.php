@@ -119,4 +119,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(StudentIncorrectQuestion::class, 'user_id');
     }
+
+    /**
+     * Courses created by this user.
+     */
+    public function courses(): HasMany
+    {
+        return $this->hasMany(Course::class, 'user_id');
+    }
+
+    /**
+     * Classes created / taught by this user.
+     */
+    public function createdClasses(): HasMany
+    {
+        return $this->hasMany(CourseClass::class, 'user_id');
+    }
 }

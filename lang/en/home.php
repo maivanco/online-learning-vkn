@@ -58,4 +58,7 @@ return [
     'footer_copy' => 'Copy',
     'footer_view_qr' => 'VietQR Code',
     'footer_hide_qr' => 'Hide QR',
+    'author' => 'Author',
+    'instructor' => 'Instructor',
+    'created_by' => 'Created by',
 ];

@@ -19,6 +19,11 @@ interface CourseItem {
     category?: 'dhamma' | 'vinaya' | 'abhidhamma' | 'pali' | string;
     target_audience?: string;
     description?: string | null;
+    user?: {
+        id: number;
+        name: string;
+        username: string;
+    } | null;
     lessons_count: number;
     classes_count: number;
     order?: number;
@@ -335,6 +340,14 @@ export default function Home({ auth, courses, activeClassesCount, monastery, yea
                                                                     {course.classes_count} {t('home.classes_count')}
                                                                 </span>
                                                             )}
+                                                            {course.user && (
+                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-stone-100 text-stone-700 font-medium">
+                                                                    <svg className="w-3 h-3 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                                    </svg>
+                                                                    <span>{course.user.name}</span>
+                                                                </span>
+                                                            )}
                                                         </div>
 
                                                         {/* Description if present */}
@@ -392,8 +405,16 @@ export default function Home({ auth, courses, activeClassesCount, monastery, yea
                                                                                 <h4 className="text-xs font-bold text-stone-900 leading-tight">
                                                                                     {child.title}
                                                                                 </h4>
-                                                                                {(child.lessons_count > 0 || child.classes_count > 0) && (
+                                                                                {(child.lessons_count > 0 || child.classes_count > 0 || child.user) && (
                                                                                     <div className="flex items-center gap-1.5 text-[10px] text-stone-500">
+                                                                                        {child.user && (
+                                                                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white border border-stone-200 text-stone-600 font-medium">
+                                                                                                <svg className="w-2.5 h-2.5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                                                                </svg>
+                                                                                                <span>{child.user.name}</span>
+                                                                                            </span>
+                                                                                        )}
                                                                                         {child.lessons_count > 0 && (
                                                                                             <span className="px-1.5 py-0.5 rounded bg-white border border-stone-200 text-stone-600 font-medium">
                                                                                                 {child.lessons_count} {child.lessons_count === 1 ? t('home.lesson_unit') : t('home.lessons_count')}

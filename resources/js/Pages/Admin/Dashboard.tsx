@@ -12,6 +12,11 @@ interface ClassItem {
         title: string;
         category: string;
     };
+    user?: {
+        id: number;
+        name: string;
+        username: string;
+    } | null;
     is_locked: boolean;
     students_count: number;
     completed_count: number;
@@ -197,6 +202,14 @@ export default function Dashboard({ auth, classes, stats, courses, flash }: Dash
                                             <p className="text-xs text-amber-800/80 font-medium mt-1">
                                                 {cls.course.title}
                                             </p>
+                                            {cls.user && (
+                                                <div className="flex items-center gap-1.5 text-[11px] text-stone-600 mt-2 font-medium bg-stone-50 px-2 py-1 rounded-md border border-stone-200/60 w-fit">
+                                                    <svg className="w-3.5 h-3.5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                    </svg>
+                                                    <span>{cls.user.name}</span>
+                                                </div>
+                                            )}
 
                                             {/* Roster & Progress Stats */}
                                             <div className="mt-4 pt-3 border-t border-gray-100">

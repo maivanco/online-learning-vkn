@@ -17,6 +17,11 @@ interface Course {
         id: number;
         title: string;
     } | null;
+    user?: {
+        id: number;
+        name: string;
+        username: string;
+    } | null;
     lessons_count: number;
     order: number;
 }
@@ -281,6 +286,14 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                                         <span className="truncate max-w-[130px]">{c.parent.title}</span>
                                                     </div>
                                                 )}
+                                                {c.user && (
+                                                    <div className="flex items-center gap-1 text-[10px] text-stone-500 mt-1 font-sans">
+                                                        <svg className="w-3 h-3 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                        </svg>
+                                                        <span className="truncate max-w-[140px]">{c.user.name}</span>
+                                                    </div>
+                                                )}
                                                 <div className="flex items-center justify-between text-[11px] text-gray-500 mt-1.5">
                                                     <span className="capitalize font-sans text-[10px] bg-stone-100 text-stone-600 px-1.5 py-0.2 rounded">
                                                         {c.category}
@@ -335,6 +348,14 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                                 {activeCourse?.parent && (
                                                     <span className="text-[10px] font-semibold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
                                                         {t('materials.parent_label', { title: activeCourse.parent.title })}
+                                                    </span>
+                                                )}
+                                                {activeCourse?.user && (
+                                                    <span className="text-[10px] font-semibold bg-stone-100 text-stone-700 px-2 py-0.5 rounded-full flex items-center gap-1 border border-stone-200">
+                                                        <svg className="w-3 h-3 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                        </svg>
+                                                        <span>{activeCourse.user.name}</span>
                                                     </span>
                                                 )}
                                             </div>

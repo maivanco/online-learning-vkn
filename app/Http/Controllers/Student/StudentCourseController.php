@@ -26,7 +26,7 @@ class StudentCourseController extends Controller
         $user = $request->user();
 
         // Enrolled classes
-        $classes = $user->enrolledClasses()->with('course.lessons')->get()->map(function ($cls) use ($user) {
+        $classes = $user->enrolledClasses()->with(['course.lessons', 'user'])->get()->map(function ($cls) use ($user) {
             $lessons = $cls->course->lessons;
             $progressRecords = StudentProgress::where('user_id', $user->id)
                 ->where('class_id', $cls->id)
@@ -62,6 +62,11 @@ class StudentCourseController extends Controller
                 'name' => $cls->name,
                 'course_title' => $cls->course->title,
                 'category' => $cls->course->category,
+                'instructor' => $cls->user ? [
+                    'id' => $cls->user->id,
+                    'name' => $cls->user->name,
+                    'username' => $cls->user->username,
+                ] : null,
                 'is_locked' => $cls->is_locked,
                 'enrollment_status' => $cls->pivot->status,
                 'progress_percentage' => $percentage,
@@ -74,11 +79,16 @@ class StudentCourseController extends Controller
         // Other monastery classes available to join
         $enrolledIds = $classes->pluck('id')->toArray();
         $upcomingClasses = CourseClass::whereNotIn('id', $enrolledIds)
-            ->with('course')
+            ->with(['course', 'user'])
             ->get()
             ->map(fn($cls) => [
                 'id' => $cls->id,
                 'name' => $cls->name,
+                'instructor' => $cls->user ? [
+                    'id' => $cls->user->id,
+                    'name' => $cls->user->name,
+                    'username' => $cls->user->username,
+                ] : null,
                 'course' => [
                     'title' => $cls->course->title,
                     'category' => $cls->course->category,

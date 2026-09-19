@@ -37,6 +37,11 @@ interface ClassShowProps extends PageProps {
         name: string;
         description: string | null;
         is_locked: boolean;
+        user?: {
+            id: number;
+            name: string;
+            username: string;
+        } | null;
         course: {
             id: number;
             title: string;
@@ -147,9 +152,19 @@ export default function ClassShow({ auth, classItem, students, availableStudents
                         <div>
                             <span className="text-[11px] font-medium uppercase text-gray-400">{t('classes.subject_curriculum')}</span>
                             <h3 className="font-semibold text-gray-900 text-sm mt-0.5">{classItem.course.title}</h3>
-                            <span className="inline-block mt-1 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
-                                {classItem.course.category}
-                            </span>
+                            <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
+                                    {classItem.course.category}
+                                </span>
+                                {classItem.user && (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-stone-700 bg-stone-100 px-2 py-0.5 rounded border border-stone-200">
+                                        <svg className="w-3 h-3 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        <span>{classItem.user.name}</span>
+                                    </span>
+                                )}
+                            </div>
                         </div>
 
                         <div>

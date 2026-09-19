@@ -13,6 +13,7 @@ class Course extends Model
 
     protected $fillable = [
         'parent_id',
+        'user_id',
         'title',
         'slug',
         'category', // dhamma, vinaya, abhidhamma, pali, general
@@ -21,6 +22,14 @@ class Course extends Model
         'thumbnail',
         'order',
     ];
+
+    /**
+     * Creator / Author of this course.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
     /**
      * Parent course catalog.

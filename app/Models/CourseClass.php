@@ -16,10 +16,19 @@ class CourseClass extends Model
 
     protected $fillable = [
         'course_id',
+        'user_id',
         'name',
         'is_locked',
         'description',
     ];
+
+    /**
+     * Teacher / Instructor / Creator of this class.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
     protected $casts = [
         'is_locked' => 'boolean',

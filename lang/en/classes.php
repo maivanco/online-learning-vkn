@@ -95,4 +95,6 @@ return [
     'view_progress_roster' => 'View Progress & Roster',
     'action_unlock' => 'Unlock',
     'action_lock' => 'Lock',
+    'instructor' => 'Instructor',
+    'created_by' => 'Created by',
 ];

@@ -58,4 +58,7 @@ return [
     'footer_copy' => 'Sao chép',
     'footer_view_qr' => 'Mã VietQR',
     'footer_hide_qr' => 'Thu gọn QR',
+    'author' => 'Tác giả',
+    'instructor' => 'Giáo thọ / Giảng viên',
+    'created_by' => 'Người tạo',
 ];

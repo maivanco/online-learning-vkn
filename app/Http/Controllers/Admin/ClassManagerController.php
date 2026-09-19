@@ -23,7 +23,7 @@ class ClassManagerController extends Controller
      */
     public function index(Request $request): Response
     {
-        $classes = CourseClass::with(['course', 'students'])
+        $classes = CourseClass::with(['course', 'students', 'user'])
             ->withCount('students')
             ->orderBy('created_at', 'desc')
             ->get()
@@ -46,6 +46,11 @@ class ClassManagerController extends Controller
                         'title' => $cls->course->title,
                         'category' => $cls->course->category,
                     ],
+                    'user' => $cls->user ? [
+                        'id' => $cls->user->id,
+                        'name' => $cls->user->name,
+                        'username' => $cls->user->username,
+                    ] : null,
                     'is_locked' => $cls->is_locked,
                     'students_count' => $totalStudents,
                     'completed_count' => $completedStudents,
@@ -82,7 +87,7 @@ class ClassManagerController extends Controller
      */
     public function show(int $id): Response
     {
-        $class = CourseClass::with(['course.lessons.questions', 'students'])->findOrFail($id);
+        $class = CourseClass::with(['course.lessons.questions', 'students', 'user'])->findOrFail($id);
 
         $lessons = $class->course->lessons;
 
@@ -140,6 +145,11 @@ class ClassManagerController extends Controller
                 'name' => $class->name,
                 'description' => $class->description,
                 'is_locked' => $class->is_locked,
+                'user' => $class->user ? [
+                    'id' => $class->user->id,
+                    'name' => $class->user->name,
+                    'username' => $class->user->username,
+                ] : null,
                 'course' => [
                     'id' => $class->course->id,
                     'title' => $class->course->title,
@@ -167,6 +177,8 @@ class ClassManagerController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
+
+        $validated['user_id'] = $request->user()?->id;
 
         CourseClass::create($validated);
 

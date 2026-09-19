@@ -112,4 +112,5 @@ return [
     'feedback_placeholder' => 'Enter detailed feedback or corrections...',
     'cancel' => 'Cancel',
     'send_feedback' => 'Submit Feedback',
+    'instructor' => 'Instructor',
 ];

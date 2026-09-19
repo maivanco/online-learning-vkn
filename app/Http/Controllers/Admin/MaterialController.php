@@ -23,7 +23,7 @@ class MaterialController extends Controller
     {
         $selectedCourseId = $request->query('course_id');
 
-        $courses = Course::with('parent')
+        $courses = Course::with(['parent', 'user'])
             ->withCount('lessons')
             ->orderBy('order')
             ->get()
@@ -38,11 +38,16 @@ class MaterialController extends Controller
                     'id' => $c->parent->id,
                     'title' => $c->parent->title,
                 ] : null,
+                'user' => $c->user ? [
+                    'id' => $c->user->id,
+                    'name' => $c->user->name,
+                    'username' => $c->user->username,
+                ] : null,
                 'lessons_count' => $c->lessons_count,
                 'order' => $c->order,
             ]);
 
-        $activeCourse = $selectedCourseId ? Course::with('parent')->find($selectedCourseId) : Course::with('parent')->orderBy('order')->first();
+        $activeCourse = $selectedCourseId ? Course::with(['parent', 'user'])->find($selectedCourseId) : Course::with(['parent', 'user'])->orderBy('order')->first();
 
         $lessons = [];
         if ($activeCourse) {
@@ -274,6 +279,7 @@ class MaterialController extends Controller
         }
 
         $validated['order'] = (Course::max('order') ?? 0) + 1;
+        $validated['user_id'] = $request->user()?->id;
 
         $catalog = Course::create($validated);
 

@@ -22,11 +22,14 @@ use Inertia\Inertia;
 // Public Landing Page showcasing Viên Không Ni Monastery and Course Catalog
 Route::get('/', function () {
     $allCourses = Course::with([
+        'user:id,name,username',
         'parent:id,title',
         'lessons' => fn($q) => $q->select(['id', 'course_id', 'title', 'slug', 'order'])->orderBy('order'),
         'children' => fn($q) => $q->with([
+            'user:id,name,username',
             'lessons' => fn($lq) => $lq->select(['id', 'course_id', 'title', 'slug', 'order'])->orderBy('order'),
             'children' => fn($cq) => $cq->with([
+                'user:id,name,username',
                 'lessons' => fn($lq2) => $lq2->select(['id', 'course_id', 'title', 'slug', 'order'])->orderBy('order'),
             ])->withCount(['lessons', 'classes'])->orderBy('order'),
         ])->withCount(['lessons', 'classes'])->orderBy('order'),

@@ -412,7 +412,7 @@ export default function LessonFormModal({
                             >
                                 {form.processing
                                     ? t('materials.saving')
-                                    : (isEdit ? t('materials.update_material') : t('materials.save_material'))}
+                                    : (isEdit ? t('materials.update_lesson') : t('materials.save_lesson'))}
                             </button>
                         </div>
                     </div>

@@ -18,13 +18,18 @@ interface LessonProgress {
 interface EnrolledClass {
     id: number;
     name: string;
-    code: string;
+    code?: string;
     course_title: string;
     category: string;
-    duration_months: number;
-    start_date: string | null;
-    end_date: string | null;
-    status: 'active' | 'completed' | 'upcoming';
+    instructor?: {
+        id?: number;
+        name: string;
+        username: string;
+    } | null;
+    duration_months?: number;
+    start_date?: string | null;
+    end_date?: string | null;
+    status?: 'active' | 'completed' | 'upcoming';
     is_locked: boolean;
     enrollment_status: string;
     progress_percentage: number;
@@ -36,9 +41,14 @@ interface EnrolledClass {
 interface UpcomingClass {
     id: number;
     name: string;
-    code: string;
-    duration_months: number;
-    start_date: string | null;
+    code?: string;
+    duration_months?: number;
+    start_date?: string | null;
+    instructor?: {
+        id?: number;
+        name: string;
+        username: string;
+    } | null;
     course: {
         title: string;
         category: string;
@@ -170,6 +180,14 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                                         <p className="text-xs text-amber-900/80 font-medium mt-0.5">
                                             {cls.course_title} &bull; <span className="uppercase text-[10px]">{cls.category}</span>
                                         </p>
+                                        {cls.instructor && (
+                                            <div className="flex items-center gap-1.5 text-[11px] text-stone-600 mt-2 font-medium bg-stone-50 px-2.5 py-1 rounded-lg border border-stone-200/60 w-fit">
+                                                <svg className="w-3.5 h-3.5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                </svg>
+                                                <span>{cls.instructor.name}</span>
+                                            </div>
+                                        )}
 
                                         {/* Progress Bar */}
                                         <div className="mt-4">
@@ -236,7 +254,7 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
 
                                     {/* Class Footer */}
                                     <div className="pt-3 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
-                                        <span>{t('student.course_duration', { months: cls.duration_months.toString() })}</span>
+                                        <span>{t('student.course_duration', { months: (cls.duration_months ?? 3).toString() })}</span>
                                         <span>{cls.is_locked ? t('student.class_locked') : t('student.class_open')}</span>
                                     </div>
                                 </div>
@@ -262,12 +280,20 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                                 <div key={u.id} className="p-4 rounded-xl border border-stone-200 bg-stone-50/50 space-y-2">
                                     <div className="flex items-center justify-between">
                                         <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-800">
-                                            {u.code}
+                                            {u.code || `#${u.id}`}
                                         </span>
-                                        <span className="text-[10px] text-blue-700 font-semibold">{t('student.course_duration', { months: u.duration_months.toString() })}</span>
+                                        <span className="text-[10px] text-blue-700 font-semibold">{t('student.course_duration', { months: (u.duration_months ?? 3).toString() })}</span>
                                     </div>
                                     <h4 className="font-semibold text-stone-900">{u.name}</h4>
                                     <p className="text-[11px] text-stone-500">{u.course.title}</p>
+                                    {u.instructor && (
+                                        <div className="flex items-center gap-1 text-[10px] text-stone-600 font-medium">
+                                            <svg className="w-3 h-3 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                            </svg>
+                                            <span>{u.instructor.name}</span>
+                                        </div>
+                                    )}
                                     <p className="text-[11px] text-amber-800 font-medium pt-1">
                                         {t('student.expected_start', { date: u.start_date || t('student.tba') })}
                                     </p>

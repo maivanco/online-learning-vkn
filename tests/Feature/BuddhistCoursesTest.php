@@ -266,5 +266,42 @@ class BuddhistCoursesTest extends TestCase
                 ->where('students.0.completed_at', now()->format('Y-m-d'))
         );
     }
+
+    public function test_creating_new_class_stores_user_id(): void
+    {
+        $this->actingAs($this->admin);
+
+        $response = $this->post(route('admin.classes.store'), [
+            'course_id' => $this->course->id,
+            'name' => 'Abhidhamma Master Class',
+            'description' => 'Advanced cohort taught by Abbot Admin',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('classes', [
+            'course_id' => $this->course->id,
+            'name' => 'Abhidhamma Master Class',
+            'user_id' => $this->admin->id,
+        ]);
+    }
+
+    public function test_creating_new_course_catalog_stores_user_id(): void
+    {
+        $this->actingAs($this->teacher);
+
+        $response = $this->post(route('admin.materials.catalogs.store'), [
+            'title' => 'Pali Chanting Course',
+            'slug' => 'pali-chanting-course',
+            'description' => 'Daily Paritta chants and protective sutras.',
+            'category' => 'pali',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('courses', [
+            'title' => 'Pali Chanting Course',
+            'slug' => 'pali-chanting-course',
+            'user_id' => $this->teacher->id,
+        ]);
+    }
 }
 

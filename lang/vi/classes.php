@@ -95,4 +95,6 @@ return [
     'view_progress_roster' => 'Xem Tiến Độ & Danh Sách',
     'action_unlock' => 'Mở khóa',
     'action_lock' => 'Khóa lớp',
+    'instructor' => 'Giáo thọ / Giảng viên',
+    'created_by' => 'Người tạo',
 ];

@@ -112,4 +112,5 @@ return [
     'feedback_placeholder' => 'Nhập chi tiết nội dung cần chỉnh sửa...',
     'cancel' => 'Hủy',
     'send_feedback' => 'Gửi Góp Ý',
+    'instructor' => 'Giáo thọ / Giảng viên',
 ];
