@@ -30,9 +30,9 @@ Route::get('/', function () {
         'activeClassesCount' => $activeClassesCount,
         'hasAdmin' => $hasAdmin,
         'monastery' => [
-            'name' => 'Viên Không Ni',
-            'tagline' => 'Buddhist Courses – Con Đường Học Pháp & Hành Pháp',
-            'address' => 'Viên Không Ni, ấp 4, xã Châu Pha, Tp. Hồ Chí Minh',
+            'name' => 'Vien Khong Ni',
+            'tagline' => 'Buddhist Courses – Learning & Practice Path',
+            'address' => 'Vien Khong Ni, Hamlet 4, Chau Pha, Ho Chi Minh City',
             'facebook' => 'https://www.facebook.com/share/1DCWqsCZSY/?mibextid=wwXIfr',
         ],
         'laravelVersion' => Application::VERSION,
@@ -69,6 +69,11 @@ Route::middleware(['auth', 'role:admin,teacher'])->prefix('admin')->name('admin.
     Route::post('/materials', [MaterialController::class, 'store'])->name('materials.store');
     Route::put('/materials/{id}', [MaterialController::class, 'update'])->name('materials.update');
     Route::put('/feedbacks/{id}', [MaterialController::class, 'updateFeedback'])->name('feedbacks.update');
+
+    // Courses Catalog Management (CRUD)
+    Route::post('/materials/catalogs', [MaterialController::class, 'storeCatalog'])->name('materials.catalogs.store');
+    Route::put('/materials/catalogs/{id}', [MaterialController::class, 'updateCatalog'])->name('materials.catalogs.update');
+    Route::delete('/materials/catalogs/{id}', [MaterialController::class, 'destroyCatalog'])->name('materials.catalogs.destroy');
 
     // Question Bank Management
     Route::get('/questions', [QuestionBankController::class, 'index'])->name('questions.index');

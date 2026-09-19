@@ -24,7 +24,7 @@ class AdminSetupController extends Controller
     public function create(): Response|RedirectResponse
     {
         if (User::where('role', 'admin')->exists()) {
-            return redirect()->route('login')->with('status', 'Tài khoản Quản trị viên đã tồn tại. Vui lòng đăng nhập.');
+            return redirect()->route('login')->with('status', 'An Administrator account already exists. Please log in.');
         }
 
         return Inertia::render('Auth/SetupAdmin');
@@ -36,7 +36,7 @@ class AdminSetupController extends Controller
     public function store(Request $request): RedirectResponse
     {
         if (User::where('role', 'admin')->exists()) {
-            return redirect()->route('login')->with('status', 'Tài khoản Quản trị viên đã tồn tại. Vui lòng đăng nhập.');
+            return redirect()->route('login')->with('status', 'An Administrator account already exists. Please log in.');
         }
 
         $validated = $request->validate([
@@ -45,14 +45,6 @@ class AdminSetupController extends Controller
             'username' => ['nullable', 'string', 'max:50', 'unique:users,username'],
             'phone' => ['nullable', 'string', 'max:20'],
             'password' => ['required', 'confirmed', Password::defaults()],
-        ], [
-            'name.required' => 'Vui lòng nhập họ và tên quản trị viên.',
-            'email.required' => 'Vui lòng nhập địa chỉ email.',
-            'email.email' => 'Địa chỉ email không hợp lệ.',
-            'email.unique' => 'Địa chỉ email này đã được sử dụng.',
-            'username.unique' => 'Tên đăng nhập này đã được sử dụng.',
-            'password.required' => 'Vui lòng nhập mật khẩu.',
-            'password.confirmed' => 'Xác nhận mật khẩu không trùng khớp.',
         ]);
 
         $admin = User::create([

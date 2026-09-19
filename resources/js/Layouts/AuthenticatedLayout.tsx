@@ -6,9 +6,10 @@ import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import Sidebar from '@/Sections/Admin/Sidebar';
 import { Link } from '@inertiajs/react';
 import { User } from '@/types';
-
+import { useTranslation } from '@/utils/useTranslation';
 
 export default function Authenticated({ user, header, children }: PropsWithChildren<{ user: User, header?: ReactNode }>) {
+    const t = useTranslation();
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
     return (
@@ -28,7 +29,7 @@ export default function Authenticated({ user, header, children }: PropsWithChild
 
                             <div className="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                                 <NavLink href={route('dashboard')} active={route().current('dashboard')}>
-                                    Dashboard
+                                    {t('nav.dashboard')}
                                 </NavLink>
                             </div>
                         </div>
@@ -61,9 +62,9 @@ export default function Authenticated({ user, header, children }: PropsWithChild
                                     </Dropdown.Trigger>
 
                                     <Dropdown.Content>
-                                        <Dropdown.Link href={route('admin/profile.edit')}>Profile</Dropdown.Link>
+                                        <Dropdown.Link href={route('admin/profile.edit')}>{t('nav.profile')}</Dropdown.Link>
                                         <Dropdown.Link href={route('logout')} method="post" as="button">
-                                            Log Out
+                                            {t('nav.log_out')}
                                         </Dropdown.Link>
                                     </Dropdown.Content>
                                 </Dropdown>
@@ -99,7 +100,7 @@ export default function Authenticated({ user, header, children }: PropsWithChild
                 <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden'}>
                     <div className="pt-2 pb-3 space-y-1">
                         <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
-                            Dashboard
+                            {t('nav.dashboard')}
                         </ResponsiveNavLink>
                     </div>
 
@@ -112,9 +113,9 @@ export default function Authenticated({ user, header, children }: PropsWithChild
                         </div>
 
                         <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('admin/profile.edit')}>Profile</ResponsiveNavLink>
+                            <ResponsiveNavLink href={route('admin/profile.edit')}>{t('nav.profile')}</ResponsiveNavLink>
                             <ResponsiveNavLink method="post" href={route('logout')} as="button">
-                                Log Out
+                                {t('nav.log_out')}
                             </ResponsiveNavLink>
                         </div>
                     </div>

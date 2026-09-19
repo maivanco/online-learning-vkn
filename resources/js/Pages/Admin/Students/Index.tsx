@@ -2,6 +2,7 @@ import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { PageProps } from '@/types';
+import { useTranslation } from '@/utils/useTranslation';
 
 interface Student {
     id: number;
@@ -35,6 +36,7 @@ interface StudentsProps extends PageProps {
 }
 
 export default function StudentsIndex({ auth, students, availableClasses, search, flash }: StudentsProps) {
+    const t = useTranslation();
     const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
     const [selectedStudentForPassword, setSelectedStudentForPassword] = useState<Student | null>(null);
 
@@ -75,9 +77,9 @@ export default function StudentsIndex({ auth, students, availableClasses, search
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Student Roster & Accounts (Quản Lý Học Viên & Cấp Mật Khẩu)</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">{t('students.header_title')}</h2>}
         >
-            <Head title="Students Management - Buddhist Courses" />
+            <Head title={t('students.page_title')} />
 
             <div className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
                 {/* Flash Messages */}
@@ -92,10 +94,10 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                 <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h3 className="font-serif font-bold text-base text-gray-900">
-                            Users Management
+                            {t('students.users_management')}
                         </h3>
                         <p className="text-xs text-gray-500 mt-0.5">
-                            Manage users and issue accounts with initial passwords.
+                            {t('students.users_management_subtitle')}
                         </p>
                     </div>
 
@@ -107,7 +109,7 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                             </svg>
-                            Register New Student (Cấp Tài Khoản)
+                            {t('students.register_new_student')}
                         </button>
                     </div>
                 </div>
@@ -118,19 +120,19 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                         <table className="min-w-full divide-y divide-gray-200 text-xs">
                             <thead className="bg-stone-50 text-stone-700 font-semibold uppercase tracking-wider text-[11px]">
                                 <tr>
-                                    <th className="px-6 py-3.5 text-left">Học Viên (Name & Email)</th>
-                                    <th className="px-6 py-3.5 text-left">Tên Đăng Nhập (Username)</th>
-                                    <th className="px-6 py-3.5 text-left">Số Điện Thoại</th>
-                                    <th className="px-6 py-3.5 text-left">Lớp Tham Gia (Enrolled)</th>
-                                    <th className="px-6 py-3.5 text-center">Trạng Thái</th>
-                                    <th className="px-6 py-3.5 text-right">Đổi Mật Khẩu (Password)</th>
+                                    <th className="px-6 py-3.5 text-left">{t('students.th_student')}</th>
+                                    <th className="px-6 py-3.5 text-left">{t('students.th_username')}</th>
+                                    <th className="px-6 py-3.5 text-left">{t('students.th_phone')}</th>
+                                    <th className="px-6 py-3.5 text-left">{t('students.th_classes')}</th>
+                                    <th className="px-6 py-3.5 text-center">{t('students.th_status')}</th>
+                                    <th className="px-6 py-3.5 text-right">{t('students.th_password')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 bg-white">
                                 {students.data.length === 0 ? (
                                     <tr>
                                         <td colSpan={6} className="text-center py-12 text-gray-400 text-xs">
-                                            No students found.
+                                            {t('students.no_students')}
                                         </td>
                                     </tr>
                                 ) : (
@@ -161,7 +163,7 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                                                         ))}
                                                     </div>
                                                 ) : (
-                                                    <span className="text-[11px] text-gray-400 italic">None</span>
+                                                    <span className="text-[11px] text-gray-400 italic">{t('students.none')}</span>
                                                 )}
                                             </td>
 
@@ -179,7 +181,7 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                                                     </svg>
-                                                    Cấp/Đổi Mật Khẩu
+                                                    {t('students.issue_change_password')}
                                                 </button>
                                             </td>
                                         </tr>
@@ -197,7 +199,7 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                     <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs">
                         <div className="flex items-center justify-between border-b pb-3">
                             <h3 className="font-serif font-bold text-base text-gray-900">
-                                Cấp Tài Khoản Học Viên Mới (Issue Student Account)
+                                {t('students.register_modal_title')}
                             </h3>
                             <button onClick={() => setIsAddStudentOpen(false)} className="text-gray-400 hover:text-gray-600">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -209,11 +211,11 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                         <form onSubmit={handleCreateStudent} className="space-y-3.5">
                             <div>
                                 <label className="block font-medium text-gray-700 mb-1">
-                                    Full Name (Họ tên học viên / Pháp danh)
+                                    {t('students.full_name')}
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="e.g. Bhikkhuni Vien Tue or Nguyen Van A"
+                                    placeholder={t('students.full_name_placeholder')}
                                     value={studentForm.data.name}
                                     onChange={(e) => studentForm.setData('name', e.target.value)}
                                     className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
@@ -224,11 +226,11 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block font-medium text-gray-700 mb-1">
-                                        Tên Đăng Nhập (Username)
+                                        {t('students.username')}
                                     </label>
                                     <input
                                         type="text"
-                                        placeholder="Ví dụ: student01"
+                                        placeholder={t('students.username_placeholder')}
                                         value={studentForm.data.username}
                                         onChange={(e) => studentForm.setData('username', e.target.value)}
                                         className="w-full rounded-lg border-gray-300 text-xs font-mono focus:ring-amber-500 focus:border-amber-500"
@@ -238,7 +240,7 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                                 </div>
 
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Phone Number (SĐT)</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('students.phone')}</label>
                                     <input
                                         type="tel"
                                         placeholder="0912345678"
@@ -250,7 +252,7 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                             </div>
 
                             <div>
-                                <label className="block font-medium text-gray-700 mb-1">Email</label>
+                                <label className="block font-medium text-gray-700 mb-1">{t('students.email')}</label>
                                 <input
                                     type="email"
                                     placeholder="student@vienkhongni.vn"
@@ -264,31 +266,31 @@ export default function StudentsIndex({ auth, students, availableClasses, search
 
                             <div>
                                 <label className="block font-medium text-gray-700 mb-1">
-                                    Initial Password (Mật khẩu được người quản lý cấp)
+                                    {t('students.initial_password')}
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="e.g. password or custom"
+                                    placeholder={t('students.initial_password_placeholder')}
                                     value={studentForm.data.password}
                                     onChange={(e) => studentForm.setData('password', e.target.value)}
                                     className="w-full rounded-lg border-gray-300 text-xs font-mono focus:ring-amber-500 focus:border-amber-500"
                                     required
                                 />
                                 <p className="text-[11px] text-gray-400 mt-0.5">
-                                    This password is handed to the student alongside their Username.
+                                    {t('students.initial_password_hint')}
                                 </p>
                             </div>
 
                             <div>
                                 <label className="block font-medium text-gray-700 mb-1">
-                                    Assign to Class (Ghi danh vào lớp học)
+                                    {t('students.assign_class')}
                                 </label>
                                 <select
                                     value={studentForm.data.initial_class_id}
                                     onChange={(e) => studentForm.setData('initial_class_id', Number(e.target.value))}
                                     className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
                                 >
-                                    <option value="">-- Do not assign immediately --</option>
+                                    <option value="">{t('students.do_not_assign')}</option>
                                     {availableClasses.map((c) => (
                                         <option key={c.id} value={c.id}>
                                             {c.name} ({c.code})
@@ -303,14 +305,14 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                                     onClick={() => setIsAddStudentOpen(false)}
                                     className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
                                 >
-                                    Cancel
+                                    {t('students.cancel')}
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={studentForm.processing}
                                     className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium shadow"
                                 >
-                                    Register Account
+                                    {t('students.register_account')}
                                 </button>
                             </div>
                         </form>
@@ -324,7 +326,7 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                     <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-xs">
                         <div className="flex items-center justify-between border-b pb-3">
                             <h3 className="font-serif font-bold text-base text-gray-900">
-                                Cấp Lại Mật Khẩu
+                                {t('students.reset_password_modal_title')}
                             </h3>
                             <button onClick={() => setSelectedStudentForPassword(null)} className="text-gray-400 hover:text-gray-600">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -335,11 +337,11 @@ export default function StudentsIndex({ auth, students, availableClasses, search
 
                         <form onSubmit={handleUpdatePassword} className="space-y-3.5">
                             <p className="text-gray-600">
-                                Set a new password for <span className="font-semibold text-gray-900">{selectedStudentForPassword.name}</span> (Username: {selectedStudentForPassword.username}).
+                                {t('students.reset_password_desc', { name: selectedStudentForPassword.name, username: selectedStudentForPassword.username || '' })}
                             </p>
 
                             <div>
-                                <label className="block font-medium text-gray-700 mb-1">New Password</label>
+                                <label className="block font-medium text-gray-700 mb-1">{t('students.new_password')}</label>
                                 <input
                                     type="password"
                                     placeholder="••••••••"
@@ -357,14 +359,14 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                                     onClick={() => setSelectedStudentForPassword(null)}
                                     className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
                                 >
-                                    Cancel
+                                    {t('students.cancel')}
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={passwordForm.processing}
                                     className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium shadow"
                                 >
-                                    Update Password
+                                    {t('students.update_password')}
                                 </button>
                             </div>
                         </form>

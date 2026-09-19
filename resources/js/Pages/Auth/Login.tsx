@@ -6,8 +6,10 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useTranslation } from '@/utils/useTranslation';
 
 export default function Login({ status, canResetPassword }: { status?: string; canResetPassword: boolean }) {
+    const t = useTranslation();
     const { data, setData, post, processing, errors, reset } = useForm({
         login: '',
         password: '',
@@ -27,7 +29,7 @@ export default function Login({ status, canResetPassword }: { status?: string; c
 
     return (
         <GuestLayout>
-            <Head title="Sign In - Buddhist Courses" />
+            <Head title={t('auth.sign_in_title')} />
 
             <div className="mb-6 text-center">
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 text-amber-800 mb-3 shadow-inner">
@@ -35,9 +37,9 @@ export default function Login({ status, canResetPassword }: { status?: string; c
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                 </div>
-                <h2 className="text-xl font-serif font-bold text-gray-900 tracking-tight">Buddhist Courses</h2>
+                <h2 className="text-xl font-serif font-bold text-gray-900 tracking-tight">{t('auth.heading')}</h2>
                 <p className="text-xs text-amber-800/80 font-medium mt-1">
-                    Sign in with Username or Email, and password
+                    {t('auth.sign_in_subtitle')}
                 </p>
             </div>
 
@@ -45,14 +47,14 @@ export default function Login({ status, canResetPassword }: { status?: string; c
 
             <form onSubmit={submit} className="space-y-4">
                 <div>
-                    <InputLabel htmlFor="login" value="Username or Email" />
+                    <InputLabel htmlFor="login" value={t('auth.username_or_email')} />
 
                     <TextInput
                         id="login"
                         type="text"
                         name="login"
                         value={data.login}
-                        placeholder="Username or Email"
+                        placeholder={t('auth.username_or_email')}
                         className="mt-1 block w-full text-sm"
                         autoComplete="username"
                         isFocused={true}
@@ -63,7 +65,7 @@ export default function Login({ status, canResetPassword }: { status?: string; c
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="password" value="Password" />
+                    <InputLabel htmlFor="password" value={t('auth.password')} />
 
                     <TextInput
                         id="password"
@@ -86,7 +88,7 @@ export default function Login({ status, canResetPassword }: { status?: string; c
                             checked={data.remember}
                             onChange={(e) => setData('remember', e.target.checked)}
                         />
-                        <span className="ml-2 text-xs text-gray-600">Remember me</span>
+                        <span className="ml-2 text-xs text-gray-600">{t('auth.remember_me')}</span>
                     </label>
 
                     {canResetPassword && (
@@ -94,13 +96,13 @@ export default function Login({ status, canResetPassword }: { status?: string; c
                             href={route('password.request')}
                             className="text-xs text-amber-700 hover:text-amber-900 underline"
                         >
-                            Forgot password?
+                            {t('auth.forgot_password')}
                         </Link>
                     )}
                 </div>
 
                 <PrimaryButton className="w-full justify-center py-2.5 bg-amber-700 hover:bg-amber-800 text-white shadow" disabled={processing}>
-                    Sign In to Portal
+                    {t('auth.sign_in_btn')}
                 </PrimaryButton>
             </form>
 

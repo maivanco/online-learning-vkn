@@ -2,6 +2,7 @@ import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
+import { useTranslation } from '@/utils/useTranslation';
 
 interface ClassItem {
     id: number;
@@ -53,6 +54,7 @@ interface DashboardProps extends PageProps {
 }
 
 export default function Dashboard({ auth, classes, stats, courses, currentFilter, flash }: DashboardProps) {
+    const t = useTranslation();
     const [activeTab, setActiveTab] = useState<'all' | 'active' | 'completed' | 'upcoming'>('all');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [classToDelete, setClassToDelete] = useState<ClassItem | null>(null);
@@ -98,9 +100,9 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Class Management</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">{t('classes.management_title')}</h2>}
         >
-            <Head title="Class Management" />
+            <Head title={t('classes.management_title')} />
 
             <div className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
                 {/* Flash Messages */}
@@ -117,13 +119,13 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                 <div className="bg-gradient-to-r from-stone-900 via-stone-800 to-amber-950 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
                         <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30 mb-2">
-                            Buddhist Courses
+                            {t('classes.badge_courses')}
                         </div>
                         <h1 className="text-2xl font-serif font-bold text-white tracking-wide">
-                            Buddhist Courses & Training Progress
+                            {t('classes.hero_title')}
                         </h1>
                         <p className="text-xs text-stone-300 mt-1 max-w-xl">
-                            Track active courses, student progress metrics, lock/unlock classes after 3-month durations, and manage study materials according to monastic guidelines.
+                            {t('classes.hero_description')}
                         </p>
                     </div>
 
@@ -135,7 +137,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                             </svg>
-                            Open New Class (Mở lớp mới)
+                            {t('classes.open_new_class')}
                         </button>
                     </div>
                 </div>
@@ -143,28 +145,28 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                 {/* Statistics Cards */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                        <p className="text-xs font-medium text-gray-500">Active Classes (Đang học)</p>
+                        <p className="text-xs font-medium text-gray-500">{t('classes.active_classes')}</p>
                         <p className="text-2xl font-bold text-amber-700 mt-1">{stats.active_classes}</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">Underway (3-month cycle)</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{t('classes.underway_cycle')}</p>
                     </div>
 
                     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                        <p className="text-xs font-medium text-gray-500">Completed (Đã hoàn thành)</p>
+                        <p className="text-xs font-medium text-gray-500">{t('classes.completed')}</p>
                         <p className="text-2xl font-bold text-emerald-600 mt-1">{stats.completed_classes}</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">Finished curriculums</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{t('classes.finished_curriculums')}</p>
                     </div>
 
                     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                        <p className="text-xs font-medium text-gray-500">Upcoming (Sắp mở)</p>
+                        <p className="text-xs font-medium text-gray-500">{t('classes.upcoming')}</p>
                         <p className="text-2xl font-bold text-blue-600 mt-1">{stats.upcoming_classes}</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">Enrolling students</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{t('classes.enrolling_students')}</p>
                     </div>
 
                     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                        <p className="text-xs font-medium text-gray-500">Total Students (Học viên)</p>
+                        <p className="text-xs font-medium text-gray-500">{t('classes.total_students')}</p>
                         <p className="text-2xl font-bold text-stone-800 mt-1">{stats.total_students}</p>
                         <p className="text-[11px] text-amber-700 mt-0.5 font-medium">
-                            {stats.pending_feedbacks} pending material feedbacks
+                            {t('classes.pending_feedbacks_count', { count: String(stats.pending_feedbacks) })}
                         </p>
                     </div>
                 </div>
@@ -182,7 +184,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                         : 'border-transparent text-gray-500 hover:text-gray-800'
                                 }`}
                             >
-                                All Classes ({classes.length})
+                                {t('classes.all_classes_tab')} ({classes.length})
                             </button>
                             <button
                                 onClick={() => setActiveTab('active')}
@@ -192,7 +194,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                         : 'border-transparent text-gray-500 hover:text-gray-800'
                                 }`}
                             >
-                                Active Classes (Các lớp đang học) ({stats.active_classes})
+                                {t('classes.active_classes_tab')} ({stats.active_classes})
                             </button>
                             <button
                                 onClick={() => setActiveTab('completed')}
@@ -202,7 +204,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                         : 'border-transparent text-gray-500 hover:text-gray-800'
                                 }`}
                             >
-                                Completed Classes (Các lớp đã hoàn thành) ({stats.completed_classes})
+                                {t('classes.completed_classes_tab')} ({stats.completed_classes})
                             </button>
                             <button
                                 onClick={() => setActiveTab('upcoming')}
@@ -212,7 +214,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                         : 'border-transparent text-gray-500 hover:text-gray-800'
                                 }`}
                             >
-                                Upcoming Classes (Các lớp sắp mở) ({stats.upcoming_classes})
+                                {t('classes.upcoming_classes_tab')} ({stats.upcoming_classes})
                             </button>
                         </div>
                     </div>
@@ -221,7 +223,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                     <div className="p-6">
                         {filteredClasses.length === 0 ? (
                             <div className="text-center py-12 text-gray-400 text-xs">
-                                No classes found in this category.
+                                {t('classes.no_classes_found')}
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -245,7 +247,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                                             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                                 <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                                                             </svg>
-                                                            Locked
+                                                            {t('classes.badge_locked')}
                                                         </span>
                                                     )}
                                                     <span
@@ -257,7 +259,11 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                                                 : 'bg-blue-100 text-blue-800'
                                                         }`}
                                                     >
-                                                        {cls.status === 'active' ? 'Đang học' : cls.status === 'completed' ? 'Đã hoàn thành' : 'Sắp mở'}
+                                                        {cls.status === 'active'
+                                                            ? t('classes.status_active')
+                                                            : cls.status === 'completed'
+                                                            ? t('classes.status_completed')
+                                                            : t('classes.status_upcoming')}
                                                     </span>
                                                 </div>
                                             </div>
@@ -275,32 +281,32 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                                     <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
-                                                    <span>Duration: {cls.duration_months} Months (Khóa 3 tháng)</span>
+                                                    <span>{t('classes.duration_display', { months: String(cls.duration_months) })}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
                                                     <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                     </svg>
-                                                    <span>Period: {cls.start_date || 'TBD'} &rarr; {cls.end_date || 'TBD'}</span>
+                                                    <span>{t('classes.period_label')} {cls.start_date || 'TBD'} &rarr; {cls.end_date || 'TBD'}</span>
                                                 </div>
                                             </div>
 
                                             {/* Roster & Progress Stats */}
                                             <div className="mt-4 pt-3 border-t border-gray-100">
                                                 <div className="flex justify-between text-xs mb-1.5">
-                                                    <span className="text-gray-500 font-medium">Enrolled Students:</span>
-                                                    <span className="font-bold text-gray-800">{cls.students_count} học viên</span>
+                                                    <span className="text-gray-500 font-medium">{t('classes.enrolled_students')}</span>
+                                                    <span className="font-bold text-gray-800">{t('classes.students_count', { count: String(cls.students_count) })}</span>
                                                 </div>
 
                                                 {cls.status === 'completed' ? (
                                                     <div className="flex justify-between text-xs mb-1">
-                                                        <span className="text-emerald-700 font-medium">Graduated/Completed:</span>
-                                                        <span className="font-bold text-emerald-700">{cls.completed_count} học viên</span>
+                                                        <span className="text-emerald-700 font-medium">{t('classes.graduated_completed')}</span>
+                                                        <span className="font-bold text-emerald-700">{t('classes.students_count', { count: String(cls.completed_count) })}</span>
                                                     </div>
                                                 ) : (
                                                     <div>
                                                         <div className="flex justify-between text-[11px] text-gray-500 mb-1">
-                                                            <span>Average Completion:</span>
+                                                            <span>{t('classes.average_completion')}</span>
                                                             <span className="font-semibold text-amber-800">{cls.completion_rate}%</span>
                                                         </div>
                                                         <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
@@ -314,7 +320,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
 
                                                 {cls.status === 'upcoming' && (
                                                     <div className="mt-2 text-[11px] text-blue-700 bg-blue-50 p-2 rounded">
-                                                        Registered prospective students: {cls.students_count}
+                                                        {t('classes.registered_prospective', { count: String(cls.students_count) })}
                                                     </div>
                                                 )}
                                             </div>
@@ -326,7 +332,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                                 href={route('admin.classes.show', cls.id)}
                                                 className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 hover:text-amber-900"
                                             >
-                                                <span>View Progress & Roster</span>
+                                                <span>{t('classes.view_progress_roster')}</span>
                                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                                                 </svg>
@@ -343,19 +349,19 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                                             : 'bg-stone-100 text-stone-700 border-stone-300 hover:bg-stone-200'
                                                     }`}
                                                 >
-                                                    {cls.is_locked ? 'Unlock' : 'Lock'}
+                                                    {cls.is_locked ? t('classes.action_unlock') : t('classes.action_lock')}
                                                 </Link>
 
                                                 <button
                                                     type="button"
                                                     onClick={() => setClassToDelete(cls)}
                                                     className="text-[11px] font-semibold px-2.5 py-1 rounded-lg text-red-700 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 hover:border-red-600 transition flex items-center gap-1.5 shadow-sm"
-                                                    title="Remove Class (Xóa lớp học)"
+                                                    title={t('classes.remove_class')}
                                                 >
                                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                     </svg>
-                                                    <span>Remove Class (Xóa Lớp)</span>
+                                                    <span>{t('classes.remove_class')}</span>
                                                 </button>
                                             </div>
                                         </div>
@@ -373,7 +379,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                     <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
                         <div className="flex items-center justify-between border-b pb-3">
                             <h3 className="font-serif font-bold text-lg text-gray-900">
-                                Open New Class (Mở Lớp Học Mới)
+                                {t('classes.create_modal_title')}
                             </h3>
                             <button
                                 onClick={() => setIsCreateModalOpen(false)}
@@ -387,7 +393,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
 
                         <form onSubmit={handleCreateClass} className="space-y-3.5 text-xs">
                             <div>
-                                <label className="block font-medium text-gray-700 mb-1">Subject / Course (Môn học)</label>
+                                <label className="block font-medium text-gray-700 mb-1">{t('classes.subject_course')}</label>
                                 <select
                                     value={data.course_id}
                                     onChange={(e) => setData('course_id', Number(e.target.value))}
@@ -402,7 +408,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                             </div>
 
                             <div>
-                                <label className="block font-medium text-gray-700 mb-1">Class Cohort Name (Tên Lớp Học)</label>
+                                <label className="block font-medium text-gray-700 mb-1">{t('classes.class_name')}</label>
                                 <input
                                     type="text"
                                     placeholder="e.g. Abhidhammattha-sangaha Cohort 02"
@@ -416,7 +422,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Class Code (Mã Lớp)</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('classes.class_code')}</label>
                                     <input
                                         type="text"
                                         placeholder="e.g. VNK-ADH-2602"
@@ -429,7 +435,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                 </div>
 
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Duration (Months - ví dụ 3 tháng)</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('classes.duration_months')}</label>
                                     <input
                                         type="number"
                                         min="1"
@@ -444,7 +450,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Start Date</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('classes.start_date')}</label>
                                     <input
                                         type="date"
                                         value={data.start_date}
@@ -454,7 +460,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                 </div>
 
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">End Date</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('classes.end_date')}</label>
                                     <input
                                         type="date"
                                         value={data.end_date}
@@ -465,15 +471,15 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                             </div>
 
                             <div>
-                                <label className="block font-medium text-gray-700 mb-1">Status (Trạng thái)</label>
+                                <label className="block font-medium text-gray-700 mb-1">{t('classes.status')}</label>
                                 <select
                                     value={data.status}
                                     onChange={(e) => setData('status', e.target.value)}
                                     className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
                                 >
-                                    <option value="active">Active (Đang học)</option>
-                                    <option value="upcoming">Upcoming (Sắp mở / Đăng ký)</option>
-                                    <option value="completed">Completed (Đã hoàn thành)</option>
+                                    <option value="active">{t('classes.status_active')}</option>
+                                    <option value="upcoming">{t('classes.status_upcoming')}</option>
+                                    <option value="completed">{t('classes.status_completed')}</option>
                                 </select>
                             </div>
 
@@ -483,14 +489,14 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                     onClick={() => setIsCreateModalOpen(false)}
                                     className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
                                 >
-                                    Cancel
+                                    {t('classes.cancel')}
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={processing}
                                     className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium shadow"
                                 >
-                                    Create Class
+                                    {t('classes.create_button')}
                                 </button>
                             </div>
                         </form>
@@ -510,24 +516,24 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                             </div>
                             <div>
                                 <h3 className="font-serif font-bold text-base text-gray-900">
-                                    Remove Class (Xóa Lớp Học)
+                                    {t('classes.delete_modal_title')}
                                 </h3>
                                 <p className="text-xs text-gray-500">
-                                    This action cannot be undone.
+                                    {t('classes.delete_warning')}
                                 </p>
                             </div>
                         </div>
 
                         <div className="bg-stone-50 p-3.5 rounded-xl border border-stone-200 text-xs text-stone-700 space-y-1">
                             <div>
-                                <span className="font-semibold text-stone-900">Class: </span>
+                                <span className="font-semibold text-stone-900">{t('classes.class_label')} </span>
                                 {classToDelete.name}
                             </div>
                             <div className="text-[11px] text-stone-500 font-mono">
                                 Code: {classToDelete.code} &bull; {classToDelete.course.title}
                             </div>
                             <div className="text-[11px] text-red-700 pt-1">
-                                Deleting this class will also remove its student enrollments and progress records.
+                                {t('classes.delete_impact')}
                             </div>
                         </div>
 
@@ -538,7 +544,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                 disabled={isDeleting}
                                 className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50"
                             >
-                                Cancel (Hủy)
+                                {t('classes.cancel')}
                             </button>
                             <button
                                 type="button"
@@ -547,13 +553,13 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                 className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold shadow transition disabled:opacity-50 flex items-center gap-1.5"
                             >
                                 {isDeleting ? (
-                                    <span>Deleting...</span>
+                                    <span>{t('classes.deleting')}</span>
                                 ) : (
                                     <>
                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
-                                        <span>Confirm Delete (Xác Nhận Xóa)</span>
+                                        <span>{t('classes.confirm_delete')}</span>
                                     </>
                                 )}
                             </button>

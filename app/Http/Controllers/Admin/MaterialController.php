@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -21,8 +23,26 @@ class MaterialController extends Controller
     {
         $selectedCourseId = $request->query('course_id');
 
-        $courses = Course::withCount('lessons')->orderBy('order')->get();
-        $activeCourse = $selectedCourseId ? Course::find($selectedCourseId) : $courses->first();
+        $courses = Course::with('parent')
+            ->withCount('lessons')
+            ->orderBy('order')
+            ->get()
+            ->map(fn($c) => [
+                'id' => $c->id,
+                'title' => $c->title,
+                'slug' => $c->slug,
+                'category' => $c->category,
+                'description' => $c->description,
+                'parent_id' => $c->parent_id,
+                'parent' => $c->parent ? [
+                    'id' => $c->parent->id,
+                    'title' => $c->parent->title,
+                ] : null,
+                'lessons_count' => $c->lessons_count,
+                'order' => $c->order,
+            ]);
+
+        $activeCourse = $selectedCourseId ? Course::with('parent')->find($selectedCourseId) : Course::with('parent')->orderBy('order')->first();
 
         $lessons = [];
         if ($activeCourse) {
@@ -137,4 +157,101 @@ class MaterialController extends Controller
 
         return back()->with('success', 'Material feedback status updated.');
     }
+
+    /**
+     * Store newly created course catalog.
+     */
+    public function storeCatalog(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255|unique:courses,slug',
+            'description' => 'nullable|string',
+            'parent_id' => 'nullable|exists:courses,id',
+            'category' => 'nullable|string|max:50',
+        ]);
+
+        $slug = !empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($validated['title']);
+        $originalSlug = $slug;
+        $counter = 1;
+        while (Course::where('slug', $slug)->exists()) {
+            $slug = $originalSlug . '-' . $counter;
+            $counter++;
+        }
+        $validated['slug'] = $slug;
+
+        if (empty($validated['category'])) {
+            if (!empty($validated['parent_id'])) {
+                $parent = Course::find($validated['parent_id']);
+                $validated['category'] = $parent?->category ?? 'general';
+            } else {
+                $validated['category'] = 'general';
+            }
+        }
+
+        $validated['order'] = (Course::max('order') ?? 0) + 1;
+
+        $catalog = Course::create($validated);
+
+        return redirect()->route('admin.materials.index', ['course_id' => $catalog->id])
+            ->with('success', 'Courses Catalog created successfully.');
+    }
+
+    /**
+     * Update existing course catalog.
+     */
+    public function updateCatalog(Request $request, int $id): RedirectResponse
+    {
+        $course = Course::findOrFail($id);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:courses,slug,' . $id,
+            'description' => 'nullable|string',
+            'parent_id' => 'nullable|exists:courses,id',
+            'category' => 'nullable|string|max:50',
+        ]);
+
+        if (!empty($validated['parent_id']) && (int) $validated['parent_id'] === $id) {
+            return back()->withErrors(['parent_id' => 'A course catalog cannot be its own parent.']);
+        }
+
+        if (!empty($validated['parent_id'])) {
+            $descendants = $course->allDescendantIds();
+            if (in_array((int) $validated['parent_id'], $descendants, true)) {
+                return back()->withErrors(['parent_id' => 'Cannot set a descendant catalog as the parent.']);
+            }
+        }
+
+        $course->update($validated);
+
+        return back()->with('success', 'Courses Catalog updated successfully.');
+    }
+
+    /**
+     * Delete course catalog.
+     */
+    public function destroyCatalog(int $id): RedirectResponse
+    {
+        $course = Course::findOrFail($id);
+
+        if ($course->lessons()->exists()) {
+            return back()->with('error', 'Cannot delete this catalog because it contains study materials / lessons.');
+        }
+
+        if ($course->classes()->exists()) {
+            return back()->with('error', 'Cannot delete this catalog because it is linked to existing classes.');
+        }
+
+        if ($course->questions()->exists()) {
+            return back()->with('error', 'Cannot delete this catalog because it contains question bank items.');
+        }
+
+        Course::where('parent_id', $id)->update(['parent_id' => null]);
+
+        $course->delete();
+
+        return redirect()->route('admin.materials.index')->with('success', 'Courses Catalog deleted successfully.');
+    }
 }
+

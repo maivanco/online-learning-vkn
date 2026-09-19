@@ -30,6 +30,9 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $locale = $request->hasSession() ? $request->session()->get('locale', config('app.locale', 'en')) : config('app.locale', 'en');
+        app()->setLocale($locale);
+
         return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $request->user(),
@@ -43,8 +46,38 @@ class HandleInertiaRequests extends Middleware
                     'location' => $request->url(),
                 ]);
             },
+            'locale' => fn() => app()->getLocale(),
             'translations' => function () {
-                return [];
+                $locale = app()->getLocale();
+                $fallback = config('app.fallback_locale', 'en');
+
+                $loadTranslations = function (string $loc): array {
+                    $translations = [];
+                    $dir = lang_path($loc);
+                    if (is_dir($dir)) {
+                        $files = glob($dir . '/*.php') ?: [];
+                        foreach ($files as $file) {
+                            $key = basename($file, '.php');
+                            $translations[$key] = require $file;
+                        }
+                    }
+                    $jsonFile = lang_path($loc . '.json');
+                    if (file_exists($jsonFile)) {
+                        $json = json_decode((string) file_get_contents($jsonFile), true);
+                        if (is_array($json)) {
+                            $translations = array_merge($translations, $json);
+                        }
+                    }
+                    return $translations;
+                };
+
+                $fallbackData = $loadTranslations($fallback);
+                if ($locale !== $fallback) {
+                    $localeData = $loadTranslations($locale);
+                    return array_replace_recursive($fallbackData, $localeData);
+                }
+
+                return $fallbackData;
             },
         ]);
     }

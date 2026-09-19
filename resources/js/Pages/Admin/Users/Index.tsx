@@ -2,6 +2,7 @@ import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { PageProps } from '@/types';
+import { useTranslation } from '@/utils/useTranslation';
 
 export interface UserItem {
     id: number;
@@ -52,6 +53,7 @@ interface UsersProps extends PageProps {
 }
 
 export default function UsersIndex({ auth, users, availableClasses, counts, filters, flash }: UsersProps) {
+    const t = useTranslation();
     const [isAddUserOpen, setIsAddUserOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<UserItem | null>(null);
     const [selectedUserForPassword, setSelectedUserForPassword] = useState<UserItem | null>(null);
@@ -161,35 +163,35 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
 
     const roleBadges: Record<string, { label: string; badgeClass: string; icon: string }> = {
         admin: {
-            label: 'Quản trị viên (Admin)',
+            label: t('users.role_admin'),
             badgeClass: 'bg-purple-50 text-purple-700 border-purple-200',
             icon: '🛡️',
         },
         teacher: {
-            label: 'Giáo thọ (Teacher)',
+            label: t('users.role_teacher'),
             badgeClass: 'bg-sky-50 text-sky-700 border-sky-200',
             icon: '🎓',
         },
         student: {
-            label: 'Học viên (Student)',
+            label: t('users.role_student'),
             badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
             icon: '📖',
         },
     };
 
     const tabs = [
-        { key: 'all', label: 'Tất cả người dùng', count: counts.all },
-        { key: 'admin', label: 'Quản trị viên', count: counts.admin },
-        { key: 'teacher', label: 'Giáo thọ / Giảng viên', count: counts.teacher },
-        { key: 'student', label: 'Học viên', count: counts.student },
+        { key: 'all', label: t('users.tab_all'), count: counts.all },
+        { key: 'admin', label: t('users.tab_admin'), count: counts.admin },
+        { key: 'teacher', label: t('users.tab_teacher'), count: counts.teacher },
+        { key: 'student', label: t('users.tab_student'), count: counts.student },
     ];
 
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Quản Lý Người Dùng & Phân Quyền (User Management)</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">{t('users.management_title')}</h2>}
         >
-            <Head title="Quản Lý Người Dùng - Buddhist Courses" />
+            <Head title={t('users.page_title')} />
 
             <div className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
                 {/* Flash Messages */}
@@ -211,10 +213,10 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                 <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h3 className="font-serif font-bold text-lg text-gray-900">
-                            Danh Sách Tài Khoản & Vai Trò
+                            {t('users.section_title')}
                         </h3>
                         <p className="text-xs text-gray-500 mt-1">
-                            Quản lý tài khoản Quản trị viên, Giáo thọ và Học viên trong hệ thống Tu viện.
+                            {t('users.section_subtitle')}
                         </p>
                     </div>
 
@@ -226,7 +228,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                             </svg>
-                            Tạo Tài Khoản Mới
+                            {t('users.create_user')}
                         </button>
                     </div>
                 </div>
@@ -264,7 +266,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                             <div className="relative w-full sm:w-64">
                                 <input
                                     type="text"
-                                    placeholder="Tìm tên, email, SĐT, Username..."
+                                    placeholder={t('users.search_placeholder')}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border-gray-300 focus:ring-amber-500 focus:border-amber-500"
@@ -277,7 +279,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                                 type="submit"
                                 className="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-medium transition"
                             >
-                                Tìm kiếm
+                                {t('users.search')}
                             </button>
                             {searchTerm && (
                                 <button
@@ -288,7 +290,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                                     }}
                                     className="text-xs text-gray-400 hover:text-gray-600"
                                 >
-                                    Xóa
+                                    {t('users.clear')}
                                 </button>
                             )}
                         </form>
@@ -301,19 +303,19 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                         <table className="min-w-full divide-y divide-gray-200 text-xs">
                             <thead className="bg-stone-50 text-stone-700 font-semibold uppercase tracking-wider text-[11px]">
                                 <tr>
-                                    <th className="px-6 py-3.5 text-left">Người Dùng (Họ tên & Email)</th>
-                                    <th className="px-6 py-3.5 text-left">Vai Trò (Role)</th>
-                                    <th className="px-6 py-3.5 text-left">Số Điện Thoại / Username</th>
-                                    <th className="px-6 py-3.5 text-left">Lớp Học Tham Gia</th>
-                                    <th className="px-6 py-3.5 text-center">Trạng Thái</th>
-                                    <th className="px-6 py-3.5 text-right">Thao Tác</th>
+                                    <th className="px-6 py-3.5 text-left">{t('users.th_user')}</th>
+                                    <th className="px-6 py-3.5 text-left">{t('users.th_role')}</th>
+                                    <th className="px-6 py-3.5 text-left">{t('users.th_phone')}</th>
+                                    <th className="px-6 py-3.5 text-left">{t('users.th_classes')}</th>
+                                    <th className="px-6 py-3.5 text-center">{t('users.th_status')}</th>
+                                    <th className="px-6 py-3.5 text-right">{t('users.th_actions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 bg-white">
                                 {users.data.length === 0 ? (
                                     <tr>
                                         <td colSpan={6} className="text-center py-12 text-gray-400 text-xs">
-                                            Không tìm thấy người dùng nào phù hợp.
+                                            {t('users.no_users')}
                                         </td>
                                     </tr>
                                 ) : (
@@ -333,7 +335,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                                                                 {user.name}
                                                                 {isSelf && (
                                                                     <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-normal">
-                                                                        Bạn
+                                                                        {t('users.you')}
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -368,7 +370,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                                                             ))}
                                                         </div>
                                                     ) : (
-                                                        <span className="text-[11px] text-gray-400 italic">Chưa ghi danh</span>
+                                                        <span className="text-[11px] text-gray-400 italic">{t('users.not_enrolled')}</span>
                                                     )}
                                                 </td>
 
@@ -378,7 +380,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                                                             ? 'bg-emerald-100 text-emerald-800'
                                                             : 'bg-rose-100 text-rose-800'
                                                     }`}>
-                                                        {user.status === 'active' ? 'Hoạt động' : 'Tạm khóa'}
+                                                        {user.status === 'active' ? t('users.status_active') : t('users.status_suspended')}
                                                     </span>
                                                 </td>
 
@@ -386,30 +388,30 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                                                     <button
                                                         onClick={() => openEditModal(user)}
                                                         className="inline-flex items-center gap-1 text-xs font-medium text-stone-700 hover:text-stone-900 border border-stone-300 rounded-lg px-2.5 py-1 bg-stone-50 hover:bg-stone-100 transition"
-                                                        title="Chỉnh sửa thông tin"
+                                                        title={t('users.edit_info')}
                                                     >
                                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                         </svg>
-                                                        Sửa
+                                                        {t('users.edit')}
                                                     </button>
 
                                                     <button
                                                         onClick={() => setSelectedUserForPassword(user)}
                                                         className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 hover:text-amber-900 border border-amber-300 rounded-lg px-2.5 py-1 bg-amber-50 hover:bg-amber-100 transition"
-                                                        title="Đổi mật khẩu"
+                                                        title={t('users.change_password')}
                                                     >
                                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                                                         </svg>
-                                                        Mật khẩu
+                                                        {t('users.password')}
                                                     </button>
 
                                                     {!isSelf && (
                                                         <button
                                                             onClick={() => setUserToDelete(user)}
                                                             className="inline-flex items-center gap-1 text-xs font-medium text-rose-700 hover:text-rose-900 border border-rose-300 rounded-lg px-2 py-1 bg-rose-50 hover:bg-rose-100 transition"
-                                                            title="Xóa tài khoản"
+                                                            title={t('users.delete_account')}
                                                         >
                                                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -429,7 +431,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                     {users.total > users.data.length && (
                         <div className="p-4 border-t border-gray-200 flex items-center justify-between text-xs text-gray-600">
                             <div>
-                                Hiển thị {users.data.length} trên tổng số {users.total} người dùng
+                                {t('users.pagination_showing', { current: String(users.data.length), total: String(users.total) })}
                             </div>
                             <div className="flex items-center gap-1">
                                 {users.links.map((link, idx) => (
@@ -459,7 +461,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                     <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs">
                         <div className="flex items-center justify-between border-b pb-3">
                             <h3 className="font-serif font-bold text-base text-gray-900">
-                                Tạo Tài Khoản Người Dùng Mới
+                                {t('users.create_modal_title')}
                             </h3>
                             <button onClick={() => setIsAddUserOpen(false)} className="text-gray-400 hover:text-gray-600">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -471,11 +473,11 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                         <form onSubmit={handleCreateUser} className="space-y-3.5">
                             <div>
                                 <label className="block font-medium text-gray-700 mb-1">
-                                    Họ và tên / Pháp danh <span className="text-rose-500">*</span>
+                                    {t('users.full_name')} <span className="text-rose-500">*</span>
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="VD: Sư cô Viên Tuệ hoặc Nguyễn Văn A"
+                                    placeholder={t('users.full_name_placeholder')}
                                     value={createForm.data.name}
                                     onChange={(e) => createForm.setData('name', e.target.value)}
                                     className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
@@ -486,7 +488,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
 
                             <div>
                                 <label className="block font-medium text-gray-700 mb-1">
-                                    Vai Trò (Role) <span className="text-rose-500">*</span>
+                                    {t('users.role')} <span className="text-rose-500">*</span>
                                 </label>
                                 <select
                                     value={createForm.data.role}
@@ -494,16 +496,16 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                                     className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500 font-medium"
                                     required
                                 >
-                                    <option value="student">📖 Học viên (Student)</option>
-                                    <option value="teacher">🎓 Giáo thọ / Giảng sư (Teacher)</option>
-                                    <option value="admin">🛡️ Quản trị viên (Administrator)</option>
+                                    <option value="student">{t('users.role_option_student')}</option>
+                                    <option value="teacher">{t('users.role_option_teacher')}</option>
+                                    <option value="admin">{t('users.role_option_admin')}</option>
                                 </select>
                                 {createForm.errors.role && <p className="text-red-500 text-[10px] mt-0.5">{createForm.errors.role}</p>}
                             </div>
 
                             <div>
                                 <label className="block font-medium text-gray-700 mb-1">
-                                    Địa Chỉ Email <span className="text-rose-500">*</span>
+                                    {t('users.email_address')} <span className="text-rose-500">*</span>
                                 </label>
                                 <input
                                     type="email"
@@ -519,7 +521,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block font-medium text-gray-700 mb-1">
-                                        Số Điện Thoại (Tùy chọn)
+                                        {t('users.phone_optional')}
                                     </label>
                                     <input
                                         type="tel"
@@ -532,11 +534,11 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
 
                                 <div>
                                     <label className="block font-medium text-gray-700 mb-1">
-                                        Tên Đăng Nhập / Username (Tùy chọn)
+                                        {t('users.username_optional')}
                                     </label>
                                     <input
                                         type="text"
-                                        placeholder="Ví dụ: nguyenvana"
+                                        placeholder={t('users.username_placeholder')}
                                         value={createForm.data.username}
                                         onChange={(e) => createForm.setData('username', e.target.value)}
                                         className="w-full rounded-lg border-gray-300 text-xs font-mono focus:ring-amber-500 focus:border-amber-500"
@@ -547,11 +549,11 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
 
                             <div>
                                 <label className="block font-medium text-gray-700 mb-1">
-                                    Mật Khẩu Ban Đầu <span className="text-rose-500">*</span>
+                                    {t('users.initial_password')} <span className="text-rose-500">*</span>
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="Tối thiểu 6 ký tự"
+                                    placeholder={t('users.password_min_chars')}
                                     value={createForm.data.password}
                                     onChange={(e) => createForm.setData('password', e.target.value)}
                                     className="w-full rounded-lg border-gray-300 text-xs font-mono focus:ring-amber-500 focus:border-amber-500"
@@ -564,14 +566,14 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                             {createForm.data.role === 'student' && (
                                 <div>
                                     <label className="block font-medium text-gray-700 mb-1">
-                                        Ghi danh vào lớp học (Tùy chọn)
+                                        {t('users.enroll_class_optional')}
                                     </label>
                                     <select
                                         value={createForm.data.initial_class_id}
                                         onChange={(e) => createForm.setData('initial_class_id', Number(e.target.value))}
                                         className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
                                     >
-                                        <option value="">-- Chưa ghi danh vào lớp nào --</option>
+                                        <option value="">{t('users.no_initial_class')}</option>
                                         {availableClasses.map((c) => (
                                             <option key={c.id} value={c.id}>
                                                 {c.name} ({c.code})
@@ -587,14 +589,14 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                                     onClick={() => setIsAddUserOpen(false)}
                                     className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
                                 >
-                                    Hủy bỏ
+                                    {t('users.cancel')}
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={createForm.processing}
                                     className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium shadow"
                                 >
-                                    {createForm.processing ? 'Đang tạo...' : 'Tạo Tài Khoản'}
+                                    {createForm.processing ? t('users.creating') : t('users.create_account_btn')}
                                 </button>
                             </div>
                         </form>
@@ -608,7 +610,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                     <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs">
                         <div className="flex items-center justify-between border-b pb-3">
                             <h3 className="font-serif font-bold text-base text-gray-900">
-                                Chỉnh Sửa Thông Tin Người Dùng
+                                {t('users.edit_modal_title')}
                             </h3>
                             <button onClick={() => setEditingUser(null)} className="text-gray-400 hover:text-gray-600">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -619,7 +621,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
 
                         <form onSubmit={handleUpdateUser} className="space-y-3.5">
                             <div>
-                                <label className="block font-medium text-gray-700 mb-1">Họ và tên</label>
+                                <label className="block font-medium text-gray-700 mb-1">{t('users.full_name')}</label>
                                 <input
                                     type="text"
                                     value={editForm.data.name}
@@ -632,36 +634,36 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Vai Trò (Role)</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('users.role')}</label>
                                     <select
                                         value={editForm.data.role}
                                         onChange={(e) => editForm.setData('role', e.target.value as 'admin' | 'teacher' | 'student')}
                                         className="w-full rounded-lg border-gray-300 text-xs font-medium"
                                         required
                                     >
-                                        <option value="student">📖 Học viên</option>
-                                        <option value="teacher">🎓 Giáo thọ</option>
-                                        <option value="admin">🛡️ Quản trị viên</option>
+                                        <option value="student">{t('users.role_option_student')}</option>
+                                        <option value="teacher">{t('users.role_option_teacher')}</option>
+                                        <option value="admin">{t('users.role_option_admin')}</option>
                                     </select>
                                     {editForm.errors.role && <p className="text-red-500 text-[10px] mt-0.5">{editForm.errors.role}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Trạng Thái</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('users.status_field')}</label>
                                     <select
                                         value={editForm.data.status}
                                         onChange={(e) => editForm.setData('status', e.target.value)}
                                         className="w-full rounded-lg border-gray-300 text-xs"
                                         required
                                     >
-                                        <option value="active">Hoạt động (Active)</option>
-                                        <option value="inactive">Tạm khóa (Inactive)</option>
+                                        <option value="active">{t('users.status_option_active')}</option>
+                                        <option value="inactive">{t('users.status_option_inactive')}</option>
                                     </select>
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block font-medium text-gray-700 mb-1">Email</label>
+                                <label className="block font-medium text-gray-700 mb-1">{t('users.email_address')}</label>
                                 <input
                                     type="email"
                                     value={editForm.data.email}
@@ -674,7 +676,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Số Điện Thoại</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('users.phone_optional')}</label>
                                     <input
                                         type="tel"
                                         value={editForm.data.phone}
@@ -684,7 +686,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                                 </div>
 
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Username</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('users.username_optional')}</label>
                                     <input
                                         type="text"
                                         value={editForm.data.username}
@@ -701,14 +703,14 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                                     onClick={() => setEditingUser(null)}
                                     className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
                                 >
-                                    Hủy bỏ
+                                    {t('users.cancel')}
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={editForm.processing}
                                     className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium shadow"
                                 >
-                                    {editForm.processing ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+                                    {editForm.processing ? t('users.saving') : t('users.save_changes')}
                                 </button>
                             </div>
                         </form>
@@ -722,7 +724,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                     <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-xs">
                         <div className="flex items-center justify-between border-b pb-3">
                             <h3 className="font-serif font-bold text-base text-gray-900">
-                                Cấp / Đổi Mật Khẩu
+                                {t('users.reset_password_title')}
                             </h3>
                             <button onClick={() => setSelectedUserForPassword(null)} className="text-gray-400 hover:text-gray-600">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -733,11 +735,11 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
 
                         <form onSubmit={handleUpdatePassword} className="space-y-3.5">
                             <p className="text-gray-600">
-                                Đặt mật khẩu mới cho người dùng <span className="font-semibold text-gray-900">{selectedUserForPassword.name}</span> ({selectedUserForPassword.email}).
+                                {t('users.reset_password_desc', { name: selectedUserForPassword.name, email: selectedUserForPassword.email })}
                             </p>
 
                             <div>
-                                <label className="block font-medium text-gray-700 mb-1">Mật khẩu mới</label>
+                                <label className="block font-medium text-gray-700 mb-1">{t('users.new_password')}</label>
                                 <input
                                     type="password"
                                     placeholder="••••••••"
@@ -758,14 +760,14 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                                     onClick={() => setSelectedUserForPassword(null)}
                                     className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
                                 >
-                                    Hủy bỏ
+                                    {t('users.cancel')}
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={passwordForm.processing}
                                     className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium shadow"
                                 >
-                                    {passwordForm.processing ? 'Đang cập nhật...' : 'Cập Nhật Mật Khẩu'}
+                                    {passwordForm.processing ? t('users.updating') : t('users.update_password_btn')}
                                 </button>
                             </div>
                         </form>
@@ -784,12 +786,12 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                                 </svg>
                             </div>
                             <h3 className="font-serif font-bold text-base text-gray-900">
-                                Xác Nhận Xóa Tài Khoản
+                                {t('users.delete_confirm_title')}
                             </h3>
                         </div>
 
                         <p className="text-gray-600">
-                            Bạn có chắc chắn muốn xóa tài khoản <span className="font-semibold text-gray-900">{userToDelete.name}</span> ({userToDelete.email})? Hành động này không thể hoàn tác.
+                            {t('users.delete_confirm_desc', { name: userToDelete.name, email: userToDelete.email })}
                         </p>
 
                         <div className="flex justify-end gap-2 pt-3 border-t">
@@ -798,14 +800,14 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                                 onClick={() => setUserToDelete(null)}
                                 className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
                             >
-                                Hủy bỏ
+                                {t('users.cancel')}
                             </button>
                             <button
                                 type="button"
                                 onClick={handleDeleteUser}
                                 className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-medium shadow"
                             >
-                                Xác Nhận Xóa
+                                {t('users.confirm_delete_btn')}
                             </button>
                         </div>
                     </div>

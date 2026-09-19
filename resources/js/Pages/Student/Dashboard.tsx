@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { PageProps } from '@/types';
+import { useTranslation } from '@/utils/useTranslation';
 
 interface LessonProgress {
     id: number;
@@ -55,9 +56,11 @@ interface StudentDashboardProps extends PageProps {
 }
 
 export default function StudentDashboard({ auth, enrolledClasses, upcomingClasses, user, flash }: StudentDashboardProps) {
+    const t = useTranslation();
+
     return (
         <div className="min-h-screen bg-stone-100 font-sans text-stone-900">
-            <Head title="Student Dashboard - Buddhist Courses" />
+            <Head title={t('student.meta_title')} />
 
             {/* Navigation Header */}
             <header className="bg-stone-900 text-stone-100 border-b border-stone-800 sticky top-0 z-40 shadow">
@@ -68,18 +71,18 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                                 VK
                             </div>
                             <span className="font-serif font-bold text-base tracking-wide text-white">
-                                Buddhist Courses
+                                {t('student.portal_brand')}
                             </span>
                         </Link>
                         <span className="hidden sm:inline text-xs text-amber-400/90 font-medium pl-2 border-l border-stone-700">
-                            Buddhist Courses Portal
+                            {t('student.portal_title')}
                         </span>
                     </div>
 
                     <div className="flex items-center gap-4 text-xs">
                         <div className="text-right hidden sm:block">
                             <div className="font-semibold text-stone-200">{user.name}</div>
-                            <div className="text-[11px] text-amber-400 font-mono">Username: {user.username}</div>
+                            <div className="text-[11px] text-amber-400 font-mono">{t('student.username_display', { username: user.username })}</div>
                         </div>
 
                         <Link
@@ -88,7 +91,7 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                             as="button"
                             className="px-3 py-1.5 rounded-lg border border-stone-700 text-stone-300 hover:text-white hover:bg-stone-800 transition"
                         >
-                            Log Out
+                            {t('student.nav_logout')}
                         </Link>
                     </div>
                 </div>
@@ -114,13 +117,13 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                 <div className="relative overflow-hidden bg-gradient-to-r from-stone-900 via-amber-950 to-stone-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
                     <div className="relative z-10 max-w-3xl">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 mb-3">
-                            Welcome, Student &bull; Username: {user.username}
+                            {t('student.welcome_badge', { username: user.username })}
                         </span>
                         <h1 className="text-2xl sm:text-3xl font-serif font-bold text-amber-100 tracking-tight leading-tight">
-                            Buddhist Learning Path
+                            {t('student.learning_path_title')}
                         </h1>
                         <p className="text-xs sm:text-sm text-stone-300 mt-2 leading-relaxed">
-                            Follow the 5 strict steps to master the course: <span className="text-amber-300 font-medium">1. Read the materials</span> &rarr; <span className="text-amber-300 font-medium">2. Watch video lectures</span> &rarr; <span className="text-amber-300 font-medium">3. Practice 10 times</span> &rarr; <span className="text-amber-300 font-medium">4. Take the test</span> &rarr; <span className="text-amber-300 font-medium">5. Complete all incorrect answers</span> to achieve your goal.
+                            {t('student.learning_path_desc')}
                         </p>
                     </div>
                 </div>
@@ -129,16 +132,16 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <h2 className="font-serif font-bold text-lg text-stone-900">
-                            Các Lớp Học Của Bạn (Enrolled Classes)
+                            {t('student.enrolled_classes_title')}
                         </h2>
                         <span className="text-xs text-stone-500 font-medium">
-                            {enrolledClasses.length} lớp tham gia
+                            {t('student.enrolled_classes_count', { count: enrolledClasses.length.toString() })}
                         </span>
                     </div>
 
                     {enrolledClasses.length === 0 ? (
                         <div className="bg-white rounded-2xl border border-stone-200 p-12 text-center text-xs text-stone-500 shadow-sm">
-                            Bạn chưa được ghi danh vào lớp học nào. Vui lòng liên hệ Người quản lý lớp học (Giáo viên tu viện) để được xếp lớp.
+                            {t('student.no_classes_enrolled')}
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -157,7 +160,7 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                                                     ? 'bg-emerald-100 text-emerald-800'
                                                     : 'bg-amber-100 text-amber-800'
                                             }`}>
-                                                {cls.enrollment_status === 'completed' ? 'Đã Tốt Nghiệp' : 'Đang Theo Học'}
+                                                {cls.enrollment_status === 'completed' ? t('student.status_graduated') : t('student.status_studying')}
                                             </span>
                                         </div>
 
@@ -171,9 +174,13 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                                         {/* Progress Bar */}
                                         <div className="mt-4">
                                             <div className="flex justify-between text-xs mb-1.5">
-                                                <span className="text-stone-500 font-medium">Tiến độ chương trình:</span>
+                                                <span className="text-stone-500 font-medium">{t('student.progress_label')}</span>
                                                 <span className="font-bold text-amber-800">
-                                                    {cls.progress_percentage}% ({cls.completed_lessons} / {cls.total_lessons} bài)
+                                                    {t('student.progress_summary', {
+                                                        percentage: cls.progress_percentage.toString(),
+                                                        completed: cls.completed_lessons.toString(),
+                                                        total: cls.total_lessons.toString(),
+                                                    })}
                                                 </span>
                                             </div>
                                             <div className="w-full bg-stone-100 rounded-full h-2 overflow-hidden border border-stone-200">
@@ -187,7 +194,7 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                                         {/* Lessons Checklist */}
                                         <div className="mt-4 pt-3 border-t border-stone-100 space-y-2">
                                             <h4 className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider">
-                                                Nội Dung Bài Học (Units):
+                                                {t('student.units_title')}
                                             </h4>
                                             <div className="space-y-1.5">
                                                 {cls.lessons.map((lesson) => (
@@ -206,11 +213,11 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                                                                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                                                                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                                     </svg>
-                                                                    Hoàn thành
+                                                                    {t('student.completed_badge')}
                                                                 </span>
                                                             ) : (
                                                                 <span className="text-stone-500">
-                                                                    Ôn: {lesson.practice_count}/10
+                                                                    {t('student.practice_count_badge', { count: lesson.practice_count.toString() })}
                                                                 </span>
                                                             )}
 
@@ -218,7 +225,7 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                                                                 href={route('student.lesson', [cls.id, lesson.id])}
                                                                 className="px-2.5 py-1 rounded bg-amber-700 hover:bg-amber-800 text-white font-medium text-[11px] shadow-sm transition"
                                                             >
-                                                                Vào học
+                                                                {t('student.enter_lesson')}
                                                             </Link>
                                                         </div>
                                                     </div>
@@ -229,8 +236,8 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
 
                                     {/* Class Footer */}
                                     <div className="pt-3 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
-                                        <span>Thời gian: Khóa {cls.duration_months} tháng</span>
-                                        <span>{cls.is_locked ? 'Lớp đã khóa' : 'Lớp đang mở'}</span>
+                                        <span>{t('student.course_duration', { months: cls.duration_months.toString() })}</span>
+                                        <span>{cls.is_locked ? t('student.class_locked') : t('student.class_open')}</span>
                                     </div>
                                 </div>
                             ))}
@@ -243,10 +250,10 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                     <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm space-y-4">
                         <div className="border-b border-stone-100 pb-3">
                             <h3 className="font-serif font-bold text-base text-stone-900">
-                                Các Lớp Sắp Khai Giảng (Upcoming Classes)
+                                {t('student.upcoming_classes_title')}
                             </h3>
                             <p className="text-xs text-stone-500">
-                                Upcoming courses scheduled for registration at Vien Khong Ni monastery.
+                                {t('student.upcoming_classes_desc')}
                             </p>
                         </div>
 
@@ -257,12 +264,12 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                                         <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-800">
                                             {u.code}
                                         </span>
-                                        <span className="text-[10px] text-blue-700 font-semibold">Khóa {u.duration_months} tháng</span>
+                                        <span className="text-[10px] text-blue-700 font-semibold">{t('student.course_duration', { months: u.duration_months.toString() })}</span>
                                     </div>
                                     <h4 className="font-semibold text-stone-900">{u.name}</h4>
                                     <p className="text-[11px] text-stone-500">{u.course.title}</p>
                                     <p className="text-[11px] text-amber-800 font-medium pt-1">
-                                        Dự kiến: {u.start_date || 'Thông báo sau'}
+                                        {t('student.expected_start', { date: u.start_date || t('student.tba') })}
                                     </p>
                                 </div>
                             ))}
@@ -274,10 +281,10 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                 <div className="bg-stone-900 text-stone-300 rounded-2xl p-6 shadow text-xs space-y-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h4 className="font-serif font-bold text-sm text-amber-200">
-                            Tu Viện Viên Không Ni (Buddhist Monastery)
+                            {t('student.monastery_title')}
                         </h4>
                         <p className="text-[11px] text-stone-400 mt-0.5">
-                            Địa chỉ: Viên Không Ni, ấp 4, xã Châu Pha, Tp. Hồ Chí Minh
+                            {t('student.monastery_address')}
                         </p>
                     </div>
 
@@ -290,7 +297,7 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                         <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                             <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                         </svg>
-                        Trang Facebook Tu Viện
+                        {t('student.monastery_facebook')}
                     </a>
                 </div>
             </main>

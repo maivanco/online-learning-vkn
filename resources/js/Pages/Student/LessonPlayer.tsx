@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import axios from 'axios';
 import { PageProps } from '@/types';
+import { useTranslation } from '@/utils/useTranslation';
 
 interface Question {
     id: number;
@@ -80,6 +81,8 @@ export default function LessonPlayer({
     userFeedbacks,
     flash,
 }: LessonPlayerProps) {
+    const t = useTranslation();
+
     // Current active pipeline tab (1 to 5)
     const [activeStep, setActiveStep] = useState<number>(() => {
         if (progress.is_completed) return 5;
@@ -246,7 +249,7 @@ export default function LessonPlayer({
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
-                            <span className="hidden sm:inline">Quay Lại Bảng Học Tập</span>
+                            <span className="hidden sm:inline">{t('student.back_to_dashboard')}</span>
                         </Link>
                         <span className="text-stone-600 hidden sm:inline">/</span>
                         <span className="font-serif font-bold text-sm text-amber-200 truncate max-w-[280px] sm:max-w-md">
@@ -256,14 +259,14 @@ export default function LessonPlayer({
 
                     <div className="flex items-center gap-3 text-xs">
                         <span className="font-mono text-stone-300 hidden md:inline">
-                            Học viên: {auth.user.name} {auth.user.username ? `(${auth.user.username})` : ''}
+                            {t('student.student_label', { name: auth.user.name, username: auth.user.username ? `(${auth.user.username})` : '' })}
                         </span>
                         {progress.is_completed && (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                                 <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
-                                Đã Hoàn Tất Môn Học
+                                {t('student.course_completed')}
                             </span>
                         )}
                     </div>
@@ -285,10 +288,10 @@ export default function LessonPlayer({
                                     : 'bg-stone-50 border-stone-200 text-stone-500'
                             }`}
                         >
-                            <span className="text-[10px] uppercase font-semibold">Bước 1</span>
-                            <span className="text-[11px] sm:text-xs truncate w-full">Tài Liệu Tự Đọc</span>
+                            <span className="text-[10px] uppercase font-semibold">{t('student.step_1')}</span>
+                            <span className="text-[11px] sm:text-xs truncate w-full">{t('student.step_1_title')}</span>
                             <span className="text-[10px] mt-0.5">
-                                {progress.reading_completed ? '✓ Hoàn thành' : 'Đang đọc'}
+                                {progress.reading_completed ? t('student.step_1_done') : t('student.step_1_reading')}
                             </span>
                         </button>
 
@@ -306,10 +309,10 @@ export default function LessonPlayer({
                                     : 'bg-stone-100 border-stone-200 text-stone-400 opacity-60 cursor-not-allowed'
                             }`}
                         >
-                            <span className="text-[10px] uppercase font-semibold">Bước 2</span>
-                            <span className="text-[11px] sm:text-xs truncate w-full">Video Giảng</span>
+                            <span className="text-[10px] uppercase font-semibold">{t('student.step_2')}</span>
+                            <span className="text-[11px] sm:text-xs truncate w-full">{t('student.step_2_title')}</span>
                             <span className="text-[10px] mt-0.5">
-                                {progress.video_completed ? '✓ Đã xem' : progress.reading_completed ? 'Mở xem' : '🔒 Khóa'}
+                                {progress.video_completed ? t('student.step_2_watched') : progress.reading_completed ? t('student.step_2_ready') : t('student.step_locked')}
                             </span>
                         </button>
 
@@ -327,10 +330,10 @@ export default function LessonPlayer({
                                     : 'bg-stone-100 border-stone-200 text-stone-400 opacity-60 cursor-not-allowed'
                             }`}
                         >
-                            <span className="text-[10px] uppercase font-semibold">Bước 3</span>
-                            <span className="text-[11px] sm:text-xs truncate w-full">Ôn Luyện 10 Lần</span>
+                            <span className="text-[10px] uppercase font-semibold">{t('student.step_3')}</span>
+                            <span className="text-[11px] sm:text-xs truncate w-full">{t('student.step_3_title')}</span>
                             <span className="text-[10px] font-bold mt-0.5 text-amber-700">
-                                {progress.practice_completed ? '✓ Đủ 10/10' : `${progress.practice_count}/10 Lần`}
+                                {progress.practice_completed ? t('student.step_3_done') : t('student.step_3_count', { count: progress.practice_count.toString() })}
                             </span>
                         </button>
 
@@ -348,10 +351,10 @@ export default function LessonPlayer({
                                     : 'bg-stone-100 border-stone-200 text-stone-400 opacity-60 cursor-not-allowed'
                             }`}
                         >
-                            <span className="text-[10px] uppercase font-semibold">Bước 4</span>
-                            <span className="text-[11px] sm:text-xs truncate w-full">Bài Kiểm Tra</span>
+                            <span className="text-[10px] uppercase font-semibold">{t('student.step_4')}</span>
+                            <span className="text-[11px] sm:text-xs truncate w-full">{t('student.step_4_title')}</span>
                             <span className="text-[10px] mt-0.5">
-                                {progress.exam_completed ? `✓ ${progress.exam_score}%` : progress.practice_completed ? 'Sẵn sàng' : '🔒 Khóa'}
+                                {progress.exam_completed ? `✓ ${progress.exam_score}%` : progress.practice_completed ? t('student.step_ready') : t('student.step_locked')}
                             </span>
                         </button>
 
@@ -369,10 +372,10 @@ export default function LessonPlayer({
                                     : 'bg-stone-100 border-stone-200 text-stone-400 opacity-60 cursor-not-allowed'
                             }`}
                         >
-                            <span className="text-[10px] uppercase font-semibold">Bước 5</span>
-                            <span className="text-[11px] sm:text-xs truncate w-full">Ôn Tập Câu Sai</span>
+                            <span className="text-[10px] uppercase font-semibold">{t('student.step_5')}</span>
+                            <span className="text-[11px] sm:text-xs truncate w-full">{t('student.step_5_title')}</span>
                             <span className="text-[10px] font-bold mt-0.5">
-                                {isClearedAll ? '✓ Thành tựu' : progress.exam_completed ? `${unresolvedList.length} câu sai` : '🔒 Khóa'}
+                                {isClearedAll ? t('student.step_5_mastered') : progress.exam_completed ? t('student.step_5_count', { count: unresolvedList.length.toString() }) : t('student.step_locked')}
                             </span>
                         </button>
                     </div>
@@ -394,7 +397,7 @@ export default function LessonPlayer({
                     <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-10 shadow-sm space-y-6">
                         <div className="border-b border-stone-100 pb-4">
                             <span className="text-xs font-semibold uppercase tracking-wider text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                                Bước 1: Tài Liệu Tự Đọc
+                                {t('student.step_1_header')}
                             </span>
                             <h2 className="font-serif font-bold text-2xl text-stone-900 mt-2">
                                 {lesson.title}
@@ -406,7 +409,7 @@ export default function LessonPlayer({
 
                         {/* Reading Markdown Content */}
                         <div className="prose prose-stone max-w-none text-stone-800 text-sm leading-relaxed whitespace-pre-line font-serif bg-stone-50/60 p-6 rounded-2xl border border-stone-200/80">
-                            {lesson.reading_content || 'Nội dung bài học tự đọc đang được cập nhật...'}
+                            {lesson.reading_content || t('student.reading_updating')}
                         </div>
 
                         {/* Optional Attached PDF/Document URL */}
@@ -417,8 +420,8 @@ export default function LessonPlayer({
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
                                     <div>
-                                        <div className="font-semibold text-stone-900">Tài Liệu Chuyên Khảo (PDF Đính Kèm)</div>
-                                        <div className="text-[11px] text-stone-500">Tải về hoặc xem trực tiếp tài liệu do tu viện cung cấp</div>
+                                        <div className="font-semibold text-stone-900">{t('student.attached_pdf_title')}</div>
+                                        <div className="text-[11px] text-stone-500">{t('student.attached_pdf_desc')}</div>
                                     </div>
                                 </div>
                                 <a
@@ -427,7 +430,7 @@ export default function LessonPlayer({
                                     rel="noreferrer"
                                     className="px-3 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium"
                                 >
-                                    Xem Tài Liệu
+                                    {t('student.view_material')}
                                 </a>
                             </div>
                         )}
@@ -442,7 +445,7 @@ export default function LessonPlayer({
                                 <svg className="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
-                                Góp ý chỉnh sửa tài liệu (Phản ánh sai sót)
+                                {t('student.feedback_button')}
                             </button>
 
                             <button
@@ -451,7 +454,7 @@ export default function LessonPlayer({
                                 disabled={readingForm.processing}
                                 className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs shadow-md shadow-amber-900/20 transition"
                             >
-                                <span>Xác Nhận Đã Tự Đọc Xong</span>
+                                <span>{t('student.confirm_reading_done')}</span>
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                 </svg>
@@ -465,10 +468,10 @@ export default function LessonPlayer({
                     <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-10 shadow-sm space-y-6">
                         <div className="border-b border-stone-100 pb-4">
                             <span className="text-xs font-semibold uppercase tracking-wider text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                                Bước 2: Xem Video Clip Bài Giảng
+                                {t('student.step_2_header')}
                             </span>
                             <h2 className="font-serif font-bold text-2xl text-stone-900 mt-2">
-                                Video Giảng Làm Rõ Nội Dung Tự Học
+                                {t('student.step_2_subtitle')}
                             </h2>
                             <p className="text-xs text-stone-500 mt-1">
                                 {lesson.title}
@@ -481,13 +484,13 @@ export default function LessonPlayer({
                                 <iframe
                                     className="w-full h-full"
                                     src={lesson.video_url.includes('watch?v=') ? lesson.video_url.replace('watch?v=', 'embed/') : lesson.video_url}
-                                    title="Bài giảng tu viện Viên Không Ni"
+                                    title="Buddhist Courses Lecture"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen
                                 ></iframe>
                             ) : (
                                 <div className="text-center text-stone-400 text-xs p-8">
-                                    Video giảng trực tuyến đang được đồng bộ hoá với giáo thọ sư tu viện.
+                                    {t('student.video_syncing')}
                                 </div>
                             )}
                         </div>
@@ -497,7 +500,7 @@ export default function LessonPlayer({
                                 onClick={() => setActiveStep(1)}
                                 className="text-xs font-medium text-stone-600 hover:text-stone-900"
                             >
-                                &larr; Quay lại phần tự đọc
+                                {t('student.back_to_reading')}
                             </button>
 
                             <button
@@ -506,7 +509,7 @@ export default function LessonPlayer({
                                 disabled={videoForm.processing}
                                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs shadow-md transition"
                             >
-                                <span>Xác Nhận Đã Xem Xong &rarr; Qua Phần Ôn Luyện (10 Lần)</span>
+                                <span>{t('student.confirm_video_done')}</span>
                             </button>
                         </div>
                     </div>
@@ -518,20 +521,20 @@ export default function LessonPlayer({
                         <div className="border-b border-stone-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
                                 <span className="text-xs font-semibold uppercase tracking-wider text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                                    Bước 3: Bài Ôn Luyện Các Nội Dung Chính
+                                    {t('student.step_3_header')}
                                 </span>
                                 <h2 className="font-serif font-bold text-2xl text-stone-900 mt-2">
-                                    Ôn Luyện Lặp Lại 10 Lần
+                                    {t('student.step_3_heading')}
                                 </h2>
                                 <p className="text-xs text-stone-500 mt-1">
-                                    Yêu cầu quy định: Làm bài ôn luyện 10 lần cho một nội dung học để ghi nhớ thấu đáo pháp học.
+                                    {t('student.step_3_desc')}
                                 </p>
                             </div>
 
                             {/* 10x Repetition Counter Tracker */}
                             <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-300 rounded-2xl p-4 text-center sm:min-w-[200px]">
                                 <span className="text-[11px] font-semibold text-amber-900 uppercase">
-                                    Số lần ôn luyện đã hoàn thành
+                                    {t('student.completed_practice_sessions')}
                                 </span>
                                 <div className="text-3xl font-serif font-bold text-amber-800 mt-1">
                                     {progress.practice_count} / 10
@@ -564,7 +567,7 @@ export default function LessonPlayer({
                                     >
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="font-medium text-stone-900 text-sm">
-                                                <span className="font-bold text-amber-900 mr-2">Câu {idx + 1}:</span>
+                                                <span className="font-bold text-amber-900 mr-2">{t('student.question_prefix', { number: (idx + 1).toString() })}</span>
                                                 {q.question_text}
                                             </div>
 
@@ -572,7 +575,7 @@ export default function LessonPlayer({
                                                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold shrink-0 ${
                                                     result.is_correct ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
                                                 }`}>
-                                                    {result.is_correct ? 'ĐÚNG ✓' : 'CHƯA ĐÚNG ✗'}
+                                                    {result.is_correct ? t('student.correct_badge') : t('student.incorrect_badge')}
                                                 </span>
                                             )}
                                         </div>
@@ -615,7 +618,7 @@ export default function LessonPlayer({
                                                     onClick={() => handleConfirmPracticeAnswer(q.id)}
                                                     className="px-4 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs disabled:opacity-50 transition"
                                                 >
-                                                    {isSubmittingPracticeQuestion === q.id ? 'Đang kiểm tra...' : 'Xác Nhận Đáp Án'}
+                                                    {isSubmittingPracticeQuestion === q.id ? t('student.checking') : t('student.confirm_answer')}
                                                 </button>
                                             </div>
                                         )}
@@ -624,10 +627,10 @@ export default function LessonPlayer({
                                         {result && (
                                             <div className="bg-white/80 p-4 rounded-xl border border-stone-200 space-y-1.5 text-xs">
                                                 <div className="flex items-center gap-2 font-semibold text-stone-900">
-                                                    <span>Đáp án chính xác: <strong className="text-emerald-700 font-bold">{result.correct_option}</strong></span>
+                                                    <span>{t('student.correct_answer_label')} <strong className="text-emerald-700 font-bold">{result.correct_option}</strong></span>
                                                 </div>
                                                 <p className="text-stone-700 text-xs italic">
-                                                    <span className="font-semibold text-amber-900 not-italic mr-1">Giải thích:</span>
+                                                    <span className="font-semibold text-amber-900 not-italic mr-1">{t('student.explanation_label')}</span>
                                                     {result.explanation}
                                                 </p>
                                             </div>
@@ -640,7 +643,7 @@ export default function LessonPlayer({
                         {/* Complete Round Action */}
                         <div className="pt-6 border-t border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <span className="text-xs text-stone-500">
-                                Sau mỗi lượt hoàn thành, bấm nút bên dưới để ghi nhận tiến độ ôn luyện.
+                                {t('student.round_note')}
                             </span>
 
                             <button
@@ -649,7 +652,7 @@ export default function LessonPlayer({
                                 disabled={practiceAttemptForm.processing}
                                 className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs shadow-md transition"
                             >
-                                <span>Ghi Nhận Lượt Ôn Luyện Thứ {Math.min(10, progress.practice_count + 1)}/10</span>
+                                <span>{t('student.record_round', { current: Math.min(10, progress.practice_count + 1).toString() })}</span>
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -663,13 +666,13 @@ export default function LessonPlayer({
                     <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-10 shadow-sm space-y-6">
                         <div className="border-b border-stone-100 pb-4">
                             <span className="text-xs font-semibold uppercase tracking-wider text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                                Bước 4: Bài Kiểm Tra (Trắc Nghiệm Cuối Khóa)
+                                {t('student.step_4_header')}
                             </span>
                             <h2 className="font-serif font-bold text-2xl text-stone-900 mt-2">
-                                Bài Kiểm Tra Đánh Giá Năng Lực
+                                {t('student.step_4_heading')}
                             </h2>
                             <p className="text-xs text-stone-500 mt-1">
-                                Đề thi tự động xáo câu hỏi. Kết thúc bài thi hiển thị số câu làm đúng, số câu sai, số câu cần ôn tập.
+                                {t('student.step_4_desc')}
                             </p>
                         </div>
 
@@ -678,27 +681,27 @@ export default function LessonPlayer({
                             <div className="bg-stone-50 border border-stone-200 rounded-2xl p-5 space-y-3">
                                 <div className="flex items-center justify-between">
                                     <h4 className="font-serif font-bold text-sm text-stone-900">
-                                        Kết Quả Lần Thi Gần Nhất
+                                        {t('student.latest_result_title')}
                                     </h4>
                                     <span className="text-base font-bold text-amber-800">
-                                        {latestExamAttempt.score}% Điểm
+                                        {t('student.score_label', { score: latestExamAttempt.score?.toString() || '0' })}
                                     </span>
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-3 text-center text-xs">
                                     <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-emerald-900">
                                         <div className="text-xl font-bold">{latestExamAttempt.correct_count}</div>
-                                        <div className="text-[11px] font-medium">Số câu đúng</div>
+                                        <div className="text-[11px] font-medium">{t('student.correct_count_label')}</div>
                                     </div>
 
                                     <div className="bg-red-50 border border-red-200 p-3 rounded-xl text-red-900">
                                         <div className="text-xl font-bold">{latestExamAttempt.incorrect_count}</div>
-                                        <div className="text-[11px] font-medium">Số câu sai</div>
+                                        <div className="text-[11px] font-medium">{t('student.incorrect_count_label')}</div>
                                     </div>
 
                                     <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl text-amber-900">
                                         <div className="text-xl font-bold">{latestExamAttempt.review_needed_count}</div>
-                                        <div className="text-[11px] font-medium">Số câu cần ôn tập</div>
+                                        <div className="text-[11px] font-medium">{t('student.review_needed_count_label')}</div>
                                     </div>
                                 </div>
                             </div>
@@ -717,7 +720,7 @@ export default function LessonPlayer({
                                     >
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="font-semibold text-stone-900 text-sm">
-                                                <span className="font-bold text-amber-900 mr-2">Câu {idx + 1}:</span>
+                                                <span className="font-bold text-amber-900 mr-2">{t('student.question_prefix', { number: (idx + 1).toString() })}</span>
                                                 {q.question_text}
                                             </div>
 
@@ -725,7 +728,7 @@ export default function LessonPlayer({
                                                 <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                                                     result.is_correct ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
                                                 }`}>
-                                                    {result.is_correct ? 'ĐÚNG' : 'SAI'}
+                                                    {result.is_correct ? t('student.badge_correct') : t('student.badge_incorrect')}
                                                 </span>
                                             )}
                                         </div>
@@ -766,7 +769,7 @@ export default function LessonPlayer({
                                                     onClick={() => handleConfirmExamQuestion(q.id)}
                                                     className="px-3 py-1 rounded bg-stone-800 hover:bg-stone-900 text-white text-xs font-medium"
                                                 >
-                                                    {isSubmittingExamQuestion === q.id ? 'Kiểm tra...' : 'Xác nhận câu này'}
+                                                    {isSubmittingExamQuestion === q.id ? t('student.checking') : t('student.confirm_this_question')}
                                                 </button>
                                             </div>
                                         )}
@@ -774,7 +777,7 @@ export default function LessonPlayer({
                                         {result && (
                                             <div className="bg-white p-3 rounded-xl border border-stone-200 space-y-1">
                                                 <div className="font-semibold text-stone-900">
-                                                    Đáp án: <span className="text-emerald-700 font-bold">{result.correct_option}</span>
+                                                    {t('student.answer_label')} <span className="text-emerald-700 font-bold">{result.correct_option}</span>
                                                 </div>
                                                 <p className="text-stone-600 italic">
                                                     {result.explanation}
@@ -794,7 +797,7 @@ export default function LessonPlayer({
                                 disabled={isSubmittingFullExam || Object.keys(examSelections).length < questions.length}
                                 className="px-6 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs shadow-md transition disabled:opacity-50"
                             >
-                                Nộp Bài Kiểm Tra & Xem Tổng Kết
+                                {t('student.submit_exam')}
                             </button>
                         </div>
                     </div>
@@ -805,13 +808,13 @@ export default function LessonPlayer({
                     <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-10 shadow-sm space-y-6">
                         <div className="border-b border-stone-100 pb-4">
                             <span className="text-xs font-semibold uppercase tracking-wider text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                                Bước 5: Ôn Tập Lại Các Câu Làm Sai
+                                {t('student.step_5_header')}
                             </span>
                             <h2 className="font-serif font-bold text-2xl text-stone-900 mt-2">
-                                Khắc Phục Câu Sai Cho Đến Khi Thành Thục
+                                {t('student.step_5_heading')}
                             </h2>
                             <p className="text-xs text-stone-500 mt-1">
-                                Các câu làm sai được ghi nhận tại đây. Học viên vào làm lại các câu sai cho đến khi không còn câu sai mới hoàn tất chương trình môn học.
+                                {t('student.step_5_desc')}
                             </p>
                         </div>
 
@@ -826,10 +829,10 @@ export default function LessonPlayer({
 
                                 <div className="max-w-md mx-auto">
                                     <h3 className="font-serif font-bold text-xl text-emerald-950">
-                                        Hoàn Tất Chương Trình Môn Học!
+                                        {t('student.celebration_title')}
                                     </h3>
                                     <p className="text-xs text-emerald-800 mt-1">
-                                        Chúc mừng học viên! Bạn không còn câu hỏi làm sai nào. Chương trình học môn <strong className="font-serif">{lesson.title}</strong> đã chính thức được công nhận hoàn tất.
+                                        {t('student.celebration_desc', { title: lesson.title })}
                                     </p>
                                 </div>
 
@@ -837,14 +840,14 @@ export default function LessonPlayer({
                                     href={route('student.dashboard')}
                                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs shadow transition"
                                 >
-                                    Trở Về Bảng Học Tập & Nhận Điểm
+                                    {t('student.return_to_dashboard')}
                                 </Link>
                             </div>
                         ) : (
                             <div className="space-y-6">
                                 <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 text-xs text-amber-900 flex items-center justify-between">
                                     <span>
-                                        Hiện còn <strong className="text-amber-950 text-sm">{unresolvedList.length}</strong> câu làm sai cần hoàn tất.
+                                        {t('student.unresolved_remaining', { count: unresolvedList.length.toString() })}
                                     </span>
                                 </div>
 
@@ -859,12 +862,12 @@ export default function LessonPlayer({
                                         >
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="font-semibold text-stone-900 text-sm">
-                                                    <span className="font-bold text-red-700 mr-2">Câu sai #{idx + 1}:</span>
+                                                    <span className="font-bold text-red-700 mr-2">{t('student.wrong_question_prefix', { number: (idx + 1).toString() })}</span>
                                                     {iq.question_text}
                                                 </div>
 
                                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-100 text-red-800 uppercase">
-                                                    Cần sửa lại
+                                                    {t('student.need_correction')}
                                                 </span>
                                             </div>
 
@@ -898,7 +901,7 @@ export default function LessonPlayer({
 
                                             <div className="flex items-center justify-between pt-1">
                                                 <span className="text-[11px] text-stone-500 italic">
-                                                    Lần chọn trước: {iq.last_chosen_option || 'N/A'}
+                                                    {t('student.previous_choice', { choice: iq.last_chosen_option || 'N/A' })}
                                                 </span>
 
                                                 <button
@@ -907,7 +910,7 @@ export default function LessonPlayer({
                                                     onClick={() => handleRetryIncorrectQuestion(iq.question_id)}
                                                     className="px-4 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs disabled:opacity-50"
                                                 >
-                                                    Kiểm Tra & Khắc Phục
+                                                    {t('student.check_and_fix')}
                                                 </button>
                                             </div>
 
@@ -934,7 +937,7 @@ export default function LessonPlayer({
                     <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-4 text-xs">
                         <div className="flex items-center justify-between border-b pb-3">
                             <h3 className="font-serif font-bold text-base text-stone-900">
-                                Góp Ý & Báo Lỗi Chỉnh Sửa Tài Liệu
+                                {t('student.feedback_modal_title')}
                             </h3>
                             <button onClick={() => setIsFeedbackModalOpen(false)} className="text-stone-400 hover:text-stone-600">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -945,12 +948,12 @@ export default function LessonPlayer({
 
                         <form onSubmit={handleSubmitFeedback} className="space-y-4">
                             <p className="text-stone-600">
-                                Nếu phát hiện sai sót về chữ, thuật ngữ Phật học, hoặc video bài giảng cần chỉnh sửa, vui lòng gửi phản hồi trực tiếp đến Giáo viên tu viện:
+                                {t('student.feedback_modal_desc')}
                             </p>
 
                             <textarea
                                 rows={5}
-                                placeholder="Nhập chi tiết nội dung cần chỉnh sửa..."
+                                placeholder={t('student.feedback_placeholder')}
                                 value={feedbackForm.data.content}
                                 onChange={(e) => feedbackForm.setData('content', e.target.value)}
                                 className="w-full rounded-xl border-stone-300 text-xs focus:ring-amber-500 focus:border-amber-500"
@@ -963,14 +966,14 @@ export default function LessonPlayer({
                                     onClick={() => setIsFeedbackModalOpen(false)}
                                     className="px-4 py-2 rounded-xl border border-stone-300 text-stone-700 font-medium hover:bg-stone-50"
                                 >
-                                    Hủy
+                                    {t('student.cancel')}
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={feedbackForm.processing}
                                     className="px-4 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-medium shadow"
                                 >
-                                    Gửi Góp Ý
+                                    {t('student.send_feedback')}
                                 </button>
                             </div>
                         </form>

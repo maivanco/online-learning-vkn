@@ -5,8 +5,10 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Head, useForm } from '@inertiajs/react';
+import { useTranslation } from '@/utils/useTranslation';
 
 export default function ResetPassword({ token, email }: { token: string, email: string }) {
+    const t = useTranslation();
     const { data, setData, post, processing, errors, reset } = useForm({
         token: token,
         email: email,
@@ -28,11 +30,11 @@ export default function ResetPassword({ token, email }: { token: string, email: 
 
     return (
         <GuestLayout>
-            <Head title="Reset Password" />
+            <Head title={t('auth.reset_password_title')} />
 
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
+                    <InputLabel htmlFor="email" value={t('auth.email')} />
 
                     <TextInput
                         id="email"
@@ -48,7 +50,7 @@ export default function ResetPassword({ token, email }: { token: string, email: 
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
+                    <InputLabel htmlFor="password" value={t('auth.password')} />
 
                     <TextInput
                         id="password"
@@ -65,7 +67,7 @@ export default function ResetPassword({ token, email }: { token: string, email: 
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password_confirmation" value="Confirm Password" />
+                    <InputLabel htmlFor="password_confirmation" value={t('auth.confirm_password')} />
 
                     <TextInput
                         type="password"
@@ -81,7 +83,7 @@ export default function ResetPassword({ token, email }: { token: string, email: 
 
                 <div className="flex items-center justify-end mt-4">
                     <PrimaryButton className="ml-4" disabled={processing}>
-                        Reset Password
+                        {t('auth.reset_password_btn')}
                     </PrimaryButton>
                 </div>
             </form>

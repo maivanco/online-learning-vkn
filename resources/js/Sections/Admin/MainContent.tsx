@@ -5,12 +5,13 @@ import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link } from '@inertiajs/react';
 import { User } from '@/types';
+import { useTranslation } from '@/utils/useTranslation';
 
 export default function MainContent({ user, header, children }: PropsWithChildren<{ user: User, header?: ReactNode }>) {
-
+    const t = useTranslation();
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
+
     return (
-        
         <nav className="bg-white border-b border-gray-100">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
@@ -23,7 +24,7 @@ export default function MainContent({ user, header, children }: PropsWithChildre
 
                         <div className="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                             <NavLink href={route('dashboard')} active={route().current('dashboard')}>
-                                Dashboard
+                                {t('nav.dashboard')}
                             </NavLink>
                         </div>
                     </div>
@@ -56,9 +57,9 @@ export default function MainContent({ user, header, children }: PropsWithChildre
                                 </Dropdown.Trigger>
 
                                 <Dropdown.Content>
-                                    <Dropdown.Link href={route('profile.edit')}>Profile</Dropdown.Link>
+                                    <Dropdown.Link href={route('profile.edit')}>{t('nav.profile')}</Dropdown.Link>
                                     <Dropdown.Link href={route('logout')} method="post" as="button">
-                                        Log Out
+                                        {t('nav.log_out')}
                                     </Dropdown.Link>
                                 </Dropdown.Content>
                             </Dropdown>
@@ -94,7 +95,7 @@ export default function MainContent({ user, header, children }: PropsWithChildre
             <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden'}>
                 <div className="pt-2 pb-3 space-y-1">
                     <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
-                        Dashboard
+                        {t('nav.dashboard')}
                     </ResponsiveNavLink>
                 </div>
 
@@ -107,14 +108,13 @@ export default function MainContent({ user, header, children }: PropsWithChildre
                     </div>
 
                     <div className="mt-3 space-y-1">
-                        <ResponsiveNavLink href={route('profile.edit')}>Profile</ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('profile.edit')}>{t('nav.profile')}</ResponsiveNavLink>
                         <ResponsiveNavLink method="post" href={route('logout')} as="button">
-                            Log Out
+                            {t('nav.log_out')}
                         </ResponsiveNavLink>
                     </div>
                 </div>
             </div>
         </nav>
-        
     );
 }

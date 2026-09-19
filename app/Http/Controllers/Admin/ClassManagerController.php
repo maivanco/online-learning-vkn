@@ -272,6 +272,6 @@ class ClassManagerController extends Controller
         $className = $class->name;
         $class->delete();
 
-        return redirect()->route('admin.dashboard')->with('success', "Class '{$className}' has been removed successfully (Đã xóa lớp học thành công).");
+        return redirect()->route('admin.dashboard')->with('success', "Class '{$className}' has been removed successfully.");
     }
 }

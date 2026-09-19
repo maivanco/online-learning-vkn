@@ -104,12 +104,12 @@ class UserManagerController extends Controller
         }
 
         $roleLabel = match ($user->role) {
-            'admin' => 'Quản trị viên (Administrator)',
-            'teacher' => 'Giáo thọ (Teacher)',
-            default => 'Học viên (Student)',
+            'admin' => 'Administrator',
+            'teacher' => 'Teacher',
+            default => 'Student',
         };
 
-        return back()->with('success', "Tạo {$roleLabel} {$user->name} thành công.");
+        return back()->with('success', "Created {$roleLabel} {$user->name} successfully.");
     }
 
     /**
@@ -124,7 +124,7 @@ class UserManagerController extends Controller
         if ($user->isAdmin() && $validated['role'] !== 'admin') {
             $adminCount = User::where('role', 'admin')->count();
             if ($adminCount <= 1) {
-                return back()->with('error', 'Không thể đổi vai trò của quản trị viên duy nhất còn lại.');
+                return back()->with('error', 'Cannot change the role of the only remaining administrator.');
             }
         }
 
@@ -137,7 +137,7 @@ class UserManagerController extends Controller
             'status' => $validated['status'],
         ]);
 
-        return back()->with('success', "Cập nhật thông tin {$user->name} thành công.");
+        return back()->with('success', "Updated information for {$user->name} successfully.");
     }
 
     /**
@@ -152,7 +152,7 @@ class UserManagerController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        return back()->with('success', "Đổi mật khẩu thành công cho {$user->name}.");
+        return back()->with('success', "Password reset successfully for {$user->name}.");
     }
 
     /**
@@ -164,14 +164,14 @@ class UserManagerController extends Controller
 
         // Safeguard: Cannot delete self
         if ($request->user()?->id === $user->id) {
-            return back()->with('error', 'Bạn không thể xóa tài khoản của chính mình.');
+            return back()->with('error', 'You cannot delete your own account.');
         }
 
         // Safeguard: Cannot delete the only remaining administrator
         if ($user->isAdmin()) {
             $adminCount = User::where('role', 'admin')->count();
             if ($adminCount <= 1) {
-                return back()->with('error', 'Không thể xóa quản trị viên duy nhất còn lại trong hệ thống.');
+                return back()->with('error', 'Cannot delete the only remaining administrator in the system.');
             }
         }
 
@@ -179,6 +179,6 @@ class UserManagerController extends Controller
         $user->enrolledClasses()->detach();
         $user->delete();
 
-        return back()->with('success', "Đã xóa người dùng {$name} thành công.");
+        return back()->with('success', "User {$name} deleted successfully.");
     }
 }

@@ -20,7 +20,7 @@ class AuthenticatedSessionController extends Controller
     public function create(): Response|RedirectResponse
     {
         if (User::where('role', 'admin')->doesntExist()) {
-            return redirect()->route('setup')->with('info', 'Hệ thống chưa có tài khoản Quản trị viên. Vui lòng thiết lập tài khoản ban đầu.');
+            return redirect()->route('setup')->with('info', 'The system does not have an Administrator account yet. Please set up the initial account.');
         }
 
         return Inertia::render('Auth/Login', [

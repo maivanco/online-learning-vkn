@@ -5,8 +5,10 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Head, useForm } from '@inertiajs/react';
+import { useTranslation } from '@/utils/useTranslation';
 
 export default function SetupAdmin() {
+    const t = useTranslation();
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
@@ -29,7 +31,7 @@ export default function SetupAdmin() {
 
     return (
         <GuestLayout>
-            <Head title="Setup Admin - Buddhist Courses" />
+            <Head title={t('setup.meta_title')} />
 
             <div className="mb-6 text-center">
                 <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white mb-3 shadow-lg shadow-amber-600/20">
@@ -39,26 +41,26 @@ export default function SetupAdmin() {
                 </div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold tracking-wide uppercase bg-amber-100/80 text-amber-900 border border-amber-200 mb-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span>
-                    Khởi Tạo Hệ Thống Ban Đầu
+                    {t('setup.badge_init')}
                 </div>
                 <h2 className="text-xl font-serif font-bold text-gray-900 tracking-tight">
-                    Thiết Lập Tài Khoản Quản Trị Viên
+                    {t('setup.heading')}
                 </h2>
                 <p className="text-xs text-stone-600 max-w-sm mx-auto mt-1 leading-relaxed">
-                    The system does not have an administrator yet. This account will be assigned the role of <strong className="text-amber-800 font-semibold">Administrator (Super Administrator)</strong>, responsible for managing the entire Monastery Buddhist Learning System.
+                    {t('setup.subheading')}
                 </p>
             </div>
 
             <form onSubmit={submit} className="space-y-4">
                 {/* Name */}
                 <div>
-                    <InputLabel htmlFor="name" value="Họ và tên Quản trị viên *" />
+                    <InputLabel htmlFor="name" value={t('setup.name_label')} />
                     <TextInput
                         id="name"
                         type="text"
                         name="name"
                         value={data.name}
-                        placeholder="Ví dụ: Viện Chủ / Thầy Quản Trị"
+                        placeholder={t('setup.name_placeholder')}
                         className="mt-1 block w-full text-sm"
                         autoComplete="name"
                         isFocused={true}
@@ -70,7 +72,7 @@ export default function SetupAdmin() {
 
                 {/* Email */}
                 <div>
-                    <InputLabel htmlFor="email" value="Địa chỉ Email Quản trị *" />
+                    <InputLabel htmlFor="email" value={t('setup.email_label')} />
                     <TextInput
                         id="email"
                         type="email"
@@ -88,7 +90,7 @@ export default function SetupAdmin() {
                 {/* Username & Phone */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <InputLabel htmlFor="username" value="Tên đăng nhập (Username)" />
+                        <InputLabel htmlFor="username" value={t('setup.username_label')} />
                         <TextInput
                             id="username"
                             type="text"
@@ -102,7 +104,7 @@ export default function SetupAdmin() {
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="phone" value="Số điện thoại (Tùy chọn)" />
+                        <InputLabel htmlFor="phone" value={t('setup.phone_label')} />
                         <TextInput
                             id="phone"
                             type="tel"
@@ -118,7 +120,7 @@ export default function SetupAdmin() {
 
                 {/* Password */}
                 <div>
-                    <InputLabel htmlFor="password" value="Mật khẩu *" />
+                    <InputLabel htmlFor="password" value={t('setup.password_label')} />
                     <TextInput
                         id="password"
                         type="password"
@@ -135,7 +137,7 @@ export default function SetupAdmin() {
 
                 {/* Password Confirmation */}
                 <div>
-                    <InputLabel htmlFor="password_confirmation" value="Xác nhận mật khẩu *" />
+                    <InputLabel htmlFor="password_confirmation" value={t('setup.password_confirmation_label')} />
                     <TextInput
                         id="password_confirmation"
                         type="password"
@@ -155,7 +157,7 @@ export default function SetupAdmin() {
                         className="w-full justify-center py-2.5 bg-amber-700 hover:bg-amber-800 text-white shadow-md shadow-amber-700/20 font-medium"
                         disabled={processing}
                     >
-                        {processing ? 'Đang khởi tạo...' : 'Hoàn Tất Thiết Lập & Bắt Đầu Quản Trị'}
+                        {processing ? t('setup.submitting') : t('setup.submit_button')}
                     </PrimaryButton>
                 </div>
             </form>

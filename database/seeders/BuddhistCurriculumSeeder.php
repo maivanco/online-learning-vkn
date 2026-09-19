@@ -18,9 +18,9 @@ class BuddhistCurriculumSeeder extends Seeder
     {
         // 1. Pre-seed Curriculum Courses from Specification
         $coursesData = [
-            // Category 1: Dhamma (Pháp)
+            // Category 1: Dhamma
             [
-                'title' => 'Essential Dhamma (Pháp học tinh yếu)',
+                'title' => 'Essential Dhamma',
                 'slug' => 'essential-dhamma',
                 'category' => 'dhamma',
                 'target_audience' => 'all',
@@ -28,7 +28,7 @@ class BuddhistCurriculumSeeder extends Seeder
                 'order' => 1,
             ],
             [
-                'title' => 'Sutta Pitaka Dhamma (Pháp học theo kinh tạng)',
+                'title' => 'Sutta Pitaka Dhamma',
                 'slug' => 'sutta-pitaka-dhamma',
                 'category' => 'dhamma',
                 'target_audience' => 'all',
@@ -36,9 +36,9 @@ class BuddhistCurriculumSeeder extends Seeder
                 'order' => 2,
             ],
 
-            // Category 2: Vinaya (Luật)
+            // Category 2: Vinaya
             [
-                'title' => 'Vinaya: Bhikkhuni Patimokkha (Luật Tỳ Kheo Ni)',
+                'title' => 'Vinaya: Bhikkhuni Patimokkha',
                 'slug' => 'vinaya-bhikkhuni',
                 'category' => 'vinaya',
                 'target_audience' => 'monastics',
@@ -46,7 +46,7 @@ class BuddhistCurriculumSeeder extends Seeder
                 'order' => 3,
             ],
             [
-                'title' => 'Vinaya: Samanera & Samaneri (Luật Sa-di & Sa-di-ni)',
+                'title' => 'Vinaya: Samanera & Samaneri',
                 'slug' => 'vinaya-samanera',
                 'category' => 'vinaya',
                 'target_audience' => 'monastics',
@@ -54,7 +54,7 @@ class BuddhistCurriculumSeeder extends Seeder
                 'order' => 4,
             ],
             [
-                'title' => 'Vinaya: Female Renunciants (Luật Tu nữ)',
+                'title' => 'Vinaya: Female Renunciants',
                 'slug' => 'vinaya-nun',
                 'category' => 'vinaya',
                 'target_audience' => 'monastics',
@@ -62,7 +62,7 @@ class BuddhistCurriculumSeeder extends Seeder
                 'order' => 5,
             ],
             [
-                'title' => 'Vinaya: Lay Followers (Luật Cư sĩ)',
+                'title' => 'Vinaya: Lay Followers',
                 'slug' => 'vinaya-lay',
                 'category' => 'vinaya',
                 'target_audience' => 'lay',
@@ -70,9 +70,9 @@ class BuddhistCurriculumSeeder extends Seeder
                 'order' => 6,
             ],
 
-            // Category 3: Abhidhamma (Vi Diệu Pháp)
+            // Category 3: Abhidhamma
             [
-                'title' => 'Abhidhammattha-sangaha (Thắng pháp tập yếu luận)',
+                'title' => 'Abhidhammattha-sangaha',
                 'slug' => 'abhidhammattha-sangaha',
                 'category' => 'abhidhamma',
                 'target_audience' => 'all',
@@ -80,9 +80,9 @@ class BuddhistCurriculumSeeder extends Seeder
                 'order' => 7,
             ],
 
-            // Category 4: Pali (Pali)
+            // Category 4: Pali
             [
-                'title' => 'Pali: Pronunciation & Phonetics (Pali: Cách phát âm)',
+                'title' => 'Pali: Pronunciation & Phonetics',
                 'slug' => 'pali-pronunciation',
                 'category' => 'pali',
                 'target_audience' => 'all',
@@ -90,7 +90,7 @@ class BuddhistCurriculumSeeder extends Seeder
                 'order' => 8,
             ],
             [
-                'title' => 'Pali: Grammar (Pali: Văn phạm)',
+                'title' => 'Pali: Grammar',
                 'slug' => 'pali-grammar',
                 'category' => 'pali',
                 'target_audience' => 'all',
@@ -98,7 +98,7 @@ class BuddhistCurriculumSeeder extends Seeder
                 'order' => 9,
             ],
             [
-                'title' => 'Pali: Sutta Analysis (Pali: Phân tích qua kinh văn)',
+                'title' => 'Pali: Sutta Analysis',
                 'slug' => 'pali-sutta-analysis',
                 'category' => 'pali',
                 'target_audience' => 'all',
@@ -121,7 +121,7 @@ class BuddhistCurriculumSeeder extends Seeder
             ['code' => 'VNK-ADH-2601'],
             [
                 'course_id' => $abhidhammaCourse->id,
-                'name' => 'Abhidhammattha-sangaha Cohort 01 (Lớp Vi Diệu Pháp K01)',
+                'name' => 'Abhidhammattha-sangaha Cohort 01',
                 'duration_months' => 3,
                 'start_date' => now()->subMonth(),
                 'end_date' => now()->addMonths(2),
@@ -136,7 +136,7 @@ class BuddhistCurriculumSeeder extends Seeder
             ['code' => 'VNK-DHM-2504'],
             [
                 'course_id' => $dhammaCourse->id,
-                'name' => 'Essential Dhamma Cohort 04 (Lớp Pháp Học Tinh Yếu K04)',
+                'name' => 'Essential Dhamma Cohort 04',
                 'duration_months' => 3,
                 'start_date' => now()->subMonths(4),
                 'end_date' => now()->subMonth(),
@@ -151,7 +151,7 @@ class BuddhistCurriculumSeeder extends Seeder
             ['code' => 'VNK-PAL-2602'],
             [
                 'course_id' => $paliGrammarCourse->id,
-                'name' => 'Pali Grammar Cohort 02 (Lớp Văn Phạm Pali K02)',
+                'name' => 'Pali Grammar Cohort 02',
                 'duration_months' => 3,
                 'start_date' => now()->addMonth(),
                 'end_date' => now()->addMonths(4),
@@ -165,7 +165,7 @@ class BuddhistCurriculumSeeder extends Seeder
         $lesson1 = Lesson::updateOrCreate(
             ['course_id' => $abhidhammaCourse->id, 'slug' => 'lesson-1-four-paramattha-dhammas'],
             [
-                'title' => 'Lesson 1: The Four Ultimate Realities (Bốn Pháp Chân Đế)',
+                'title' => 'Lesson 1: The Four Ultimate Realities',
                 'order' => 1,
                 'summary' => 'Introduction to Paramattha Dhamma: Citta (Consciousness), Cetasika (Mental Factors), Rupa (Matter), and Nibbana.',
                 'reading_content' => "# Bốn Pháp Chân Đế (Cattāri Paramatthadhamma)\n\nTrong Vi Diệu Pháp (Abhidhamma), Đức Phật phân tích toàn bộ thực tại hiện hữu thành bốn pháp chân đế vô thượng:\n\n1. **Tâm (Citta)**: Thực tính biết cảnh. Có 89 hoặc 121 thứ tâm tuỳ theo phân loại.\n2. **Tâm sở (Cetasika)**: Những yếu tố đồng sinh cùng tâm, phối hợp để tạo nên trạng thái cảm thọ, tư niệm. Có 52 tâm sở.\n3. **Sắc pháp (Rūpa)**: Những hiện tượng vật lý, hình tướng sinh diệt do duyên. Có 28 sắc pháp.\n4. **Niết-bàn (Nibbāna)**: Thực tại vô vi, tịch tịnh, dứt trừ phiền não và khổ đau luân hồi.\n\nNgười tu học cần phân biệt rõ giữa Chân đế (Paramattha Sacca) và Tục đế (Sammuti Sacca) để thoát khỏi sự chấp ngã sai lầm.",
@@ -177,7 +177,7 @@ class BuddhistCurriculumSeeder extends Seeder
         Lesson::updateOrCreate(
             ['course_id' => $abhidhammaCourse->id, 'slug' => 'lesson-2-wholesome-consciousness'],
             [
-                'title' => 'Lesson 2: Wholesome Consciousness (Tâm Thiện Dục Giới)',
+                'title' => 'Lesson 2: Wholesome Consciousness',
                 'order' => 2,
                 'summary' => 'Study of Kusala Citta in Kamavacara, accompanied by Joy and Equanimity, prompted and unprompted.',
                 'reading_content' => "# Tâm Thiện Dục Giới (Kāmāvacara Kusala Citta)\n\nCó 8 thứ tâm thiện dục giới sinh khởi khi hành giả thực hiện thiện sự như bố thí (dāna), trì giới (sīla), hoặc tu tập thiền định (bhāvanā):\n\n- Tâm câu hành hỷ, tương ưng tri thức, vô trợ.\n- Tâm câu hành hỷ, tương ưng tri thức, hữu trợ.\n- Tâm câu hành hỷ, bất tương ưng tri thức, vô trợ.\n- Tâm câu hành hỷ, bất tương ưng tri thức, hữu trợ.\n- Bốn thứ tâm câu hành xả tương ứng.",

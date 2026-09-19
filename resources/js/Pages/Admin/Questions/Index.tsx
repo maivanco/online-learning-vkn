@@ -2,6 +2,7 @@ import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { PageProps } from '@/types';
+import { useTranslation } from '@/utils/useTranslation';
 
 interface QuestionItem {
     id: number;
@@ -35,6 +36,7 @@ interface QuestionProps extends PageProps {
 }
 
 export default function QuestionBankIndex({ auth, questions, courses, selectedCourseId, flash }: QuestionProps) {
+    const t = useTranslation();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [selectedQuestionForEdit, setSelectedQuestionForEdit] = useState<QuestionItem | null>(null);
 
@@ -101,9 +103,9 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Question Bank (Ngân Hàng Đề Thi & Ôn Luyện)</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">{t('questions.header_title')}</h2>}
         >
-            <Head title="Question Bank - Buddhist Courses" />
+            <Head title={t('questions.bank_title')} />
 
             <div className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
                 {/* Flash Messages */}
@@ -118,10 +120,10 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                 <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h3 className="font-serif font-bold text-base text-gray-900">
-                            Ngân Hàng Đề Thi Trắc Nghiệm & Đáp Án Giải Thích
+                            {t('questions.section_title')}
                         </h3>
                         <p className="text-xs text-gray-500 mt-0.5">
-                            Questions automatically shuffle for exams and 10x practice reviews, with instant grading and explanation.
+                            {t('questions.section_subtitle')}
                         </p>
                     </div>
 
@@ -147,7 +149,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                             </svg>
-                            Add Question (Thêm Câu Hỏi)
+                            {t('questions.add_question')}
                         </button>
                     </div>
                 </div>
@@ -156,7 +158,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                 <div className="space-y-4">
                     {questions.length === 0 ? (
                         <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center text-gray-400 text-xs shadow-sm">
-                            No questions registered for this course yet.
+                            {t('questions.no_questions')}
                         </div>
                     ) : (
                         questions.map((q, idx) => (
@@ -165,7 +167,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-2">
                                             <span className="font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded text-[11px]">
-                                                Câu {idx + 1}
+                                                {t('questions.question_prefix')} {idx + 1}
                                             </span>
                                             {q.lesson_title && (
                                                 <span className="text-[11px] text-gray-500">
@@ -183,7 +185,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                                             onClick={() => openEdit(q)}
                                             className="text-amber-700 hover:text-amber-900 font-medium"
                                         >
-                                            Edit
+                                            {t('questions.edit')}
                                         </button>
                                         <Link
                                             href={route('admin.questions.destroy', q.id)}
@@ -191,7 +193,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                                             as="button"
                                             className="text-red-500 hover:text-red-700"
                                         >
-                                            Delete
+                                            {t('questions.delete')}
                                         </Link>
                                     </div>
                                 </div>
@@ -215,7 +217,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                                 {/* Explanation */}
                                 <div className="bg-amber-50/70 border border-amber-200/80 p-3 rounded-lg text-amber-950">
                                     <span className="font-semibold text-[11px] uppercase tracking-wider text-amber-900 block mb-0.5">
-                                        Đáp Án Giải Thích (Explanation):
+                                        {t('questions.explanation_label')}
                                     </span>
                                     {q.explanation}
                                 </div>
@@ -231,7 +233,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                     <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                         <div className="flex items-center justify-between border-b pb-3">
                             <h3 className="font-serif font-bold text-base text-gray-900">
-                                Add Multiple Choice Question (Thêm Câu Hỏi Mới)
+                                {t('questions.add_modal_title')}
                             </h3>
                             <button onClick={() => setIsAddModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -242,13 +244,13 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
 
                         <form onSubmit={handleCreateQuestion} className="space-y-3.5">
                             <div>
-                                <label className="block font-medium text-gray-700 mb-1">Associated Lesson (Bài học)</label>
+                                <label className="block font-medium text-gray-700 mb-1">{t('questions.associated_lesson')}</label>
                                 <select
                                     value={questionForm.data.lesson_id}
                                     onChange={(e) => questionForm.setData('lesson_id', e.target.value)}
                                     className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
                                 >
-                                    <option value="">-- All / General Course --</option>
+                                    <option value="">{t('questions.all_general_course')}</option>
                                     {currentCourse?.lessons?.map((l) => (
                                         <option key={l.id} value={l.id}>
                                             {l.title}
@@ -258,20 +260,20 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                             </div>
 
                             <div>
-                                <label className="block font-medium text-gray-700 mb-1">Question Text (Nội dung câu hỏi)</label>
+                                <label className="block font-medium text-gray-700 mb-1">{t('questions.question_text')}</label>
                                 <textarea
                                     rows={3}
                                     value={questionForm.data.question_text}
                                     onChange={(e) => questionForm.setData('question_text', e.target.value)}
                                     className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                    placeholder="Enter question text..."
+                                    placeholder={t('questions.enter_question_placeholder')}
                                     required
                                 />
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Option A</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('questions.option_a')}</label>
                                     <input
                                         type="text"
                                         value={questionForm.data.option_a}
@@ -281,7 +283,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                                     />
                                 </div>
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Option B</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('questions.option_b')}</label>
                                     <input
                                         type="text"
                                         value={questionForm.data.option_b}
@@ -291,7 +293,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                                     />
                                 </div>
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Option C</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('questions.option_c')}</label>
                                     <input
                                         type="text"
                                         value={questionForm.data.option_c}
@@ -301,7 +303,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                                     />
                                 </div>
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Option D</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('questions.option_d')}</label>
                                     <input
                                         type="text"
                                         value={questionForm.data.option_d}
@@ -314,7 +316,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Correct Answer (Đáp án đúng)</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('questions.correct_answer')}</label>
                                     <select
                                         value={questionForm.data.correct_option}
                                         onChange={(e) => questionForm.setData('correct_option', e.target.value as any)}
@@ -328,29 +330,29 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                                 </div>
 
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Usage Type</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('questions.usage_type')}</label>
                                     <select
                                         value={questionForm.data.type}
                                         onChange={(e) => questionForm.setData('type', e.target.value)}
                                         className="w-full rounded-lg border-gray-300 text-xs"
                                     >
-                                        <option value="both">Both (Practice & Exam)</option>
-                                        <option value="practice">Practice Only</option>
-                                        <option value="exam">Final Exam Only</option>
+                                        <option value="both">{t('questions.both_practice_exam')}</option>
+                                        <option value="practice">{t('questions.practice_only')}</option>
+                                        <option value="exam">{t('questions.exam_only')}</option>
                                     </select>
                                 </div>
                             </div>
 
                             <div>
                                 <label className="block font-medium text-gray-700 mb-1">
-                                    Explanation for Answer (Giải thích đáp án sau khi chọn)
+                                    {t('questions.explanation_field')}
                                 </label>
                                 <textarea
                                     rows={3}
                                     value={questionForm.data.explanation}
                                     onChange={(e) => questionForm.setData('explanation', e.target.value)}
                                     className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                    placeholder="Explain why this option is correct based on canonical scriptures..."
+                                    placeholder={t('questions.explanation_placeholder')}
                                     required
                                 />
                             </div>
@@ -361,14 +363,14 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                                     onClick={() => setIsAddModalOpen(false)}
                                     className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
                                 >
-                                    Cancel
+                                    {t('questions.cancel')}
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={questionForm.processing}
                                     className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium shadow"
                                 >
-                                    Save Question
+                                    {t('questions.save_question')}
                                 </button>
                             </div>
                         </form>
@@ -382,7 +384,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                     <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                         <div className="flex items-center justify-between border-b pb-3">
                             <h3 className="font-serif font-bold text-base text-gray-900">
-                                Edit Question (Chỉnh Sửa Câu Hỏi)
+                                {t('questions.edit_modal_title')}
                             </h3>
                             <button onClick={() => setSelectedQuestionForEdit(null)} className="text-gray-400 hover:text-gray-600">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -393,7 +395,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
 
                         <form onSubmit={handleUpdateQuestion} className="space-y-3.5">
                             <div>
-                                <label className="block font-medium text-gray-700 mb-1">Question Text</label>
+                                <label className="block font-medium text-gray-700 mb-1">{t('questions.question_text')}</label>
                                 <textarea
                                     rows={3}
                                     value={editForm.data.question_text}
@@ -405,7 +407,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Option A</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('questions.option_a')}</label>
                                     <input
                                         type="text"
                                         value={editForm.data.option_a}
@@ -415,7 +417,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                                     />
                                 </div>
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Option B</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('questions.option_b')}</label>
                                     <input
                                         type="text"
                                         value={editForm.data.option_b}
@@ -425,7 +427,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                                     />
                                 </div>
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Option C</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('questions.option_c')}</label>
                                     <input
                                         type="text"
                                         value={editForm.data.option_c}
@@ -435,7 +437,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                                     />
                                 </div>
                                 <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Option D</label>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('questions.option_d')}</label>
                                     <input
                                         type="text"
                                         value={editForm.data.option_d}
@@ -446,22 +448,24 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block font-medium text-gray-700 mb-1">Correct Answer</label>
-                                <select
-                                    value={editForm.data.correct_option}
-                                    onChange={(e) => editForm.setData('correct_option', e.target.value as any)}
-                                    className="w-full rounded-lg border-gray-300 text-xs font-bold text-emerald-800"
-                                >
-                                    <option value="A">A</option>
-                                    <option value="B">B</option>
-                                    <option value="C">C</option>
-                                    <option value="D">D</option>
-                                </select>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block font-medium text-gray-700 mb-1">{t('questions.correct_answer')}</label>
+                                    <select
+                                        value={editForm.data.correct_option}
+                                        onChange={(e) => editForm.setData('correct_option', e.target.value as any)}
+                                        className="w-full rounded-lg border-gray-300 text-xs font-bold text-emerald-800"
+                                    >
+                                        <option value="A">A</option>
+                                        <option value="B">B</option>
+                                        <option value="C">C</option>
+                                        <option value="D">D</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div>
-                                <label className="block font-medium text-gray-700 mb-1">Explanation</label>
+                                <label className="block font-medium text-gray-700 mb-1">{t('questions.explanation_field')}</label>
                                 <textarea
                                     rows={3}
                                     value={editForm.data.explanation}
@@ -477,14 +481,14 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
                                     onClick={() => setSelectedQuestionForEdit(null)}
                                     className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
                                 >
-                                    Cancel
+                                    {t('questions.cancel')}
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={editForm.processing}
                                     className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium shadow"
                                 >
-                                    Update Question
+                                    {t('questions.update_question')}
                                 </button>
                             </div>
                         </form>

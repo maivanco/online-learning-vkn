@@ -1,9 +1,10 @@
 import { User } from '@/types';
 import Dropdown from '@/Components/Dropdown';
 import { usePage } from '@inertiajs/react';
-
+import { useTranslation } from '@/utils/useTranslation';
 
 export default function Header({ user }: { user: User }) {
+    const t = useTranslation();
     const { url } = usePage();
 
     const isHomeActive = url === '/';
@@ -17,7 +18,7 @@ export default function Header({ user }: { user: User }) {
                             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white shadow">
                                 <i className="fas fa-graduation-cap text-lg"></i>
                             </span>
-                            <span>Online Learning</span>
+                            <span>{t('nav.buddhist_courses')}</span>
                         </a>
 
                         <nav id="main-nav" className="hidden md:flex items-center space-x-6">
@@ -25,13 +26,12 @@ export default function Header({ user }: { user: User }) {
                                 href="/"
                                 className={`text-sm font-medium transition ${isHomeActive ? 'text-indigo-400' : 'text-slate-300 hover:text-white'}`}
                             >
-                                Home
+                                {t('nav.home')}
                             </a>
                         </nav>
                     </div>
                     <aside className="side-right">
                         {user ? (
-
                             <Dropdown>
                                 <Dropdown.Trigger>
                                     <span className="inline-flex rounded-md">
@@ -58,17 +58,20 @@ export default function Header({ user }: { user: User }) {
                                 </Dropdown.Trigger>
 
                                 <Dropdown.Content>
-                                    <Dropdown.Link href={route('dashboard')}> <i className="fas fa-home"></i> Dashboard</Dropdown.Link>
-                                    <Dropdown.Link href={route('admin/profile.edit')}> <i className="fas fa-user"></i> Profile</Dropdown.Link>
+                                    <Dropdown.Link href={route('dashboard')}>
+                                        <i className="fas fa-home"></i> {t('nav.dashboard')}
+                                    </Dropdown.Link>
+                                    <Dropdown.Link href={route('admin/profile.edit')}>
+                                        <i className="fas fa-user"></i> {t('nav.profile')}
+                                    </Dropdown.Link>
                                     <Dropdown.Link href={route('logout')} method="post" as="button">
-                                        <i className="fas fa-sign-out-alt"></i> Log Out
+                                        <i className="fas fa-sign-out-alt"></i> {t('nav.log_out')}
                                     </Dropdown.Link>
                                 </Dropdown.Content>
                             </Dropdown>
-
                         ) : (
                             <a href="/login" className="ml-2">
-                                <i className="fas fa-user"></i>  Login / Register
+                                <i className="fas fa-user"></i> {t('nav.login_register')}
                             </a>
                         )}
                     </aside>

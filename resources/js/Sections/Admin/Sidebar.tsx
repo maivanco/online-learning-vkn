@@ -1,12 +1,14 @@
 import { Link, usePage } from "@inertiajs/react";
 import { admin_url } from "@/utils/helper";
+import { useTranslation } from "@/utils/useTranslation";
 
 export default function Sidebar() {
     const { url } = usePage();
+    const t = useTranslation();
 
     const navLinks = [
         {
-            label: 'Classes & Progress (Lớp học)',
+            label: t('nav.classes_progress'),
             href: admin_url('dashboard'),
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -15,7 +17,7 @@ export default function Sidebar() {
             ),
         },
         {
-            label: 'Materials & Videos (Tài liệu)',
+            label: t('nav.materials_videos'),
             href: admin_url('materials'),
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -24,7 +26,7 @@ export default function Sidebar() {
             ),
         },
         {
-            label: 'Question Bank (Ngân hàng đề)',
+            label: t('nav.question_bank'),
             href: admin_url('questions'),
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -33,7 +35,7 @@ export default function Sidebar() {
             ),
         },
         {
-            label: 'Users & Roles (Người dùng)',
+            label: t('nav.users_roles'),
             href: admin_url('users'),
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,7 +44,7 @@ export default function Sidebar() {
             ),
         },
         {
-            label: 'Security & Password',
+            label: t('nav.security_password'),
             href: admin_url('profile/edit'),
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,9 +95,9 @@ export default function Sidebar() {
 
             {/* Monastery Info Footer */}
             <div className="p-4 border-t border-stone-800/80 bg-stone-950/60 text-[11px] text-stone-400">
-                <p className="font-medium text-stone-300">Tu viện Viên Không Ni</p>
+                <p className="font-medium text-stone-300">{t('nav.monastery_name')}</p>
                 <p className="text-[10px] text-stone-400 mt-0.5 leading-tight">
-                    Ấp 4, xã Châu Pha, Tp. Hồ Chí Minh
+                    {t('nav.monastery_address')}
                 </p>
                 <a
                     href="https://www.facebook.com/share/1DCWqsCZSY/?mibextid=wwXIfr"
@@ -106,7 +108,7 @@ export default function Sidebar() {
                     <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
                         <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                     </svg>
-                    Facebook Tu viện
+                    {t('nav.monastery_facebook')}
                 </a>
             </div>
         </aside>
