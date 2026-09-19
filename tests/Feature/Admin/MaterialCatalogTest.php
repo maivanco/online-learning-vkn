@@ -92,7 +92,6 @@ class MaterialCatalogTest extends TestCase
             'slug' => 'vinaya-pitaka-discipline',
             'description' => 'Monastic rules and disciplinary codes.',
             'parent_id' => null,
-            'category' => 'vinaya',
         ]);
 
         $response->assertRedirect();
@@ -101,7 +100,6 @@ class MaterialCatalogTest extends TestCase
             'slug' => 'vinaya-pitaka-discipline',
             'description' => 'Monastic rules and disciplinary codes.',
             'parent_id' => null,
-            'category' => 'vinaya',
         ]);
     }
 
@@ -110,7 +108,6 @@ class MaterialCatalogTest extends TestCase
         $parent = Course::create([
             'title' => 'Pali Language',
             'slug' => 'pali-language',
-            'category' => 'pali',
             'description' => 'Pali canonical studies',
         ]);
 
@@ -126,7 +123,6 @@ class MaterialCatalogTest extends TestCase
             'title' => 'Pali Grammar Primer',
             'slug' => 'pali-grammar-primer',
             'parent_id' => $parent->id,
-            'category' => 'pali', // inherited from parent
         ]);
     }
 
@@ -135,13 +131,11 @@ class MaterialCatalogTest extends TestCase
         $parent = Course::create([
             'title' => 'Abhidhamma Studies',
             'slug' => 'abhidhamma-studies',
-            'category' => 'abhidhamma',
         ]);
 
         $course = Course::create([
             'title' => 'Original Title',
             'slug' => 'original-title',
-            'category' => 'general',
             'description' => 'Old description',
         ]);
 
@@ -150,7 +144,6 @@ class MaterialCatalogTest extends TestCase
             'slug' => 'updated-catalog-title',
             'description' => 'Updated description content.',
             'parent_id' => $parent->id,
-            'category' => 'abhidhamma',
         ]);
 
         $response->assertRedirect();

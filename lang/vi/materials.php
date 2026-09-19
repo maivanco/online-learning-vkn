@@ -15,7 +15,7 @@ return [
     'delete_catalog' => 'Xóa Danh mục',
     'no_course_selected' => 'Chưa chọn Môn học',
     'parent_label' => 'Thuộc danh mục: :title',
-    'course_meta' => 'Đường dẫn: :slug • Phân loại: :category • :count bài học',
+    'course_meta' => 'Đường dẫn: :slug • :count bài học',
     'no_materials_published' => 'Chưa có học liệu hoặc bài giảng nào cho môn học này.',
     'unit_label' => 'Bài :order',
     'btn_edit_lesson' => 'Sửa Bài học',

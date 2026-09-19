@@ -31,7 +31,6 @@ class MaterialController extends Controller
                 'id' => $c->id,
                 'title' => $c->title,
                 'slug' => $c->slug,
-                'category' => $c->category,
                 'description' => $c->description,
                 'parent_id' => $c->parent_id,
                 'parent' => $c->parent ? [
@@ -253,7 +252,6 @@ class MaterialController extends Controller
             'slug' => 'nullable|string|max:255|unique:courses,slug',
             'description' => 'nullable|string',
             'parent_id' => 'nullable|exists:courses,id',
-            'category' => 'nullable|string|max:50',
         ]);
 
         if (isset($validated['description']) && trim(strip_tags($validated['description'])) === '') {
@@ -268,15 +266,6 @@ class MaterialController extends Controller
             $counter++;
         }
         $validated['slug'] = $slug;
-
-        if (empty($validated['category'])) {
-            if (!empty($validated['parent_id'])) {
-                $parent = Course::find($validated['parent_id']);
-                $validated['category'] = $parent?->category ?? 'general';
-            } else {
-                $validated['category'] = 'general';
-            }
-        }
 
         $validated['order'] = (Course::max('order') ?? 0) + 1;
         $validated['user_id'] = $request->user()?->id;
@@ -299,7 +288,6 @@ class MaterialController extends Controller
             'slug' => 'required|string|max:255|unique:courses,slug,' . $id,
             'description' => 'nullable|string',
             'parent_id' => 'nullable|exists:courses,id',
-            'category' => 'nullable|string|max:50',
         ]);
 
         if (isset($validated['description']) && trim(strip_tags($validated['description'])) === '') {

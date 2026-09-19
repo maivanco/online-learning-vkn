@@ -10,7 +10,6 @@ interface Course {
     id: number;
     title: string;
     slug: string;
-    category: string;
     description: string | null;
     parent_id: number | null;
     parent: {
@@ -81,7 +80,6 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
         slug: '',
         description: '',
         parent_id: '',
-        category: 'general',
     });
 
     const editCatalogForm = useForm({
@@ -89,7 +87,6 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
         slug: '',
         description: '',
         parent_id: '',
-        category: 'general',
     });
 
     const handleCreateCatalog = (e: React.FormEvent) => {
@@ -111,7 +108,6 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
             slug: catalog.slug,
             description: catalog.description || '',
             parent_id: catalog.parent_id ? String(catalog.parent_id) : '',
-            category: catalog.category || 'general',
         });
     };
 
@@ -294,10 +290,7 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                                         <span className="truncate max-w-[140px]">{c.user.name}</span>
                                                     </div>
                                                 )}
-                                                <div className="flex items-center justify-between text-[11px] text-gray-500 mt-1.5">
-                                                    <span className="capitalize font-sans text-[10px] bg-stone-100 text-stone-600 px-1.5 py-0.2 rounded">
-                                                        {c.category}
-                                                    </span>
+                                                <div className="flex items-center justify-end text-[11px] text-gray-500 mt-1.5">
                                                     <span className="text-[10px]">{t('materials.topics_count', { count: c.lessons_count.toString() })}</span>
                                                 </div>
                                             </Link>
@@ -363,7 +356,6 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                                 <p className="text-xs text-gray-500 mt-1">
                                                     {t('materials.course_meta', {
                                                         slug: activeCourse.slug,
-                                                        category: activeCourse.category.toUpperCase(),
                                                         count: lessons.length.toString(),
                                                     })}
                                                 </p>
@@ -662,7 +654,7 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                     <option value="">{t('materials.parent_catalog_none')}</option>
                                     {courses.map((c) => (
                                         <option key={c.id} value={c.id}>
-                                            {c.title} {c.category ? `[${c.category.toUpperCase()}]` : ''}
+                                            {c.title}
                                         </option>
                                     ))}
                                 </select>
@@ -783,7 +775,7 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                         )
                                         .map((c) => (
                                             <option key={c.id} value={c.id}>
-                                                {c.title} {c.category ? `[${c.category.toUpperCase()}]` : ''}
+                                                {c.title}
                                             </option>
                                         ))}
                                 </select>

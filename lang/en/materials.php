@@ -15,7 +15,7 @@ return [
     'delete_catalog' => 'Delete Course Catalog',
     'no_course_selected' => 'No Course Selected',
     'parent_label' => 'Parent: :title',
-    'course_meta' => 'Slug: :slug • Category: :category • :count study units',
+    'course_meta' => 'Slug: :slug • :count study units',
     'no_materials_published' => 'No materials or lessons published for this course yet.',
     'unit_label' => 'Unit :order',
     'btn_edit_lesson' => 'Edit Lesson',
