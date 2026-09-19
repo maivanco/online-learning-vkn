@@ -19,7 +19,14 @@ class Lesson extends Model
         'summary',
         'reading_content',
         'reading_file_url',
+        'document_urls',
         'video_url',
+        'video_urls',
+    ];
+
+    protected $casts = [
+        'document_urls' => 'array',
+        'video_urls' => 'array',
     ];
 
     /**

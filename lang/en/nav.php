@@ -2,7 +2,7 @@
 
 return [
     'classes_progress' => 'Classes & Progress',
-    'materials_videos' => 'Materials & Videos',
+    'courses_lessons' => 'Courses & Lessons',
     'question_bank' => 'Question Bank',
     'users_roles' => 'Users & Roles',
     'security_password' => 'Security & Password',

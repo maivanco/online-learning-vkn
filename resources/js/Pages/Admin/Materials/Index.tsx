@@ -4,6 +4,7 @@ import { Head, Link, useForm, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { useTranslation } from '@/utils/useTranslation';
 import RichTextEditor from '@/Components/RichTextEditor';
+import LessonFormModal, { LessonItem } from './Components/LessonFormModal';
 
 interface Course {
     id: number;
@@ -31,21 +32,6 @@ function slugify(text: string): string {
         .trim()
         .replace(/[\s_]+/g, '-')
         .replace(/-+/g, '-');
-}
-
-interface LessonItem {
-    id: number;
-    course_id: number;
-    title: string;
-    slug: string;
-    order: number;
-    summary: string | null;
-    reading_content: string | null;
-    reading_file_url: string | null;
-    video_url: string | null;
-    feedbacks_count: number;
-    questions_count: number;
-    updated_at: string;
 }
 
 interface FeedbackItem {
@@ -153,55 +139,6 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
         return ids;
     };
 
-    const lessonForm = useForm({
-        course_id: activeCourse?.id || '',
-        title: '',
-        summary: '',
-        reading_content: '',
-        reading_file_url: '',
-        video_url: '',
-        order: lessons.length + 1,
-    });
-
-    const editLessonForm = useForm({
-        title: '',
-        summary: '',
-        reading_content: '',
-        reading_file_url: '',
-        video_url: '',
-        order: 1,
-    });
-
-    const handleCreateLesson = (e: React.FormEvent) => {
-        e.preventDefault();
-        lessonForm.post(route('admin.materials.store'), {
-            onSuccess: () => {
-                setIsCreateLessonModalOpen(false);
-                lessonForm.reset();
-            },
-        });
-    };
-
-    const openEditModal = (lesson: LessonItem) => {
-        setSelectedLessonForEdit(lesson);
-        editLessonForm.setData({
-            title: lesson.title,
-            summary: lesson.summary || '',
-            reading_content: lesson.reading_content || '',
-            reading_file_url: lesson.reading_file_url || '',
-            video_url: lesson.video_url || '',
-            order: lesson.order,
-        });
-    };
-
-    const handleUpdateLesson = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!selectedLessonForEdit) return;
-        editLessonForm.put(route('admin.materials.update', selectedLessonForEdit.id), {
-            onSuccess: () => setSelectedLessonForEdit(null),
-        });
-    };
-
     const handleDeleteLesson = () => {
         if (!selectedLessonForDelete) return;
         router.delete(route('admin.materials.destroy', selectedLessonForDelete.id), {
@@ -213,11 +150,6 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
             },
         });
     };
-
-    const feedbackStatusForm = useForm({
-        status: 'reviewed',
-        admin_notes: '',
-    });
 
     const handleUpdateFeedbackStatus = (feedbackId: number, status: string) => {
         router.put(route('admin.feedbacks.update', feedbackId), {
@@ -460,7 +392,7 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                                     <div className="flex items-center gap-1.5 flex-shrink-0">
                                                         <button
                                                             type="button"
-                                                            onClick={() => openEditModal(lesson)}
+                                                            onClick={() => setSelectedLessonForEdit(lesson)}
                                                             className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-amber-700 bg-white border border-amber-300 rounded-lg hover:bg-amber-50 transition shadow-2xs"
                                                         >
                                                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -486,14 +418,18 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                                     <div className="flex items-center gap-2 text-gray-600">
                                                         <span className="font-medium text-gray-700">{t('materials.reading_document')}</span>
                                                         <span className="text-emerald-700 truncate max-w-[200px]">
-                                                            {lesson.reading_file_url ? t('materials.attached_file_url') : t('materials.embedded_text')}
+                                                            {lesson.document_urls && lesson.document_urls.length > 0
+                                                                ? `${lesson.document_urls.length} file(s)`
+                                                                : (lesson.reading_file_url ? t('materials.attached_file_url') : t('materials.embedded_text'))}
                                                         </span>
                                                     </div>
 
                                                     <div className="flex items-center gap-2 text-gray-600">
                                                         <span className="font-medium text-gray-700">{t('materials.video_lecture')}</span>
                                                         <span className="text-blue-600 truncate max-w-[200px]">
-                                                            {lesson.video_url || t('materials.none')}
+                                                            {lesson.video_urls && lesson.video_urls.length > 0
+                                                                ? `${lesson.video_urls.length} video(s)`
+                                                                : (lesson.video_url || t('materials.none'))}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -557,11 +493,11 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                             <div className="flex items-center gap-2">
                                                 <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                                                     fb.status === 'pending'
-                                                        ? 'bg-amber-100 text-amber-800'
-                                                        : fb.status === 'resolved'
-                                                        ? 'bg-emerald-100 text-emerald-800'
-                                                        : 'bg-blue-100 text-blue-800'
-                                                }`}>
+                                                         ? 'bg-amber-100 text-amber-800'
+                                                         : fb.status === 'resolved'
+                                                         ? 'bg-emerald-100 text-emerald-800'
+                                                         : 'bg-blue-100 text-blue-800'
+                                                 }`}>
                                                     {fb.status}
                                                 </span>
                                                 <span className="text-[11px] text-gray-400">{fb.created_at}</span>
@@ -605,256 +541,26 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
             </div>
 
             {/* Create Lesson Modal */}
-            {isCreateLessonModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
-                        <div className="flex items-center justify-between border-b pb-3">
-                            <h3 className="font-serif font-bold text-base text-gray-900">
-                                {t('materials.modal_create_lesson_title')}
-                            </h3>
-                            <button
-                                onClick={() => setIsCreateLessonModalOpen(false)}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleCreateLesson} className="space-y-3.5">
-                            <div>
-                                <label className="block font-medium text-gray-700 mb-1">{t('materials.course_select_label')}</label>
-                                <select
-                                    value={lessonForm.data.course_id}
-                                    onChange={(e) => lessonForm.setData('course_id', Number(e.target.value))}
-                                    className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                >
-                                    {courses.map((c) => (
-                                        <option key={c.id} value={c.id}>
-                                            {c.title}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-3">
-                                <div className="col-span-2">
-                                    <label className="block font-medium text-gray-700 mb-1">{t('materials.lesson_title_label')}</label>
-                                    <input
-                                        type="text"
-                                        placeholder={t('materials.lesson_title_placeholder')}
-                                        value={lessonForm.data.title}
-                                        onChange={(e) => lessonForm.setData('title', e.target.value)}
-                                        className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-1">{t('materials.order_index_label')}</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={lessonForm.data.order}
-                                        onChange={(e) => lessonForm.setData('order', Number(e.target.value))}
-                                        className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block font-medium text-gray-700 mb-1">{t('materials.summary_label')}</label>
-                                <textarea
-                                    placeholder={t('materials.summary_placeholder')}
-                                    value={lessonForm.data.summary}
-                                    onChange={(e) => lessonForm.setData('summary', e.target.value)}
-                                    className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block font-medium text-gray-700 mb-1">
-                                    {t('materials.reading_content_label')}
-                                </label>
-                                <RichTextEditor
-                                    value={lessonForm.data.reading_content}
-                                    onChange={(html) => lessonForm.setData('reading_content', html)}
-                                    placeholder={t('materials.reading_content_placeholder')}
-                                    minHeight="180px"
-                                    error={lessonForm.errors.reading_content}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-1">
-                                        {t('materials.reading_file_url_label')}
-                                    </label>
-                                    <input
-                                        type="url"
-                                        placeholder="https://.../document.pdf"
-                                        value={lessonForm.data.reading_file_url}
-                                        onChange={(e) => lessonForm.setData('reading_file_url', e.target.value)}
-                                        className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-1">
-                                        {t('materials.video_url_label')}
-                                    </label>
-                                    <input
-                                        type="url"
-                                        placeholder="https://www.youtube.com/watch?v=..."
-                                        value={lessonForm.data.video_url}
-                                        onChange={(e) => lessonForm.setData('video_url', e.target.value)}
-                                        className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end gap-2 pt-3 border-t">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsCreateLessonModalOpen(false)}
-                                    className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
-                                >
-                                    {t('materials.cancel')}
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={lessonForm.processing}
-                                    className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium shadow"
-                                >
-                                    {t('materials.save_material')}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <LessonFormModal
+                isOpen={isCreateLessonModalOpen}
+                onClose={() => setIsCreateLessonModalOpen(false)}
+                courseId={activeCourse?.id || (courses[0]?.id ?? '')}
+                courseTitle={activeCourse?.title}
+                nextOrder={lessons.length + 1}
+            />
 
             {/* Edit Lesson Modal */}
-            {selectedLessonForEdit && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
-                        <div className="flex items-center justify-between border-b pb-3">
-                            <h3 className="font-serif font-bold text-base text-gray-900">
-                                {t('materials.modal_edit_material_title')}
-                            </h3>
-                            <button
-                                onClick={() => setSelectedLessonForEdit(null)}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleUpdateLesson} className="space-y-3.5">
-                            <div className="grid grid-cols-3 gap-3">
-                                <div className="col-span-2">
-                                    <label className="block font-medium text-gray-700 mb-1">{t('materials.lesson_title_label')}</label>
-                                    <input
-                                        type="text"
-                                        value={editLessonForm.data.title}
-                                        onChange={(e) => editLessonForm.setData('title', e.target.value)}
-                                        className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-1">{t('materials.order_index_label')}</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={editLessonForm.data.order}
-                                        onChange={(e) => editLessonForm.setData('order', Number(e.target.value))}
-                                        className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block font-medium text-gray-700 mb-1">{t('materials.summary_label')}</label>
-                                <input
-                                    type="text"
-                                    value={editLessonForm.data.summary}
-                                    onChange={(e) => editLessonForm.setData('summary', e.target.value)}
-                                    className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block font-medium text-gray-700 mb-1">{t('materials.reading_content_label')}</label>
-                                <RichTextEditor
-                                    value={editLessonForm.data.reading_content}
-                                    onChange={(html) => editLessonForm.setData('reading_content', html)}
-                                    placeholder={t('materials.reading_content_placeholder')}
-                                    minHeight="200px"
-                                    error={editLessonForm.errors.reading_content}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-1">{t('materials.reading_file_url_label')}</label>
-                                    <input
-                                        type="url"
-                                        value={editLessonForm.data.reading_file_url}
-                                        onChange={(e) => editLessonForm.setData('reading_file_url', e.target.value)}
-                                        className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-1">{t('materials.video_url_label')}</label>
-                                    <input
-                                        type="url"
-                                        value={editLessonForm.data.video_url}
-                                        onChange={(e) => editLessonForm.setData('video_url', e.target.value)}
-                                        className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between gap-2 pt-3 border-t">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const lessonToDel = selectedLessonForEdit;
-                                        setSelectedLessonForEdit(null);
-                                        setSelectedLessonForDelete(lessonToDel);
-                                    }}
-                                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 font-medium transition"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                    {t('materials.btn_delete_lesson')}
-                                </button>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedLessonForEdit(null)}
-                                        className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
-                                    >
-                                        {t('materials.cancel')}
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={editLessonForm.processing}
-                                        className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium shadow"
-                                    >
-                                        {t('materials.update_material')}
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <LessonFormModal
+                isOpen={Boolean(selectedLessonForEdit)}
+                onClose={() => setSelectedLessonForEdit(null)}
+                courseId={selectedLessonForEdit?.course_id || (activeCourse?.id ?? '')}
+                courseTitle={activeCourse?.title}
+                lesson={selectedLessonForEdit}
+                onDeleteRequest={(lessonToDel) => {
+                    setSelectedLessonForEdit(null);
+                    setSelectedLessonForDelete(lessonToDel);
+                }}
+            />
 
             {/* Create Courses Catalog Modal */}
             {isCreateCatalogModalOpen && (

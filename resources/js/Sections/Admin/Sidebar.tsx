@@ -17,7 +17,7 @@ export default function Sidebar() {
             ),
         },
         {
-            label: t('nav.materials_videos'),
+            label: t('nav.courses_lessons'),
             href: admin_url('materials'),
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

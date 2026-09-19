@@ -99,8 +99,35 @@ class BuddhistCoursesTest extends TestCase
 
     public function test_landing_page_renders_with_monastery_info(): void
     {
+        $childCourse = Course::create([
+            'parent_id' => $this->course->id,
+            'title' => 'Cetasika Paramattha',
+            'slug' => 'cetasika-paramattha',
+            'category' => 'abhidhamma',
+        ]);
+
+        Lesson::create([
+            'course_id' => $childCourse->id,
+            'title' => 'Lesson 1: Cetasika Overview',
+            'slug' => 'lesson-1-cetasika',
+            'order' => 1,
+            'reading_content' => 'Content for cetasika.',
+        ]);
+
         $response = $this->get('/');
         $response->assertStatus(200);
+        $response->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+            ->component('Home/Index')
+            ->has('courses', 1)
+            ->where('courses.0.title', $this->course->title)
+            ->has('courses.0.lessons', 1)
+            ->where('courses.0.lessons.0.title', $this->lesson->title)
+            ->has('courses.0.children', 1)
+            ->where('courses.0.children.0.title', 'Cetasika Paramattha')
+            ->has('courses.0.children.0.lessons', 1)
+            ->where('courses.0.children.0.lessons.0.title', 'Lesson 1: Cetasika Overview')
+            ->has('monastery')
+        );
     }
 
     public function test_user_can_login_using_username(): void

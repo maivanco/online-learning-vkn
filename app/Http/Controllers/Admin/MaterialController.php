@@ -50,20 +50,27 @@ class MaterialController extends Controller
                 ->withCount(['feedbacks', 'questions'])
                 ->orderBy('order')
                 ->get()
-                ->map(fn($l) => [
-                    'id' => $l->id,
-                    'course_id' => $l->course_id,
-                    'title' => $l->title,
-                    'slug' => $l->slug,
-                    'order' => $l->order,
-                    'summary' => $l->summary,
-                    'reading_content' => $l->reading_content,
-                    'reading_file_url' => $l->reading_file_url,
-                    'video_url' => $l->video_url,
-                    'feedbacks_count' => $l->feedbacks_count,
-                    'questions_count' => $l->questions_count,
-                    'updated_at' => $l->updated_at->format('Y-m-d H:i'),
-                ]);
+                ->map(function ($l) {
+                    $docUrls = $l->document_urls ?: (!empty($l->reading_file_url) ? [['title' => 'Tài liệu / Document', 'url' => $l->reading_file_url]] : []);
+                    $vidUrls = $l->video_urls ?: (!empty($l->video_url) ? [['title' => 'Video bài giảng / Lecture Video', 'url' => $l->video_url]] : []);
+
+                    return [
+                        'id' => $l->id,
+                        'course_id' => $l->course_id,
+                        'title' => $l->title,
+                        'slug' => $l->slug,
+                        'order' => $l->order,
+                        'summary' => $l->summary,
+                        'reading_content' => $l->reading_content,
+                        'reading_file_url' => $l->reading_file_url,
+                        'document_urls' => $docUrls,
+                        'video_url' => $l->video_url,
+                        'video_urls' => $vidUrls,
+                        'feedbacks_count' => $l->feedbacks_count,
+                        'questions_count' => $l->questions_count,
+                        'updated_at' => $l->updated_at->format('Y-m-d H:i'),
+                    ];
+                });
         }
 
         // Feedbacks list across all materials
@@ -102,13 +109,32 @@ class MaterialController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Filter out empty rows from arrays before validation
+        $rawDocUrls = $request->input('document_urls');
+        if (is_array($rawDocUrls)) {
+            $filteredDocs = array_values(array_filter($rawDocUrls, fn($d) => is_array($d) && !empty(trim($d['url'] ?? ''))));
+            $request->merge(['document_urls' => $filteredDocs]);
+        }
+
+        $rawVideoUrls = $request->input('video_urls');
+        if (is_array($rawVideoUrls)) {
+            $filteredVideos = array_values(array_filter($rawVideoUrls, fn($v) => is_array($v) && !empty(trim($v['url'] ?? ''))));
+            $request->merge(['video_urls' => $filteredVideos]);
+        }
+
         $validated = $request->validate([
             'course_id' => 'required|exists:courses,id',
             'title' => 'required|string|max:255',
             'summary' => 'nullable|string',
             'reading_content' => 'required|string',
             'reading_file_url' => 'nullable|url',
+            'document_urls' => 'nullable|array',
+            'document_urls.*.title' => 'nullable|string|max:255',
+            'document_urls.*.url' => 'required|url',
             'video_url' => 'nullable|url',
+            'video_urls' => 'nullable|array',
+            'video_urls.*.title' => 'nullable|string|max:255',
+            'video_urls.*.url' => 'required|url',
             'order' => 'nullable|integer|min:1',
         ]);
 
@@ -118,6 +144,14 @@ class MaterialController extends Controller
 
         $validated['slug'] = Str::slug($validated['title']) . '-' . rand(100, 999);
         $validated['order'] = $validated['order'] ?? (Lesson::where('course_id', $validated['course_id'])->max('order') + 1);
+
+        // Maintain fallback for single URL columns
+        if (!empty($validated['document_urls'])) {
+            $validated['reading_file_url'] = $validated['document_urls'][0]['url'] ?? null;
+        }
+        if (!empty($validated['video_urls'])) {
+            $validated['video_url'] = $validated['video_urls'][0]['url'] ?? null;
+        }
 
         Lesson::create($validated);
 
@@ -131,17 +165,44 @@ class MaterialController extends Controller
     {
         $lesson = Lesson::findOrFail($id);
 
+        // Filter out empty rows from arrays before validation
+        $rawDocUrls = $request->input('document_urls');
+        if (is_array($rawDocUrls)) {
+            $filteredDocs = array_values(array_filter($rawDocUrls, fn($d) => is_array($d) && !empty(trim($d['url'] ?? ''))));
+            $request->merge(['document_urls' => $filteredDocs]);
+        }
+
+        $rawVideoUrls = $request->input('video_urls');
+        if (is_array($rawVideoUrls)) {
+            $filteredVideos = array_values(array_filter($rawVideoUrls, fn($v) => is_array($v) && !empty(trim($v['url'] ?? ''))));
+            $request->merge(['video_urls' => $filteredVideos]);
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'summary' => 'nullable|string',
             'reading_content' => 'required|string',
             'reading_file_url' => 'nullable|url',
+            'document_urls' => 'nullable|array',
+            'document_urls.*.title' => 'nullable|string|max:255',
+            'document_urls.*.url' => 'required|url',
             'video_url' => 'nullable|url',
+            'video_urls' => 'nullable|array',
+            'video_urls.*.title' => 'nullable|string|max:255',
+            'video_urls.*.url' => 'required|url',
             'order' => 'required|integer|min:1',
         ]);
 
         if (trim(strip_tags($validated['reading_content'])) === '') {
             return back()->withErrors(['reading_content' => 'The reading content field cannot be empty.']);
+        }
+
+        // Maintain fallback for single URL columns
+        if (isset($validated['document_urls'])) {
+            $validated['reading_file_url'] = !empty($validated['document_urls']) ? ($validated['document_urls'][0]['url'] ?? null) : null;
+        }
+        if (isset($validated['video_urls'])) {
+            $validated['video_url'] = !empty($validated['video_urls']) ? ($validated['video_urls'][0]['url'] ?? null) : null;
         }
 
         $lesson->update($validated);

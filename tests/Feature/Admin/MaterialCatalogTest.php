@@ -399,4 +399,66 @@ class MaterialCatalogTest extends TestCase
 
         $responseEmpty->assertSessionHasErrors('reading_content');
     }
+
+    public function test_admin_can_save_and_update_lesson_with_multiple_document_and_video_urls(): void
+    {
+        $course = Course::create([
+            'title' => 'Multi Resource Course',
+            'slug' => 'multi-resource-course',
+            'category' => 'dhamma',
+        ]);
+
+        // 1. Create lesson with multiple documents & videos
+        $docUrls = [
+            ['title' => 'Document Part 1 PDF', 'url' => 'https://example.com/doc1.pdf'],
+            ['title' => 'Document Part 2 PDF', 'url' => 'https://example.com/doc2.pdf'],
+        ];
+        $vidUrls = [
+            ['title' => 'Video Lecture Part 1', 'url' => 'https://www.youtube.com/watch?v=vid1'],
+            ['title' => 'Video Lecture Part 2', 'url' => 'https://www.youtube.com/watch?v=vid2'],
+        ];
+
+        $response = $this->actingAs($this->admin)->post(route('admin.materials.store'), [
+            'course_id' => $course->id,
+            'title' => 'Lesson with Multiple Resources',
+            'reading_content' => '<p>Complete lesson content.</p>',
+            'document_urls' => $docUrls,
+            'video_urls' => $vidUrls,
+            'order' => 1,
+        ]);
+
+        $response->assertRedirect();
+        $lesson = Lesson::where('course_id', $course->id)->first();
+        $this->assertNotNull($lesson);
+        $this->assertEquals($docUrls, $lesson->document_urls);
+        $this->assertEquals($vidUrls, $lesson->video_urls);
+        $this->assertEquals('https://example.com/doc1.pdf', $lesson->reading_file_url);
+        $this->assertEquals('https://www.youtube.com/watch?v=vid1', $lesson->video_url);
+
+        // 2. Update lesson with modified document and video lists
+        $updatedDocUrls = [
+            ['title' => 'Updated Doc 1', 'url' => 'https://example.com/updated_doc1.pdf'],
+        ];
+        $updatedVidUrls = [
+            ['title' => 'Updated Vid 1', 'url' => 'https://www.youtube.com/watch?v=updated_vid1'],
+            ['title' => 'Updated Vid 2', 'url' => 'https://www.youtube.com/watch?v=updated_vid2'],
+            ['title' => 'Updated Vid 3', 'url' => 'https://www.youtube.com/watch?v=updated_vid3'],
+        ];
+
+        $updateResponse = $this->actingAs($this->admin)->put(route('admin.materials.update', $lesson->id), [
+            'title' => 'Lesson with Multiple Resources Updated',
+            'reading_content' => '<p>Updated reading content.</p>',
+            'document_urls' => $updatedDocUrls,
+            'video_urls' => $updatedVidUrls,
+            'order' => 1,
+        ]);
+
+        $updateResponse->assertRedirect();
+        $lesson->refresh();
+        $this->assertEquals('Lesson with Multiple Resources Updated', $lesson->title);
+        $this->assertEquals($updatedDocUrls, $lesson->document_urls);
+        $this->assertEquals($updatedVidUrls, $lesson->video_urls);
+        $this->assertEquals('https://example.com/updated_doc1.pdf', $lesson->reading_file_url);
+        $this->assertEquals('https://www.youtube.com/watch?v=updated_vid1', $lesson->video_url);
+    }
 }

@@ -3,17 +3,26 @@ import { Head, Link } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { useTranslation } from '@/utils/useTranslation';
 
+interface LessonItem {
+    id: number;
+    course_id: number;
+    title: string;
+    slug?: string;
+    order?: number;
+}
+
 interface CourseItem {
     id: number;
     parent_id?: number | null;
     title: string;
     slug: string;
-    category: 'dhamma' | 'vinaya' | 'abhidhamma' | 'pali' | string;
+    category?: 'dhamma' | 'vinaya' | 'abhidhamma' | 'pali' | string;
     target_audience?: string;
     description?: string | null;
     lessons_count: number;
     classes_count: number;
     order?: number;
+    lessons?: LessonItem[];
     parent?: {
         id: number;
         title: string;
@@ -38,36 +47,6 @@ interface HomeProps extends PageProps {
 
 export default function Home({ auth, courses, activeClassesCount, monastery, year, hasAdmin = true }: HomeProps) {
     const t = useTranslation();
-
-    const categoryConfigs: Record<string, { num: string; label: string; desc: string }> = {
-        dhamma: { num: t('home.dhamma_num'), label: t('home.dhamma_title'), desc: t('home.dhamma_subtitle') },
-        vinaya: { num: t('home.vinaya_num'), label: t('home.vinaya_title'), desc: t('home.vinaya_subtitle') },
-        abhidhamma: { num: t('home.abhidhamma_num'), label: t('home.abhidhamma_title'), desc: t('home.abhidhamma_subtitle') },
-        pali: { num: t('home.pali_num'), label: t('home.pali_title'), desc: t('home.pali_subtitle') },
-    };
-
-    const extraCategoryKeys = Array.from(
-        new Set(
-            (courses || [])
-                .map((c) => c.category)
-                .filter((cat) => cat && !categoryConfigs[cat])
-        )
-    );
-
-    const allCategories = [
-        ...Object.entries(categoryConfigs).map(([id, cfg]) => ({
-            id,
-            num: cfg.num,
-            label: cfg.label,
-            desc: cfg.desc,
-        })),
-        ...extraCategoryKeys.map((cat, idx) => ({
-            id: cat,
-            num: cat === 'general' ? t('home.general_num') : String(Object.keys(categoryConfigs).length + idx + 1),
-            label: cat === 'general' ? t('home.general_title') : (cat.charAt(0).toUpperCase() + cat.slice(1)),
-            desc: cat === 'general' ? t('home.general_subtitle') : '',
-        })),
-    ];
 
     const cleanedAddress = monastery?.address
         ? monastery.address.replace(/^[^,]+,\s*/, '')
@@ -300,108 +279,185 @@ export default function Home({ auth, courses, activeClassesCount, monastery, yea
                             </p>
                         </div>
 
-                        {/* Course Categories Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {allCategories.map((category) => {
-                                const categoryCourses = (courses || []).filter((c) => c.category === category.id);
-                                const topLevelCourses = categoryCourses.filter(
-                                    (c) => !c.parent_id || !categoryCourses.some((parent) => parent.id === c.parent_id)
-                                );
+                        {/* Courses Grid */}
+                        {!courses || courses.length === 0 ? (
+                            <div className="text-center py-16 px-4 rounded-3xl bg-stone-50 border border-stone-200/90 max-w-xl mx-auto space-y-3">
+                                <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto shadow-2xs">
+                                    <svg className="w-6 h-6 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                    </svg>
+                                </div>
+                                <p className="text-sm text-stone-500 font-medium">
+                                    {t('home.no_courses')}
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+                                {courses.map((course, idx) => {
+                                    const hasLessons = course.lessons && course.lessons.length > 0;
+                                    const hasChildren = course.children && course.children.length > 0;
 
-                                return (
-                                    <div
-                                        key={category.id}
-                                        className="bg-white rounded-3xl border border-stone-200 p-8 space-y-4 shadow-xs hover:border-amber-500/60 hover:shadow-lg transition flex flex-col justify-between"
-                                    >
-                                        <div className="space-y-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-serif font-bold text-base shadow-xs shrink-0">
-                                                    {category.num}
+                                    return (
+                                        <div
+                                            key={course.id}
+                                            className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 space-y-6 shadow-xs hover:border-amber-500/60 hover:shadow-lg transition duration-200 flex flex-col justify-between"
+                                        >
+                                            <div className="space-y-5">
+                                                {/* Course Header */}
+                                                <div className="flex items-start gap-3.5">
+                                                    <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-serif font-bold text-base shadow-xs shrink-0 mt-0.5">
+                                                        {idx + 1}
+                                                    </div>
+                                                    <div className="flex-1 space-y-2">
+                                                        <h3 className="font-serif font-bold text-xl text-stone-900 leading-snug">
+                                                            {course.title}
+                                                        </h3>
+
+                                                        {/* Badges / Meta */}
+                                                        <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                                                            {course.category && (
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200/60 font-medium capitalize">
+                                                                    {course.category}
+                                                                </span>
+                                                            )}
+                                                            {course.target_audience && course.target_audience !== 'all' && (
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 font-medium capitalize">
+                                                                    {course.target_audience}
+                                                                </span>
+                                                            )}
+                                                            {course.lessons_count > 0 && (
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-stone-100 text-stone-700 font-medium">
+                                                                    {course.lessons_count} {course.lessons_count === 1 ? t('home.lesson_unit') : t('home.lessons_count')}
+                                                                </span>
+                                                            )}
+                                                            {course.classes_count > 0 && (
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200/60 font-medium">
+                                                                    {course.classes_count} {t('home.classes_count')}
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Description if present */}
+                                                        {course.description && (
+                                                            <div
+                                                                className="text-stone-600 text-xs leading-relaxed prose prose-stone prose-xs max-w-none [&>p]:m-0"
+                                                                dangerouslySetInnerHTML={{ __html: course.description }}
+                                                            />
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <h3 className="font-serif font-bold text-xl text-stone-900">{category.label}</h3>
-                                                    {category.desc && (
-                                                        <p className="text-xs font-medium text-amber-700">{category.desc}</p>
-                                                    )}
-                                                </div>
-                                            </div>
 
-                                            <ul className="space-y-3 text-xs text-stone-600 pt-3 border-t border-stone-100">
-                                                {topLevelCourses.length === 0 ? (
-                                                    <li className="text-xs text-stone-400 italic py-2">
-                                                        {t('home.no_courses_in_category')}
-                                                    </li>
-                                                ) : (
-                                                    topLevelCourses.map((course) => {
-                                                        const children = (course.children && course.children.length > 0)
-                                                            ? course.children
-                                                            : categoryCourses.filter((c) => c.parent_id === course.id);
+                                                {/* Lessons of this Course */}
+                                                {hasLessons && (
+                                                    <div className="pt-4 border-t border-stone-100 space-y-2.5">
+                                                        <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-800">
+                                                            <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                                            </svg>
+                                                            <span>{t('home.lessons_title')} ({course.lessons!.length})</span>
+                                                        </div>
+                                                        <ul className="space-y-1.5 pl-1">
+                                                            {course.lessons!.map((lesson, lIdx) => (
+                                                                <li key={lesson.id} className="flex items-start gap-2.5 text-xs text-stone-700">
+                                                                    <span className="w-5 h-5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-bold flex items-center justify-center shrink-0 border border-amber-200/60 mt-0.5">
+                                                                        {lesson.order ?? lIdx + 1}
+                                                                    </span>
+                                                                    <span className="leading-snug py-0.5 font-medium">{lesson.title}</span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
 
-                                                        return (
-                                                            <li key={course.id} className="flex items-start gap-2.5">
-                                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0"></span>
-                                                                <div className="flex-1 space-y-1">
-                                                                    <div className="text-stone-700 leading-relaxed">
-                                                                        <strong className="text-stone-900 font-semibold">
-                                                                            {course.title}{course.description ? ':' : ''}
-                                                                        </strong>{' '}
-                                                                        {course.description && (
-                                                                            <span
-                                                                                className="text-stone-600 inline prose prose-stone prose-xs max-w-none [&>p]:inline [&>p]:m-0"
-                                                                                dangerouslySetInnerHTML={{ __html: course.description }}
-                                                                            />
-                                                                        )}
-                                                                    </div>
+                                                {/* Sub-courses / Tracks */}
+                                                {hasChildren && (
+                                                    <div className="pt-4 border-t border-stone-100 space-y-3">
+                                                        <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-800">
+                                                            <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                                            </svg>
+                                                            <span>{t('home.sub_courses_title')} ({course.children!.length})</span>
+                                                        </div>
 
-                                                                    {(course.lessons_count > 0 || course.classes_count > 0) && (
-                                                                        <div className="flex items-center gap-2 pt-0.5 text-[10px] text-stone-400">
-                                                                            {course.lessons_count > 0 && (
-                                                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 font-medium">
-                                                                                    {course.lessons_count} {course.lessons_count === 1 ? t('home.lesson_unit') : t('home.lessons_count')}
-                                                                                </span>
-                                                                            )}
-                                                                            {course.lessons_count > 0 && course.classes_count > 0 && (
-                                                                                <span>•</span>
-                                                                            )}
-                                                                            {course.classes_count > 0 && (
-                                                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200/60 font-medium">
-                                                                                    {course.classes_count} {t('home.classes_count')}
-                                                                                </span>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-
-                                                                    {children.length > 0 && (
-                                                                        <ul className="pl-3 mt-1.5 space-y-1 border-l-2 border-amber-200/70 text-[11px] text-stone-500">
-                                                                            {children.map((child) => (
-                                                                                <li key={child.id} className="flex items-start gap-1.5">
-                                                                                    <span className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0"></span>
-                                                                                    <div>
-                                                                                        <strong className="text-stone-800 font-medium">
-                                                                                            {child.title}{child.description ? ':' : ''}
-                                                                                        </strong>{' '}
-                                                                                        {child.description && (
-                                                                                            <span
-                                                                                                className="text-stone-500 inline prose prose-stone prose-xs [&>p]:inline [&>p]:m-0"
-                                                                                                dangerouslySetInnerHTML={{ __html: child.description }}
-                                                                                            />
+                                                        <div className="space-y-3">
+                                                            {course.children!.map((child) => {
+                                                                const childHasLessons = child.lessons && child.lessons.length > 0;
+                                                                return (
+                                                                    <div
+                                                                        key={child.id}
+                                                                        className="bg-stone-50/90 rounded-2xl p-4 border border-stone-200/80 space-y-2.5"
+                                                                    >
+                                                                        <div className="space-y-1">
+                                                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                                                <h4 className="text-xs font-bold text-stone-900 leading-tight">
+                                                                                    {child.title}
+                                                                                </h4>
+                                                                                {(child.lessons_count > 0 || child.classes_count > 0) && (
+                                                                                    <div className="flex items-center gap-1.5 text-[10px] text-stone-500">
+                                                                                        {child.lessons_count > 0 && (
+                                                                                            <span className="px-1.5 py-0.5 rounded bg-white border border-stone-200 text-stone-600 font-medium">
+                                                                                                {child.lessons_count} {child.lessons_count === 1 ? t('home.lesson_unit') : t('home.lessons_count')}
+                                                                                            </span>
+                                                                                        )}
+                                                                                        {child.classes_count > 0 && (
+                                                                                            <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">
+                                                                                                {child.classes_count} {t('home.classes_count')}
+                                                                                            </span>
                                                                                         )}
                                                                                     </div>
-                                                                                </li>
-                                                                            ))}
-                                                                        </ul>
-                                                                    )}
-                                                                </div>
-                                                            </li>
-                                                        );
-                                                    })
+                                                                                )}
+                                                                            </div>
+
+                                                                            {child.description && (
+                                                                                <div
+                                                                                    className="text-[11px] text-stone-500 prose prose-stone prose-xs max-w-none [&>p]:m-0"
+                                                                                    dangerouslySetInnerHTML={{ __html: child.description }}
+                                                                                />
+                                                                            )}
+                                                                        </div>
+
+                                                                        {/* Sub-course Lesson Titles */}
+                                                                        {childHasLessons ? (
+                                                                            <div className="pt-2 border-t border-stone-200/60 space-y-1.5">
+                                                                                <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider">
+                                                                                    {t('home.lessons_title')}
+                                                                                </span>
+                                                                                <ul className="space-y-1 pl-0.5">
+                                                                                    {child.lessons!.map((clesson, clIdx) => (
+                                                                                        <li key={clesson.id} className="flex items-start gap-2 text-[11px] text-stone-600">
+                                                                                            <span className="w-4 h-4 rounded bg-white text-stone-500 text-[9px] font-medium flex items-center justify-center shrink-0 border border-stone-200/80 mt-0.5">
+                                                                                                {clesson.order ?? clIdx + 1}
+                                                                                            </span>
+                                                                                            <span className="leading-snug py-0.5">{clesson.title}</span>
+                                                                                        </li>
+                                                                                    ))}
+                                                                                </ul>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <p className="text-[10px] text-stone-400 italic pt-1">
+                                                                                {t('home.no_lessons')}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
                                                 )}
-                                            </ul>
+
+                                                {!hasLessons && !hasChildren && (
+                                                    <div className="pt-4 border-t border-stone-100">
+                                                        <p className="text-xs text-stone-400 italic">
+                                                            {t('home.no_lessons')}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </main>
 

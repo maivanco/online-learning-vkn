@@ -3,6 +3,7 @@
 return [
     'classes_progress' => 'Lớp học & Tiến độ',
     'materials_videos' => 'Tài liệu & Video',
+    'courses_lessons' => 'Khoá học & bài học'
     'question_bank' => 'Ngân hàng đề thi',
     'users_roles' => 'Người dùng & Phân quyền',
     'security_password' => 'Bảo mật & Mật khẩu',

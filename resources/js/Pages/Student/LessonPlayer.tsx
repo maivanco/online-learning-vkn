@@ -42,7 +42,9 @@ interface LessonPlayerProps extends PageProps {
         summary: string | null;
         reading_content: string | null;
         reading_file_url: string | null;
+        document_urls?: Array<{ title?: string; url: string }>;
         video_url: string | null;
+        video_urls?: Array<{ title?: string; url: string }>;
         order: number;
     };
     allLessons: Array<{
@@ -82,6 +84,17 @@ export default function LessonPlayer({
     flash,
 }: LessonPlayerProps) {
     const t = useTranslation();
+
+    // Document and video lists
+    const documents = (lesson.document_urls && lesson.document_urls.length > 0)
+        ? lesson.document_urls
+        : (lesson.reading_file_url ? [{ title: t('student.attached_pdf_title'), url: lesson.reading_file_url }] : []);
+
+    const videos = (lesson.video_urls && lesson.video_urls.length > 0)
+        ? lesson.video_urls
+        : (lesson.video_url ? [{ title: lesson.title, url: lesson.video_url }] : []);
+
+    const [activeVideoIndex, setActiveVideoIndex] = useState<number>(0);
 
     // Current active pipeline tab (1 to 5)
     const [activeStep, setActiveStep] = useState<number>(() => {
@@ -413,26 +426,37 @@ export default function LessonPlayer({
                             dangerouslySetInnerHTML={{ __html: lesson.reading_content || t('student.reading_updating') }}
                         />
 
-                        {/* Optional Attached PDF/Document URL */}
-                        {lesson.reading_file_url && (
-                            <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 flex items-center justify-between text-xs">
-                                <div className="flex items-center gap-2">
-                                    <svg className="w-5 h-5 text-amber-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {/* Optional Attached PDF/Document URLs */}
+                        {documents.length > 0 && (
+                            <div className="space-y-2.5">
+                                <h4 className="text-xs font-semibold text-stone-700 flex items-center gap-1.5">
+                                    <svg className="w-4 h-4 text-amber-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
-                                    <div>
-                                        <div className="font-semibold text-stone-900">{t('student.attached_pdf_title')}</div>
-                                        <div className="text-[11px] text-stone-500">{t('student.attached_pdf_desc')}</div>
-                                    </div>
+                                    <span>{t('student.attached_documents_title', { count: documents.length.toString() })}</span>
+                                </h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    {documents.map((doc, idx) => (
+                                        <div key={idx} className="p-3.5 rounded-xl border border-amber-200 bg-amber-50/50 flex items-center justify-between text-xs gap-3">
+                                            <div className="min-w-0">
+                                                <div className="font-semibold text-stone-900 truncate">
+                                                    {doc.title || `Tài liệu / Document #${idx + 1}`}
+                                                </div>
+                                                <div className="text-[11px] text-stone-500 truncate">
+                                                    {doc.url}
+                                                </div>
+                                            </div>
+                                            <a
+                                                href={doc.url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="px-3 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium shrink-0 transition shadow-2xs"
+                                            >
+                                                {t('student.view_material')}
+                                            </a>
+                                        </div>
+                                    ))}
                                 </div>
-                                <a
-                                    href={lesson.reading_file_url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="px-3 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium"
-                                >
-                                    {t('student.view_material')}
-                                </a>
                             </div>
                         )}
 
@@ -479,13 +503,45 @@ export default function LessonPlayer({
                             </p>
                         </div>
 
+                        {/* Video Part Switcher */}
+                        {videos.length > 1 && (
+                            <div className="space-y-1.5">
+                                <label className="block text-[11px] font-semibold text-stone-700">
+                                    {t('student.select_video_part')}
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {videos.map((vid, idx) => (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => setActiveVideoIndex(idx)}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+                                                activeVideoIndex === idx
+                                                    ? 'bg-amber-700 text-white border-amber-800 shadow-sm'
+                                                    : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
+                                            }`}
+                                        >
+                                            {t('student.video_part_label', {
+                                                number: (idx + 1).toString(),
+                                                title: vid.title || `Part ${idx + 1}`,
+                                            })}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Video Player */}
                         <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-inner flex items-center justify-center">
-                            {lesson.video_url ? (
+                            {videos[activeVideoIndex]?.url ? (
                                 <iframe
                                     className="w-full h-full"
-                                    src={lesson.video_url.includes('watch?v=') ? lesson.video_url.replace('watch?v=', 'embed/') : lesson.video_url}
-                                    title="Buddhist Courses Lecture"
+                                    src={
+                                        videos[activeVideoIndex].url.includes('watch?v=')
+                                            ? videos[activeVideoIndex].url.replace('watch?v=', 'embed/')
+                                            : videos[activeVideoIndex].url
+                                    }
+                                    title={videos[activeVideoIndex].title || "Buddhist Courses Lecture"}
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen
                                 ></iframe>

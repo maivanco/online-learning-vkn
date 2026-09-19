@@ -21,10 +21,22 @@ use Inertia\Inertia;
 
 // Public Landing Page showcasing Viên Không Ni Monastery and Course Catalog
 Route::get('/', function () {
-    $courses = Course::with(['parent', 'children' => fn($q) => $q->withCount(['lessons', 'classes'])->orderBy('order')])
-        ->withCount(['lessons', 'classes'])
-        ->orderBy('order')
-        ->get();
+    $allCourses = Course::with([
+        'parent:id,title',
+        'lessons' => fn($q) => $q->select(['id', 'course_id', 'title', 'slug', 'order'])->orderBy('order'),
+        'children' => fn($q) => $q->with([
+            'lessons' => fn($lq) => $lq->select(['id', 'course_id', 'title', 'slug', 'order'])->orderBy('order'),
+            'children' => fn($cq) => $cq->with([
+                'lessons' => fn($lq2) => $lq2->select(['id', 'course_id', 'title', 'slug', 'order'])->orderBy('order'),
+            ])->withCount(['lessons', 'classes'])->orderBy('order'),
+        ])->withCount(['lessons', 'classes'])->orderBy('order'),
+    ])
+    ->withCount(['lessons', 'classes'])
+    ->orderBy('order')
+    ->get();
+
+    $courseIds = $allCourses->pluck('id')->all();
+    $courses = $allCourses->filter(fn($c) => is_null($c->parent_id) || !in_array($c->parent_id, $courseIds))->values();
     $activeClassesCount = CourseClass::count();
     $hasAdmin = User::where('role', 'admin')->exists();
 
