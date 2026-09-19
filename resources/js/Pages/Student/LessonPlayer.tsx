@@ -28,8 +28,6 @@ interface LessonPlayerProps extends PageProps {
     classItem: {
         id: number;
         name: string;
-        code: string;
-        duration_months: number;
         course: {
             id: number;
             title: string;

@@ -303,5 +303,50 @@ class BuddhistCoursesTest extends TestCase
             'user_id' => $this->teacher->id,
         ]);
     }
+
+    public function test_student_dashboard_displays_all_classes(): void
+    {
+        $this->actingAs($this->student);
+
+        // Create a second class without explicit enrollment
+        $otherClass = CourseClass::create([
+            'course_id' => $this->course->id,
+            'name' => 'Abhidhamma Open Class',
+            'is_locked' => false,
+        ]);
+
+        $response = $this->get(route('student.dashboard'));
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) =>
+            $page->component('Student/Dashboard')
+                ->has('enrolledClasses', 2)
+        );
+    }
+
+    public function test_student_can_enter_lesson_with_auto_enrollment(): void
+    {
+        $newStudent = User::create([
+            'name' => 'New Student',
+            'email' => 'newstudent@vienkhongni.vn',
+            'username' => 'newstudent',
+            'password' => Hash::make('password'),
+            'role' => 'student',
+        ]);
+
+        $this->actingAs($newStudent);
+
+        // Access lesson without prior enrollment
+        $response = $this->get(route('student.lesson', [$this->class->id, $this->lesson->id]));
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) =>
+            $page->component('Student/LessonPlayer')
+                ->where('lesson.id', $this->lesson->id)
+        );
+
+        $this->assertDatabaseHas('class_user', [
+            'class_id' => $this->class->id,
+            'user_id' => $newStudent->id,
+        ]);
+    }
 }
 

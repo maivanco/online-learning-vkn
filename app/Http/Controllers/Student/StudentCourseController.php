@@ -25,79 +25,65 @@ class StudentCourseController extends Controller
     {
         $user = $request->user();
 
-        // Enrolled classes
-        $classes = $user->enrolledClasses()->with(['course.lessons', 'user'])->get()->map(function ($cls) use ($user) {
-            $lessons = $cls->course->lessons;
-            $progressRecords = StudentProgress::where('user_id', $user->id)
-                ->where('class_id', $cls->id)
-                ->get()
-                ->keyBy('lesson_id');
+        // All monastery classes with progression for this student
+        $classes = CourseClass::with(['course.lessons', 'user', 'students'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($cls) use ($user) {
+                $lessons = $cls->course?->lessons ?? collect();
+                $progressRecords = StudentProgress::where('user_id', $user->id)
+                    ->where('class_id', $cls->id)
+                    ->get()
+                    ->keyBy('lesson_id');
 
-            $completedLessonsCount = 0;
-            $lessonsData = $lessons->map(function ($l) use ($progressRecords, &$completedLessonsCount) {
-                $p = $progressRecords->get($l->id);
-                $isCompleted = (bool) ($p?->is_completed ?? false);
-                if ($isCompleted) {
-                    $completedLessonsCount++;
-                }
+                $completedLessonsCount = 0;
+                $lessonsData = $lessons->map(function ($l) use ($progressRecords, &$completedLessonsCount) {
+                    $p = $progressRecords->get($l->id);
+                    $isCompleted = (bool) ($p?->is_completed ?? false);
+                    if ($isCompleted) {
+                        $completedLessonsCount++;
+                    }
+
+                    return [
+                        'id' => $l->id,
+                        'title' => $l->title,
+                        'order' => $l->order,
+                        'reading_completed' => (bool) ($p?->reading_completed ?? false),
+                        'video_completed' => (bool) ($p?->video_completed ?? false),
+                        'practice_count' => (int) ($p?->practice_count ?? 0),
+                        'practice_completed' => (bool) ($p?->practice_completed ?? false),
+                        'exam_completed' => (bool) ($p?->exam_completed ?? false),
+                        'is_completed' => $isCompleted,
+                    ];
+                });
+
+                $totalLessons = $lessons->count();
+                $percentage = $totalLessons > 0 ? round(($completedLessonsCount / $totalLessons) * 100) : 0;
+                $studentPivot = $cls->students->firstWhere('id', $user->id)?->pivot;
+                $enrollmentStatus = $studentPivot?->status ?? ($percentage === 100 && $totalLessons > 0 ? 'completed' : 'studying');
 
                 return [
-                    'id' => $l->id,
-                    'title' => $l->title,
-                    'order' => $l->order,
-                    'reading_completed' => (bool) ($p?->reading_completed ?? false),
-                    'video_completed' => (bool) ($p?->video_completed ?? false),
-                    'practice_count' => (int) ($p?->practice_count ?? 0),
-                    'practice_completed' => (bool) ($p?->practice_completed ?? false),
-                    'exam_completed' => (bool) ($p?->exam_completed ?? false),
-                    'is_completed' => $isCompleted,
+                    'id' => $cls->id,
+                    'name' => $cls->name,
+                    'course_title' => $cls->course?->title ?? '',
+                    'category' => $cls->course?->category ?? '',
+                    'instructor' => $cls->user ? [
+                        'id' => $cls->user->id,
+                        'name' => $cls->user->name,
+                        'username' => $cls->user->username,
+                    ] : null,
+                    'is_locked' => (bool) $cls->is_locked,
+                    'enrollment_status' => $enrollmentStatus,
+                    'progress_percentage' => $percentage,
+                    'completed_lessons' => $completedLessonsCount,
+                    'total_lessons' => $totalLessons,
+                    'lessons' => $lessonsData,
                 ];
             });
 
-            $totalLessons = $lessons->count();
-            $percentage = $totalLessons > 0 ? round(($completedLessonsCount / $totalLessons) * 100) : 0;
-
-            return [
-                'id' => $cls->id,
-                'name' => $cls->name,
-                'course_title' => $cls->course->title,
-                'category' => $cls->course->category,
-                'instructor' => $cls->user ? [
-                    'id' => $cls->user->id,
-                    'name' => $cls->user->name,
-                    'username' => $cls->user->username,
-                ] : null,
-                'is_locked' => $cls->is_locked,
-                'enrollment_status' => $cls->pivot->status,
-                'progress_percentage' => $percentage,
-                'completed_lessons' => $completedLessonsCount,
-                'total_lessons' => $totalLessons,
-                'lessons' => $lessonsData,
-            ];
-        });
-
-        // Other monastery classes available to join
-        $enrolledIds = $classes->pluck('id')->toArray();
-        $upcomingClasses = CourseClass::whereNotIn('id', $enrolledIds)
-            ->with(['course', 'user'])
-            ->get()
-            ->map(fn($cls) => [
-                'id' => $cls->id,
-                'name' => $cls->name,
-                'instructor' => $cls->user ? [
-                    'id' => $cls->user->id,
-                    'name' => $cls->user->name,
-                    'username' => $cls->user->username,
-                ] : null,
-                'course' => [
-                    'title' => $cls->course->title,
-                    'category' => $cls->course->category,
-                ],
-            ]);
-
         return Inertia::render('Student/Dashboard', [
             'enrolledClasses' => $classes,
-            'upcomingClasses' => $upcomingClasses,
+            'upcomingClasses' => [],
             'user' => [
                 'name' => $user->name,
                 'username' => $user->username,
@@ -115,9 +101,12 @@ class StudentCourseController extends Controller
 
         $class = CourseClass::with('course')->findOrFail($classId);
 
-        // Ensure student is enrolled in this class
+        // Auto-enroll student into this class if not already enrolled
         if (! $user->enrolledClasses()->where('classes.id', $classId)->exists()) {
-            return redirect()->route('student.dashboard')->with('error', 'You are not enrolled in this class.');
+            $user->enrolledClasses()->attach($classId, [
+                'enrolled_at' => now(),
+                'status' => 'enrolled',
+            ]);
         }
 
         // Check if class is locked

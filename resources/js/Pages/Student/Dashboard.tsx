@@ -18,7 +18,6 @@ interface LessonProgress {
 interface EnrolledClass {
     id: number;
     name: string;
-    code?: string;
     course_title: string;
     category: string;
     instructor?: {
@@ -26,10 +25,6 @@ interface EnrolledClass {
         name: string;
         username: string;
     } | null;
-    duration_months?: number;
-    start_date?: string | null;
-    end_date?: string | null;
-    status?: 'active' | 'completed' | 'upcoming';
     is_locked: boolean;
     enrollment_status: string;
     progress_percentage: number;
@@ -38,26 +33,9 @@ interface EnrolledClass {
     lessons: LessonProgress[];
 }
 
-interface UpcomingClass {
-    id: number;
-    name: string;
-    code?: string;
-    duration_months?: number;
-    start_date?: string | null;
-    instructor?: {
-        id?: number;
-        name: string;
-        username: string;
-    } | null;
-    course: {
-        title: string;
-        category: string;
-    };
-}
-
 interface StudentDashboardProps extends PageProps {
     enrolledClasses: EnrolledClass[];
-    upcomingClasses: UpcomingClass[];
+    upcomingClasses?: any[];
     user: {
         name: string;
         username: string;
@@ -65,7 +43,7 @@ interface StudentDashboardProps extends PageProps {
     };
 }
 
-export default function StudentDashboard({ auth, enrolledClasses, upcomingClasses, user, flash }: StudentDashboardProps) {
+export default function StudentDashboard({ auth, enrolledClasses, user, flash }: StudentDashboardProps) {
     const t = useTranslation();
 
     return (
@@ -162,9 +140,6 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                                 >
                                     <div>
                                         <div className="flex items-start justify-between gap-2 mb-2">
-                                            <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200">
-                                                {cls.code}
-                                            </span>
                                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                                                 cls.enrollment_status === 'completed'
                                                     ? 'bg-emerald-100 text-emerald-800'
@@ -253,8 +228,7 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                                     </div>
 
                                     {/* Class Footer */}
-                                    <div className="pt-3 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
-                                        <span>{t('student.course_duration', { months: (cls.duration_months ?? 3).toString() })}</span>
+                                    <div className="pt-3 border-t border-stone-100 flex items-center justify-end text-[11px] text-stone-500">
                                         <span>{cls.is_locked ? t('student.class_locked') : t('student.class_open')}</span>
                                     </div>
                                 </div>
@@ -262,46 +236,6 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                         </div>
                     )}
                 </div>
-
-                {/* Upcoming Classes Section */}
-                {upcomingClasses.length > 0 && (
-                    <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm space-y-4">
-                        <div className="border-b border-stone-100 pb-3">
-                            <h3 className="font-serif font-bold text-base text-stone-900">
-                                {t('student.upcoming_classes_title')}
-                            </h3>
-                            <p className="text-xs text-stone-500">
-                                {t('student.upcoming_classes_desc')}
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {upcomingClasses.map((u) => (
-                                <div key={u.id} className="p-4 rounded-xl border border-stone-200 bg-stone-50/50 space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-800">
-                                            {u.code || `#${u.id}`}
-                                        </span>
-                                        <span className="text-[10px] text-blue-700 font-semibold">{t('student.course_duration', { months: (u.duration_months ?? 3).toString() })}</span>
-                                    </div>
-                                    <h4 className="font-semibold text-stone-900">{u.name}</h4>
-                                    <p className="text-[11px] text-stone-500">{u.course.title}</p>
-                                    {u.instructor && (
-                                        <div className="flex items-center gap-1 text-[10px] text-stone-600 font-medium">
-                                            <svg className="w-3 h-3 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                            </svg>
-                                            <span>{u.instructor.name}</span>
-                                        </div>
-                                    )}
-                                    <p className="text-[11px] text-amber-800 font-medium pt-1">
-                                        {t('student.expected_start', { date: u.start_date || t('student.tba') })}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
 
                 {/* Monastery Contact Information */}
                 <div className="bg-stone-900 text-stone-300 rounded-2xl p-6 shadow text-xs space-y-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
