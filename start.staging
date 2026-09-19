@@ -79,9 +79,9 @@ docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan view:cache
 # Re-apply 777 to storage & bootstrap/cache after artisan commands run
 docker compose -f "$COMPOSE_FILE" exec -T -u root laravel.app chmod -R 777 storage bootstrap/cache
 
-# Read configured APP_PORT from .env or fallback to 8080
+# Read configured APP_PORT from .env or fallback to 8090
 APP_PORT=$(grep -E "^APP_PORT=" .env | cut -d '=' -f2 || true)
-APP_PORT=${APP_PORT:-8080}
+APP_PORT=${APP_PORT:-8090}
 
 echo "========================================="
 echo " Staging environment is ready!"

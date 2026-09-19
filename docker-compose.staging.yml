@@ -11,8 +11,8 @@ services:
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         ports:
-            # Port 80 is occupied on the Staging host, so default to 8080 (customizable via APP_PORT in .env)
-            - '${APP_PORT:-8080}:80'
+            # Port 80 is occupied on the Staging host, so default to 8090 (customizable via APP_PORT in .env)
+            - '${APP_PORT:-8090}:80'
         environment:
             WWWUSER: '${WWWUSER:-1000}'
             LARAVEL_SAIL: 1
