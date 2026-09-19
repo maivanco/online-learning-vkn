@@ -35,12 +35,7 @@ interface ClassShowProps extends PageProps {
     classItem: {
         id: number;
         name: string;
-        code: string;
         description: string | null;
-        duration_months: number;
-        start_date: string | null;
-        end_date: string | null;
-        status: 'active' | 'completed' | 'upcoming';
         is_locked: boolean;
         course: {
             id: number;

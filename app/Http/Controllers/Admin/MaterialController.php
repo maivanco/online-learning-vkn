@@ -142,6 +142,17 @@ class MaterialController extends Controller
     }
 
     /**
+     * Delete existing lesson/material.
+     */
+    public function destroy(int $id): RedirectResponse
+    {
+        $lesson = Lesson::findOrFail($id);
+        $lesson->delete();
+
+        return back()->with('success', 'Lesson deleted successfully.');
+    }
+
+    /**
      * Update feedback status from learner.
      */
     public function updateFeedback(Request $request, int $id): RedirectResponse

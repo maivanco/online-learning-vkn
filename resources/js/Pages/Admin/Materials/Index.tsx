@@ -75,6 +75,7 @@ interface MaterialsProps extends PageProps {
 export default function MaterialsIndex({ auth, courses, activeCourse, lessons, feedbacks, flash }: MaterialsProps) {
     const t = useTranslation();
     const [selectedLessonForEdit, setSelectedLessonForEdit] = useState<LessonItem | null>(null);
+    const [selectedLessonForDelete, setSelectedLessonForDelete] = useState<LessonItem | null>(null);
     const [isCreateLessonModalOpen, setIsCreateLessonModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'materials' | 'feedbacks'>('materials');
 
@@ -200,6 +201,18 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
         });
     };
 
+    const handleDeleteLesson = () => {
+        if (!selectedLessonForDelete) return;
+        router.delete(route('admin.materials.destroy', selectedLessonForDelete.id), {
+            onSuccess: () => {
+                setSelectedLessonForDelete(null);
+                if (selectedLessonForEdit?.id === selectedLessonForDelete.id) {
+                    setSelectedLessonForEdit(null);
+                }
+            },
+        });
+    };
+
     const feedbackStatusForm = useForm({
         status: 'reviewed',
         admin_notes: '',
@@ -272,7 +285,7 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                             </svg>
-                            {t('materials.btn_add_material')}
+                            {t('materials.btn_add_new_lesson')}
                         </button>
                     )}
                 </div>
@@ -442,12 +455,29 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                                         <p className="text-xs text-gray-600 mt-1">{lesson.summary}</p>
                                                     </div>
 
-                                                    <button
-                                                        onClick={() => openEditModal(lesson)}
-                                                        className="px-3 py-1 text-xs font-semibold text-amber-700 bg-white border border-amber-300 rounded-lg hover:bg-amber-50"
-                                                    >
-                                                        {t('materials.btn_edit_material')}
-                                                    </button>
+                                                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openEditModal(lesson)}
+                                                            className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-amber-700 bg-white border border-amber-300 rounded-lg hover:bg-amber-50 transition shadow-2xs"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                            </svg>
+                                                            {t('materials.btn_edit_lesson')}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSelectedLessonForDelete(lesson)}
+                                                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 hover:text-red-700 transition shadow-2xs"
+                                                            title={t('materials.btn_delete_lesson')}
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </svg>
+                                                            <span>{t('materials.btn_delete_lesson')}</span>
+                                                        </button>
+                                                    </div>
                                                 </div>
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-2 border-t border-gray-200/70">
@@ -789,21 +819,37 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                 </div>
                             </div>
 
-                            <div className="flex justify-end gap-2 pt-3 border-t">
+                            <div className="flex items-center justify-between gap-2 pt-3 border-t">
                                 <button
                                     type="button"
-                                    onClick={() => setSelectedLessonForEdit(null)}
-                                    className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
+                                    onClick={() => {
+                                        const lessonToDel = selectedLessonForEdit;
+                                        setSelectedLessonForEdit(null);
+                                        setSelectedLessonForDelete(lessonToDel);
+                                    }}
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 font-medium transition"
                                 >
-                                    {t('materials.cancel')}
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    {t('materials.btn_delete_lesson')}
                                 </button>
-                                <button
-                                    type="submit"
-                                    disabled={editLessonForm.processing}
-                                    className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium shadow"
-                                >
-                                    {t('materials.update_material')}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedLessonForEdit(null)}
+                                        className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
+                                    >
+                                        {t('materials.cancel')}
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={editLessonForm.processing}
+                                        className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium shadow"
+                                    >
+                                        {t('materials.update_material')}
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -1104,6 +1150,55 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                 className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium shadow"
                             >
                                 {t('materials.delete_catalog_btn')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Lesson Confirmation Modal */}
+            {selectedLessonForDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+                        <div className="flex items-center gap-3 border-b pb-3">
+                            <div className="p-2 bg-red-100 text-red-700 rounded-full">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 className="font-serif font-bold text-base text-gray-900">
+                                    {t('materials.modal_delete_lesson_title')}
+                                </h3>
+                                <p className="text-[11px] text-gray-500">
+                                    {t('materials.modal_delete_lesson_subtitle')}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2 text-gray-600">
+                            <p>
+                                {t('materials.delete_lesson_confirm', { title: selectedLessonForDelete.title })}
+                            </p>
+                            <p className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                                <strong>{t('materials.safety_notice_label')}</strong> {t('materials.delete_lesson_safety_notice')}
+                            </p>
+                        </div>
+
+                        <div className="flex justify-end gap-2 pt-3 border-t">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedLessonForDelete(null)}
+                                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
+                            >
+                                {t('materials.cancel')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleDeleteLesson}
+                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium shadow"
+                            >
+                                {t('materials.delete_lesson_btn')}
                             </button>
                         </div>
                     </div>

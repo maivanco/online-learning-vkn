@@ -17,20 +17,12 @@ class CourseClass extends Model
     protected $fillable = [
         'course_id',
         'name',
-        'code',
-        'duration_months',
-        'start_date',
-        'end_date',
-        'status', // upcoming, active, completed
         'is_locked',
         'description',
     ];
 
     protected $casts = [
         'is_locked' => 'boolean',
-        'start_date' => 'date',
-        'end_date' => 'date',
-        'duration_months' => 'integer',
     ];
 
     /**

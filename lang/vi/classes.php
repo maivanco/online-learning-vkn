@@ -68,7 +68,7 @@ return [
     'status_in_progress' => 'Đang học',
     'details_action' => 'Chi tiết',
     'remove_action' => 'Gỡ bỏ',
-    'danger_zone_desc' => 'Xóa vĩnh viễn :name (:code), danh sách ghi danh và toàn bộ dữ liệu bài thi/tiến độ học tập của khóa này.',
+    'danger_zone_desc' => 'Xóa vĩnh viễn :name, danh sách ghi danh và toàn bộ dữ liệu bài thi/tiến độ học tập của lớp học này.',
     'badge_completed' => 'HOÀN THÀNH',
     'badge_in_progress' => 'ĐANG HỌC',
     'step_done' => 'Đã xong',

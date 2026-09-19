@@ -116,48 +116,31 @@ class BuddhistCurriculumSeeder extends Seeder
         $paliGrammarCourse = Course::where('slug', 'pali-grammar')->first();
         $dhammaCourse = Course::where('slug', 'essential-dhamma')->first();
 
-        // Active Class (3 months duration)
+        // Classes
         $activeClass = CourseClass::updateOrCreate(
-            ['code' => 'VNK-ADH-2601'],
+            ['name' => 'Abhidhammattha-sangaha Class 01'],
             [
                 'course_id' => $abhidhammaCourse->id,
-                'name' => 'Abhidhammattha-sangaha Cohort 01',
-                'duration_months' => 3,
-                'start_date' => now()->subMonth(),
-                'end_date' => now()->addMonths(2),
-                'status' => 'active',
                 'is_locked' => false,
-                'description' => '3-month foundational course exploring Citta and Cetasika for monastery students.',
+                'description' => 'Foundational class exploring Citta and Cetasika for monastery students.',
             ]
         );
 
-        // Completed Class
         CourseClass::updateOrCreate(
-            ['code' => 'VNK-DHM-2504'],
+            ['name' => 'Essential Dhamma Class 04'],
             [
                 'course_id' => $dhammaCourse->id,
-                'name' => 'Essential Dhamma Cohort 04',
-                'duration_months' => 3,
-                'start_date' => now()->subMonths(4),
-                'end_date' => now()->subMonth(),
-                'status' => 'completed',
-                'is_locked' => true,
-                'description' => 'Completed cohort on the Four Noble Truths and Dependent Origination.',
+                'is_locked' => false,
+                'description' => 'Class on the Four Noble Truths and Dependent Origination.',
             ]
         );
 
-        // Upcoming Class
         CourseClass::updateOrCreate(
-            ['code' => 'VNK-PAL-2602'],
+            ['name' => 'Pali Grammar Class 02'],
             [
                 'course_id' => $paliGrammarCourse->id,
-                'name' => 'Pali Grammar Cohort 02',
-                'duration_months' => 3,
-                'start_date' => now()->addMonth(),
-                'end_date' => now()->addMonths(4),
-                'status' => 'upcoming',
                 'is_locked' => false,
-                'description' => 'Upcoming intensive Pali language module opening next month.',
+                'description' => 'Intensive Pali language module.',
             ]
         );
 

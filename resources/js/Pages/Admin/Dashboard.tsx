@@ -7,16 +7,11 @@ import { useTranslation } from '@/utils/useTranslation';
 interface ClassItem {
     id: number;
     name: string;
-    code: string;
     course: {
         id: number;
         title: string;
         category: string;
     };
-    duration_months: number;
-    start_date: string | null;
-    end_date: string | null;
-    status: 'active' | 'completed' | 'upcoming';
     is_locked: boolean;
     students_count: number;
     completed_count: number;
@@ -32,9 +27,6 @@ interface ClassItem {
 
 interface Stats {
     total_classes: number;
-    active_classes: number;
-    completed_classes: number;
-    upcoming_classes: number;
     total_students: number;
     pending_feedbacks: number;
     total_questions: number;
@@ -50,12 +42,10 @@ interface DashboardProps extends PageProps {
     classes: ClassItem[];
     stats: Stats;
     courses: CourseOption[];
-    currentFilter: string;
 }
 
-export default function Dashboard({ auth, classes, stats, courses, currentFilter, flash }: DashboardProps) {
+export default function Dashboard({ auth, classes, stats, courses, flash }: DashboardProps) {
     const t = useTranslation();
-    const [activeTab, setActiveTab] = useState<'all' | 'active' | 'completed' | 'upcoming'>('all');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [classToDelete, setClassToDelete] = useState<ClassItem | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -63,11 +53,6 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
     const { data, setData, post, processing, errors, reset } = useForm({
         course_id: courses[0]?.id || '',
         name: '',
-        code: '',
-        duration_months: 3,
-        start_date: '',
-        end_date: '',
-        status: 'active',
         description: '',
     });
 
@@ -91,11 +76,6 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
             },
         });
     };
-
-    const filteredClasses = classes.filter((c) => {
-        if (activeTab === 'all') return true;
-        return c.status === activeTab;
-    });
 
     return (
         <AuthenticatedLayout
@@ -145,89 +125,49 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                 {/* Statistics Cards */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                        <p className="text-xs font-medium text-gray-500">{t('classes.active_classes')}</p>
-                        <p className="text-2xl font-bold text-amber-700 mt-1">{stats.active_classes}</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">{t('classes.underway_cycle')}</p>
-                    </div>
-
-                    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                        <p className="text-xs font-medium text-gray-500">{t('classes.completed')}</p>
-                        <p className="text-2xl font-bold text-emerald-600 mt-1">{stats.completed_classes}</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">{t('classes.finished_curriculums')}</p>
-                    </div>
-
-                    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                        <p className="text-xs font-medium text-gray-500">{t('classes.upcoming')}</p>
-                        <p className="text-2xl font-bold text-blue-600 mt-1">{stats.upcoming_classes}</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">{t('classes.enrolling_students')}</p>
+                        <p className="text-xs font-medium text-gray-500">{t('classes.all_classes_tab')}</p>
+                        <p className="text-2xl font-bold text-amber-700 mt-1">{stats.total_classes}</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{classes.length} cohorts</p>
                     </div>
 
                     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                         <p className="text-xs font-medium text-gray-500">{t('classes.total_students')}</p>
                         <p className="text-2xl font-bold text-stone-800 mt-1">{stats.total_students}</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">Registered learners</p>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <p className="text-xs font-medium text-gray-500">Pending Feedback</p>
+                        <p className="text-2xl font-bold text-blue-600 mt-1">{stats.pending_feedbacks}</p>
                         <p className="text-[11px] text-amber-700 mt-0.5 font-medium">
                             {t('classes.pending_feedbacks_count', { count: String(stats.pending_feedbacks) })}
                         </p>
                     </div>
+
+                    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <p className="text-xs font-medium text-gray-500">Question Bank</p>
+                        <p className="text-2xl font-bold text-emerald-600 mt-1">{stats.total_questions}</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">Total practice questions</p>
+                    </div>
                 </div>
 
-                {/* Tabs & Class Listing */}
+                {/* Class Listing */}
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    {/* Tab Navigation */}
-                    <div className="border-b border-gray-200 px-6 pt-4 flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex space-x-1 sm:space-x-4">
-                            <button
-                                onClick={() => setActiveTab('all')}
-                                className={`pb-3 text-xs font-semibold border-b-2 transition ${
-                                    activeTab === 'all'
-                                        ? 'border-amber-600 text-amber-700'
-                                        : 'border-transparent text-gray-500 hover:text-gray-800'
-                                }`}
-                            >
-                                {t('classes.all_classes_tab')} ({classes.length})
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('active')}
-                                className={`pb-3 text-xs font-semibold border-b-2 transition ${
-                                    activeTab === 'active'
-                                        ? 'border-amber-600 text-amber-700'
-                                        : 'border-transparent text-gray-500 hover:text-gray-800'
-                                }`}
-                            >
-                                {t('classes.active_classes_tab')} ({stats.active_classes})
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('completed')}
-                                className={`pb-3 text-xs font-semibold border-b-2 transition ${
-                                    activeTab === 'completed'
-                                        ? 'border-amber-600 text-amber-700'
-                                        : 'border-transparent text-gray-500 hover:text-gray-800'
-                                }`}
-                            >
-                                {t('classes.completed_classes_tab')} ({stats.completed_classes})
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('upcoming')}
-                                className={`pb-3 text-xs font-semibold border-b-2 transition ${
-                                    activeTab === 'upcoming'
-                                        ? 'border-amber-600 text-amber-700'
-                                        : 'border-transparent text-gray-500 hover:text-gray-800'
-                                }`}
-                            >
-                                {t('classes.upcoming_classes_tab')} ({stats.upcoming_classes})
-                            </button>
-                        </div>
+                    <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                        <h2 className="text-sm font-semibold text-gray-800">
+                            {t('classes.all_classes_tab')} ({classes.length})
+                        </h2>
                     </div>
 
                     {/* Classes Grid */}
                     <div className="p-6">
-                        {filteredClasses.length === 0 ? (
+                        {classes.length === 0 ? (
                             <div className="text-center py-12 text-gray-400 text-xs">
                                 {t('classes.no_classes_found')}
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredClasses.map((cls) => (
+                                {classes.map((cls) => (
                                     <div
                                         key={cls.id}
                                         className={`rounded-xl border transition-all p-5 flex flex-col justify-between ${
@@ -238,58 +178,25 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                     >
                                         <div>
                                             <div className="flex items-start justify-between gap-2 mb-2">
-                                                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-100 text-gray-600 uppercase font-semibold">
-                                                    {cls.code}
+                                                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
+                                                    {cls.course.category}
                                                 </span>
-                                                <div className="flex items-center gap-1.5">
-                                                    {cls.is_locked && (
-                                                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700 flex items-center gap-1">
-                                                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                                                            </svg>
-                                                            {t('classes.badge_locked')}
-                                                        </span>
-                                                    )}
-                                                    <span
-                                                        className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                                                            cls.status === 'active'
-                                                                ? 'bg-amber-100 text-amber-800'
-                                                                : cls.status === 'completed'
-                                                                ? 'bg-emerald-100 text-emerald-800'
-                                                                : 'bg-blue-100 text-blue-800'
-                                                        }`}
-                                                    >
-                                                        {cls.status === 'active'
-                                                            ? t('classes.status_active')
-                                                            : cls.status === 'completed'
-                                                            ? t('classes.status_completed')
-                                                            : t('classes.status_upcoming')}
+                                                {cls.is_locked && (
+                                                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700 flex items-center gap-1">
+                                                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                                                        </svg>
+                                                        {t('classes.badge_locked')}
                                                     </span>
-                                                </div>
+                                                )}
                                             </div>
 
-                                            <h3 className="text-sm font-semibold text-gray-900 leading-snug">
+                                            <h3 className="text-base font-serif font-bold text-gray-900 leading-snug">
                                                 {cls.name}
                                             </h3>
                                             <p className="text-xs text-amber-800/80 font-medium mt-1">
                                                 {cls.course.title}
                                             </p>
-
-                                            {/* Duration & Period */}
-                                            <div className="mt-3 space-y-1 text-xs text-gray-500">
-                                                <div className="flex items-center gap-1.5">
-                                                    <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                    <span>{t('classes.duration_display', { months: String(cls.duration_months) })}</span>
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
-                                                    <span>{t('classes.period_label')} {cls.start_date || 'TBD'} &rarr; {cls.end_date || 'TBD'}</span>
-                                                </div>
-                                            </div>
 
                                             {/* Roster & Progress Stats */}
                                             <div className="mt-4 pt-3 border-t border-gray-100">
@@ -298,31 +205,18 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                                     <span className="font-bold text-gray-800">{t('classes.students_count', { count: String(cls.students_count) })}</span>
                                                 </div>
 
-                                                {cls.status === 'completed' ? (
-                                                    <div className="flex justify-between text-xs mb-1">
-                                                        <span className="text-emerald-700 font-medium">{t('classes.graduated_completed')}</span>
-                                                        <span className="font-bold text-emerald-700">{t('classes.students_count', { count: String(cls.completed_count) })}</span>
+                                                <div>
+                                                    <div className="flex justify-between text-[11px] text-gray-500 mb-1">
+                                                        <span>{t('classes.average_completion')}</span>
+                                                        <span className="font-semibold text-amber-800">{cls.completion_rate}%</span>
                                                     </div>
-                                                ) : (
-                                                    <div>
-                                                        <div className="flex justify-between text-[11px] text-gray-500 mb-1">
-                                                            <span>{t('classes.average_completion')}</span>
-                                                            <span className="font-semibold text-amber-800">{cls.completion_rate}%</span>
-                                                        </div>
-                                                        <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                                                            <div
-                                                                className="bg-amber-600 h-1.5 rounded-full transition-all"
-                                                                style={{ width: `${cls.completion_rate}%` }}
-                                                            ></div>
-                                                        </div>
+                                                    <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                                        <div
+                                                            className="bg-amber-600 h-1.5 rounded-full transition-all"
+                                                            style={{ width: `${cls.completion_rate}%` }}
+                                                        ></div>
                                                     </div>
-                                                )}
-
-                                                {cls.status === 'upcoming' && (
-                                                    <div className="mt-2 text-[11px] text-blue-700 bg-blue-50 p-2 rounded">
-                                                        {t('classes.registered_prospective', { count: String(cls.students_count) })}
-                                                    </div>
-                                                )}
+                                                </div>
                                             </div>
                                         </div>
 
@@ -411,7 +305,7 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                 <label className="block font-medium text-gray-700 mb-1">{t('classes.class_name')}</label>
                                 <input
                                     type="text"
-                                    placeholder="e.g. Abhidhammattha-sangaha Cohort 02"
+                                    placeholder="e.g. Abhidhammattha-sangaha Class"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
                                     className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
@@ -420,67 +314,16 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                 {errors.name && <p className="text-red-500 text-[11px] mt-1">{errors.name}</p>}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-1">{t('classes.class_code')}</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. VNK-ADH-2602"
-                                        value={data.code}
-                                        onChange={(e) => setData('code', e.target.value)}
-                                        className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                        required
-                                    />
-                                    {errors.code && <p className="text-red-500 text-[11px] mt-1">{errors.code}</p>}
-                                </div>
-
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-1">{t('classes.duration_months')}</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="24"
-                                        value={data.duration_months}
-                                        onChange={(e) => setData('duration_months', Number(e.target.value))}
-                                        className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-1">{t('classes.start_date')}</label>
-                                    <input
-                                        type="date"
-                                        value={data.start_date}
-                                        onChange={(e) => setData('start_date', e.target.value)}
-                                        className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-1">{t('classes.end_date')}</label>
-                                    <input
-                                        type="date"
-                                        value={data.end_date}
-                                        onChange={(e) => setData('end_date', e.target.value)}
-                                        className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                    />
-                                </div>
-                            </div>
-
                             <div>
-                                <label className="block font-medium text-gray-700 mb-1">{t('classes.status')}</label>
-                                <select
-                                    value={data.status}
-                                    onChange={(e) => setData('status', e.target.value)}
+                                <label className="block font-medium text-gray-700 mb-1">Description</label>
+                                <textarea
+                                    rows={3}
+                                    placeholder="Optional description for this class..."
+                                    value={data.description}
+                                    onChange={(e) => setData('description', e.target.value)}
                                     className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                >
-                                    <option value="active">{t('classes.status_active')}</option>
-                                    <option value="upcoming">{t('classes.status_upcoming')}</option>
-                                    <option value="completed">{t('classes.status_completed')}</option>
-                                </select>
+                                />
+                                {errors.description && <p className="text-red-500 text-[11px] mt-1">{errors.description}</p>}
                             </div>
 
                             <div className="flex justify-end gap-2 pt-3 border-t">
@@ -529,8 +372,8 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                                 <span className="font-semibold text-stone-900">{t('classes.class_label')} </span>
                                 {classToDelete.name}
                             </div>
-                            <div className="text-[11px] text-stone-500 font-mono">
-                                Code: {classToDelete.code} &bull; {classToDelete.course.title}
+                            <div className="text-[11px] text-stone-500">
+                                {classToDelete.course.title}
                             </div>
                             <div className="text-[11px] text-red-700 pt-1">
                                 {t('classes.delete_impact')}

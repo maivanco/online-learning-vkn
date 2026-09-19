@@ -82,9 +82,9 @@ class DemoUserSeeder extends Seeder
             ]
         );
 
-        $activeClass = CourseClass::where('code', 'VNK-ADH-2601')->first();
-        $completedClass = CourseClass::where('code', 'VNK-DHM-2504')->first();
-        $upcomingClass = CourseClass::where('code', 'VNK-PAL-2602')->first();
+        $activeClass = CourseClass::where('name', 'Abhidhammattha-sangaha Class 01')->first();
+        $completedClass = CourseClass::where('name', 'Essential Dhamma Class 04')->first();
+        $upcomingClass = CourseClass::where('name', 'Pali Grammar Class 02')->first();
         $abhidhammaCourse = Course::where('slug', 'abhidhammattha-sangaha')->first();
         $lesson1 = $abhidhammaCourse ? Lesson::where('course_id', $abhidhammaCourse->id)->first() : null;
 

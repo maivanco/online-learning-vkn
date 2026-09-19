@@ -264,4 +264,78 @@ class MaterialCatalogTest extends TestCase
             'slug' => 'unauthorized-catalog',
         ]);
     }
+
+    public function test_admin_can_delete_lesson(): void
+    {
+        $course = Course::create([
+            'title' => 'Course For Lesson Delete',
+            'slug' => 'course-for-lesson-delete',
+            'category' => 'sutta',
+        ]);
+
+        $lesson = Lesson::create([
+            'course_id' => $course->id,
+            'title' => 'Lesson To Delete',
+            'slug' => 'lesson-to-delete',
+            'reading_content' => 'Content to delete',
+            'order' => 1,
+        ]);
+
+        $response = $this->actingAs($this->admin)->delete(route('admin.materials.destroy', $lesson->id));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success', 'Lesson deleted successfully.');
+        $this->assertDatabaseMissing('lessons', [
+            'id' => $lesson->id,
+        ]);
+    }
+
+    public function test_teacher_can_delete_lesson(): void
+    {
+        $course = Course::create([
+            'title' => 'Teacher Lesson Course',
+            'slug' => 'teacher-lesson-course',
+            'category' => 'vinaya',
+        ]);
+
+        $lesson = Lesson::create([
+            'course_id' => $course->id,
+            'title' => 'Teacher Lesson To Delete',
+            'slug' => 'teacher-lesson-to-delete',
+            'reading_content' => 'Teacher lesson content',
+            'order' => 1,
+        ]);
+
+        $response = $this->actingAs($this->teacher)->delete(route('admin.materials.destroy', $lesson->id));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success', 'Lesson deleted successfully.');
+        $this->assertDatabaseMissing('lessons', [
+            'id' => $lesson->id,
+        ]);
+    }
+
+    public function test_student_cannot_delete_lesson(): void
+    {
+        $course = Course::create([
+            'title' => 'Student Guarded Course',
+            'slug' => 'student-guarded-course',
+            'category' => 'abhidhamma',
+        ]);
+
+        $lesson = Lesson::create([
+            'course_id' => $course->id,
+            'title' => 'Guarded Lesson',
+            'slug' => 'guarded-lesson',
+            'reading_content' => 'Guarded content',
+            'order' => 1,
+        ]);
+
+        $response = $this->actingAs($this->student)->delete(route('admin.materials.destroy', $lesson->id));
+
+        $response->assertRedirect(route('student.dashboard'));
+        $this->assertDatabaseHas('lessons', [
+            'id' => $lesson->id,
+        ]);
+    }
 }

@@ -66,7 +66,7 @@ class UserManagerController extends Controller
             'student' => User::where('role', 'student')->count(),
         ];
 
-        $availableClasses = CourseClass::where('status', '!=', 'completed')->get(['id', 'name', 'code']);
+        $availableClasses = CourseClass::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,

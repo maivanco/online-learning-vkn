@@ -22,7 +22,7 @@ use Inertia\Inertia;
 // Public Landing Page showcasing Viên Không Ni Monastery and Course Catalog
 Route::get('/', function () {
     $courses = Course::withCount(['lessons', 'classes'])->orderBy('order')->get();
-    $activeClassesCount = CourseClass::where('status', 'active')->count();
+    $activeClassesCount = CourseClass::count();
     $hasAdmin = User::where('role', 'admin')->exists();
 
     return Inertia::render('Home/Index', [
@@ -68,6 +68,7 @@ Route::middleware(['auth', 'role:admin,teacher'])->prefix('admin')->name('admin.
     Route::get('/materials', [MaterialController::class, 'index'])->name('materials.index');
     Route::post('/materials', [MaterialController::class, 'store'])->name('materials.store');
     Route::put('/materials/{id}', [MaterialController::class, 'update'])->name('materials.update');
+    Route::delete('/materials/{id}', [MaterialController::class, 'destroy'])->name('materials.destroy');
     Route::put('/feedbacks/{id}', [MaterialController::class, 'updateFeedback'])->name('feedbacks.update');
 
     // Courses Catalog Management (CRUD)

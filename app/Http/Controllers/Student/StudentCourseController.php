@@ -60,13 +60,8 @@ class StudentCourseController extends Controller
             return [
                 'id' => $cls->id,
                 'name' => $cls->name,
-                'code' => $cls->code,
                 'course_title' => $cls->course->title,
                 'category' => $cls->course->category,
-                'duration_months' => $cls->duration_months,
-                'start_date' => $cls->start_date?->format('Y-m-d'),
-                'end_date' => $cls->end_date?->format('Y-m-d'),
-                'status' => $cls->status,
                 'is_locked' => $cls->is_locked,
                 'enrollment_status' => $cls->pivot->status,
                 'progress_percentage' => $percentage,
@@ -76,12 +71,19 @@ class StudentCourseController extends Controller
             ];
         });
 
-        // Other monastery classes opening soon or available
+        // Other monastery classes available to join
         $enrolledIds = $classes->pluck('id')->toArray();
         $upcomingClasses = CourseClass::whereNotIn('id', $enrolledIds)
-            ->where('status', 'upcoming')
             ->with('course')
-            ->get();
+            ->get()
+            ->map(fn($cls) => [
+                'id' => $cls->id,
+                'name' => $cls->name,
+                'course' => [
+                    'title' => $cls->course->title,
+                    'category' => $cls->course->category,
+                ],
+            ]);
 
         return Inertia::render('Student/Dashboard', [
             'enrolledClasses' => $classes,
@@ -184,8 +186,6 @@ class StudentCourseController extends Controller
             'classItem' => [
                 'id' => $class->id,
                 'name' => $class->name,
-                'code' => $class->code,
-                'duration_months' => $class->duration_months,
                 'course' => [
                     'id' => $class->course->id,
                     'title' => $class->course->title,

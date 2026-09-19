@@ -23,59 +23,46 @@ class ClassManagerController extends Controller
      */
     public function index(Request $request): Response
     {
-        $statusFilter = $request->query('status', 'all'); // 'all', 'active', 'completed', 'upcoming'
+        $classes = CourseClass::with(['course', 'students'])
+            ->withCount('students')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($cls) {
+                // Calculate completion stats
+                $totalStudents = $cls->students_count;
+                $completedStudents = $cls->students->filter(fn($s) => $s->pivot->status === 'completed')->count();
+                
+                // Calculate avg progress across enrolled students
+                $lessonsCount = Lesson::where('course_id', $cls->course_id)->count();
+                $progressCount = StudentProgress::where('class_id', $cls->id)->where('is_completed', true)->count();
+                $expectedTotal = ($totalStudents * max(1, $lessonsCount));
+                $completionRate = $expectedTotal > 0 ? round(($progressCount / $expectedTotal) * 100) : 0;
 
-        $classesQuery = CourseClass::with(['course', 'students'])
-            ->withCount('students');
-
-        if (in_array($statusFilter, ['active', 'completed', 'upcoming'])) {
-            $classesQuery->where('status', $statusFilter);
-        }
-
-        $classes = $classesQuery->orderBy('start_date', 'desc')->get()->map(function ($cls) {
-            // Calculate completion stats
-            $totalStudents = $cls->students_count;
-            $completedStudents = $cls->students->filter(fn($s) => $s->pivot->status === 'completed')->count();
-            
-            // Calculate avg progress across enrolled students
-            $lessonsCount = Lesson::where('course_id', $cls->course_id)->count();
-            $progressCount = StudentProgress::where('class_id', $cls->id)->where('is_completed', true)->count();
-            $expectedTotal = ($totalStudents * max(1, $lessonsCount));
-            $completionRate = $expectedTotal > 0 ? round(($progressCount / $expectedTotal) * 100) : 0;
-
-            return [
-                'id' => $cls->id,
-                'name' => $cls->name,
-                'code' => $cls->code,
-                'course' => [
-                    'id' => $cls->course->id,
-                    'title' => $cls->course->title,
-                    'category' => $cls->course->category,
-                ],
-                'duration_months' => $cls->duration_months,
-                'start_date' => $cls->start_date?->format('Y-m-d'),
-                'end_date' => $cls->end_date?->format('Y-m-d'),
-                'status' => $cls->status,
-                'is_locked' => $cls->is_locked,
-                'students_count' => $totalStudents,
-                'completed_count' => $completedStudents,
-                'completion_rate' => $completionRate,
-                'registered_students' => $cls->students->map(fn($s) => [
-                    'id' => $s->id,
-                    'name' => $s->name,
-                    'username' => $s->username,
-                    'email' => $s->email,
-                    'status' => $s->pivot->status,
-                ]),
-            ];
-        });
+                return [
+                    'id' => $cls->id,
+                    'name' => $cls->name,
+                    'course' => [
+                        'id' => $cls->course->id,
+                        'title' => $cls->course->title,
+                        'category' => $cls->course->category,
+                    ],
+                    'is_locked' => $cls->is_locked,
+                    'students_count' => $totalStudents,
+                    'completed_count' => $completedStudents,
+                    'completion_rate' => $completionRate,
+                    'registered_students' => $cls->students->map(fn($s) => [
+                        'id' => $s->id,
+                        'name' => $s->name,
+                        'username' => $s->username,
+                        'email' => $s->email,
+                        'status' => $s->pivot->status,
+                    ]),
+                ];
+            });
 
         // Statistics
         $stats = [
             'total_classes' => CourseClass::count(),
-            'active_classes' => CourseClass::where('status', 'active')->count(),
-            'completed_classes' => CourseClass::where('status', 'completed')->count(),
-            'upcoming_classes' => CourseClass::where('status', 'upcoming')->count(),
             'total_students' => User::where('role', 'student')->count(),
             'pending_feedbacks' => MaterialFeedback::where('status', 'pending')->count(),
             'total_questions' => Question::count(),
@@ -87,7 +74,6 @@ class ClassManagerController extends Controller
             'classes' => $classes,
             'stats' => $stats,
             'courses' => $courses,
-            'currentFilter' => $statusFilter,
         ]);
     }
 
@@ -152,12 +138,7 @@ class ClassManagerController extends Controller
             'classItem' => [
                 'id' => $class->id,
                 'name' => $class->name,
-                'code' => $class->code,
                 'description' => $class->description,
-                'duration_months' => $class->duration_months,
-                'start_date' => $class->start_date?->format('Y-m-d'),
-                'end_date' => $class->end_date?->format('Y-m-d'),
-                'status' => $class->status,
                 'is_locked' => $class->is_locked,
                 'course' => [
                     'id' => $class->course->id,
@@ -184,11 +165,6 @@ class ClassManagerController extends Controller
         $validated = $request->validate([
             'course_id' => 'required|exists:courses,id',
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:classes,code',
-            'duration_months' => 'required|integer|min:1|max:24',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'status' => 'required|in:upcoming,active,completed',
             'description' => 'nullable|string',
         ]);
 
@@ -206,10 +182,6 @@ class ClassManagerController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'duration_months' => 'required|integer|min:1|max:24',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
-            'status' => 'required|in:upcoming,active,completed',
             'description' => 'nullable|string',
         ]);
 
