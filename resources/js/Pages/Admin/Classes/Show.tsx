@@ -18,7 +18,7 @@ interface LessonProgress {
 interface StudentItem {
     id: number;
     name: string;
-    cccd: string;
+    username: string;
     email: string;
     phone: string | null;
     enrollment_status: string;
@@ -57,7 +57,7 @@ interface ClassShowProps extends PageProps {
     availableStudents: Array<{
         id: number;
         name: string;
-        cccd: string;
+        username: string;
         email: string;
     }>;
 }
@@ -217,7 +217,7 @@ export default function ClassShow({ auth, classItem, students, availableStudents
                         <table className="min-w-full divide-y divide-gray-200 text-xs">
                             <thead className="bg-stone-50 text-stone-700 font-semibold uppercase tracking-wider text-[11px]">
                                 <tr>
-                                    <th className="px-6 py-3.5 text-left">Học Viên (Student & CCCD)</th>
+                                    <th className="px-6 py-3.5 text-left">Học Viên (Student & Username)</th>
                                     <th className="px-6 py-3.5 text-left">Tiến Độ Tổng Thể (Progress)</th>
                                     <th className="px-6 py-3.5 text-center">Hoàn Thành (Completed)</th>
                                     <th className="px-6 py-3.5 text-center">Chưa Hoàn Thành (Incomplete)</th>
@@ -239,7 +239,7 @@ export default function ClassShow({ auth, classItem, students, availableStudents
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="font-semibold text-gray-900 text-sm">{student.name}</div>
                                                 <div className="text-[11px] text-gray-500 font-mono flex items-center gap-2 mt-0.5">
-                                                    <span>CCCD: {student.cccd}</span>
+                                                    <span>Username: {student.username}</span>
                                                     <span>&bull;</span>
                                                     <span>{student.email}</span>
                                                 </div>
@@ -358,7 +358,7 @@ export default function ClassShow({ auth, classItem, students, availableStudents
                                     Chi Tiết Tiến Độ: {selectedStudentForModal.name}
                                 </h3>
                                 <p className="text-xs text-gray-500 font-mono">
-                                    Citizen ID (CCCD): {selectedStudentForModal.cccd}
+                                    Username: {selectedStudentForModal.username}
                                 </p>
                             </div>
                             <button
@@ -449,7 +449,7 @@ export default function ClassShow({ auth, classItem, students, availableStudents
                             <form onSubmit={handleAddStudent} className="space-y-4 text-xs">
                                 <div>
                                     <label className="block font-medium text-gray-700 mb-1">
-                                        Select Student by Name / Citizen ID (CCCD)
+                                        Select Student by Name / Username
                                     </label>
                                     <select
                                         value={addStudentForm.data.user_id}
@@ -458,7 +458,7 @@ export default function ClassShow({ auth, classItem, students, availableStudents
                                     >
                                         {availableStudents.map((s) => (
                                             <option key={s.id} value={s.id}>
-                                                {s.name} &bull; CCCD: {s.cccd} ({s.email})
+                                                {s.name} &bull; Username: {s.username} ({s.email})
                                             </option>
                                         ))}
                                     </select>

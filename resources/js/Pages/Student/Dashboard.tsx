@@ -49,7 +49,7 @@ interface StudentDashboardProps extends PageProps {
     upcomingClasses: UpcomingClass[];
     user: {
         name: string;
-        cccd: string;
+        username: string;
         email: string;
     };
 }
@@ -57,7 +57,7 @@ interface StudentDashboardProps extends PageProps {
 export default function StudentDashboard({ auth, enrolledClasses, upcomingClasses, user, flash }: StudentDashboardProps) {
     return (
         <div className="min-h-screen bg-stone-100 font-sans text-stone-900">
-            <Head title="Cổng Học Viên - Tu Viện Viên Không Ni" />
+            <Head title="Student Dashboard - Buddhist Courses" />
 
             {/* Navigation Header */}
             <header className="bg-stone-900 text-stone-100 border-b border-stone-800 sticky top-0 z-40 shadow">
@@ -68,7 +68,7 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                                 VK
                             </div>
                             <span className="font-serif font-bold text-base tracking-wide text-white">
-                                Viên Không Ni
+                                Buddhist Courses
                             </span>
                         </Link>
                         <span className="hidden sm:inline text-xs text-amber-400/90 font-medium pl-2 border-l border-stone-700">
@@ -79,7 +79,7 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                     <div className="flex items-center gap-4 text-xs">
                         <div className="text-right hidden sm:block">
                             <div className="font-semibold text-stone-200">{user.name}</div>
-                            <div className="text-[11px] text-amber-400 font-mono">CCCD: {user.cccd}</div>
+                            <div className="text-[11px] text-amber-400 font-mono">Username: {user.username}</div>
                         </div>
 
                         <Link
@@ -114,13 +114,13 @@ export default function StudentDashboard({ auth, enrolledClasses, upcomingClasse
                 <div className="relative overflow-hidden bg-gradient-to-r from-stone-900 via-amber-950 to-stone-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
                     <div className="relative z-10 max-w-3xl">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 mb-3">
-                            Kính Chào Học Viên &bull; Citizen ID: {user.cccd}
+                            Welcome, Student &bull; Username: {user.username}
                         </span>
                         <h1 className="text-2xl sm:text-3xl font-serif font-bold text-amber-100 tracking-tight leading-tight">
-                            Lộ Trình Tu Học Phật Pháp Tu Viện Viên Không Ni
+                            Buddhist Learning Path
                         </h1>
                         <p className="text-xs sm:text-sm text-stone-300 mt-2 leading-relaxed">
-                            Thực hành tuần tự 5 bước nghiêm ngặt: <span className="text-amber-300 font-medium">1. Tự đọc tài liệu</span> &rarr; <span className="text-amber-300 font-medium">2. Xem video bài giảng</span> &rarr; <span className="text-amber-300 font-medium">3. Ôn luyện 10 lần</span> &rarr; <span className="text-amber-300 font-medium">4. Bài kiểm tra</span> &rarr; <span className="text-amber-300 font-medium">5. Hoàn tất các câu sai</span> để thành tựu môn học.
+                            Follow the 5 strict steps to master the course: <span className="text-amber-300 font-medium">1. Read the materials</span> &rarr; <span className="text-amber-300 font-medium">2. Watch video lectures</span> &rarr; <span className="text-amber-300 font-medium">3. Practice 10 times</span> &rarr; <span className="text-amber-300 font-medium">4. Take the test</span> &rarr; <span className="text-amber-300 font-medium">5. Complete all incorrect answers</span> to achieve your goal.
                         </p>
                     </div>
                 </div>

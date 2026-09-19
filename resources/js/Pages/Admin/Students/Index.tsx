@@ -6,7 +6,7 @@ import { PageProps } from '@/types';
 interface Student {
     id: number;
     name: string;
-    cccd: string;
+    username: string;
     email: string;
     phone: string | null;
     status: string;
@@ -40,7 +40,7 @@ export default function StudentsIndex({ auth, students, availableClasses, search
 
     const studentForm = useForm({
         name: '',
-        cccd: '',
+        username: '',
         email: '',
         phone: '',
         password: '',
@@ -75,9 +75,9 @@ export default function StudentsIndex({ auth, students, availableClasses, search
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Student Roster & CCCD (Quản Lý Học Viên & Cấp Mật Khẩu)</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Student Roster & Accounts (Quản Lý Học Viên & Cấp Mật Khẩu)</h2>}
         >
-            <Head title="Students Management - Viên Không Ni" />
+            <Head title="Students Management - Buddhist Courses" />
 
             <div className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
                 {/* Flash Messages */}
@@ -92,10 +92,10 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                 <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h3 className="font-serif font-bold text-base text-gray-900">
-                            Danh Sách Học Viên Tu Viện Viên Không Ni
+                            Users Management
                         </h3>
                         <p className="text-xs text-gray-500 mt-0.5">
-                            Issue accounts with Citizen ID (CCCD) and initial passwords provided by the monastery manager.
+                            Manage users and issue accounts with initial passwords.
                         </p>
                     </div>
 
@@ -119,7 +119,7 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                             <thead className="bg-stone-50 text-stone-700 font-semibold uppercase tracking-wider text-[11px]">
                                 <tr>
                                     <th className="px-6 py-3.5 text-left">Học Viên (Name & Email)</th>
-                                    <th className="px-6 py-3.5 text-left">Căn Cước Công Dân (CCCD)</th>
+                                    <th className="px-6 py-3.5 text-left">Tên Đăng Nhập (Username)</th>
                                     <th className="px-6 py-3.5 text-left">Số Điện Thoại</th>
                                     <th className="px-6 py-3.5 text-left">Lớp Tham Gia (Enrolled)</th>
                                     <th className="px-6 py-3.5 text-center">Trạng Thái</th>
@@ -143,7 +143,7 @@ export default function StudentsIndex({ auth, students, availableClasses, search
 
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200">
-                                                    {student.cccd || 'N/A'}
+                                                    {student.username || 'N/A'}
                                                 </span>
                                             </td>
 
@@ -224,17 +224,17 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block font-medium text-gray-700 mb-1">
-                                        Citizen ID (CCCD người truy cập)
+                                        Tên Đăng Nhập (Username)
                                     </label>
                                     <input
                                         type="text"
-                                        placeholder="079199000001"
-                                        value={studentForm.data.cccd}
-                                        onChange={(e) => studentForm.setData('cccd', e.target.value)}
+                                        placeholder="Ví dụ: student01"
+                                        value={studentForm.data.username}
+                                        onChange={(e) => studentForm.setData('username', e.target.value)}
                                         className="w-full rounded-lg border-gray-300 text-xs font-mono focus:ring-amber-500 focus:border-amber-500"
                                         required
                                     />
-                                    {studentForm.errors.cccd && <p className="text-red-500 text-[10px] mt-0.5">{studentForm.errors.cccd}</p>}
+                                    {studentForm.errors.username && <p className="text-red-500 text-[10px] mt-0.5">{studentForm.errors.username}</p>}
                                 </div>
 
                                 <div>
@@ -275,7 +275,7 @@ export default function StudentsIndex({ auth, students, availableClasses, search
                                     required
                                 />
                                 <p className="text-[11px] text-gray-400 mt-0.5">
-                                    This password is handed to the student alongside their Citizen ID (CCCD).
+                                    This password is handed to the student alongside their Username.
                                 </p>
                             </div>
 
@@ -335,7 +335,7 @@ export default function StudentsIndex({ auth, students, availableClasses, search
 
                         <form onSubmit={handleUpdatePassword} className="space-y-3.5">
                             <p className="text-gray-600">
-                                Set a new password for <span className="font-semibold text-gray-900">{selectedStudentForPassword.name}</span> (CCCD: {selectedStudentForPassword.cccd}).
+                                Set a new password for <span className="font-semibold text-gray-900">{selectedStudentForPassword.name}</span> (Username: {selectedStudentForPassword.username}).
                             </p>
 
                             <div>

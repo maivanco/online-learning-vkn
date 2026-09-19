@@ -24,9 +24,10 @@ interface HomeProps extends PageProps {
     activeClassesCount: number;
     monastery: MonasteryInfo;
     year: string;
+    hasAdmin?: boolean;
 }
 
-export default function Home({ auth, courses, activeClassesCount, monastery, year }: HomeProps) {
+export default function Home({ auth, courses, activeClassesCount, monastery, year, hasAdmin = true }: HomeProps) {
     const categories = [
         { id: 'dhamma', label: '1. Pháp (Dhamma)', desc: 'Pháp học tinh yếu & Kinh tạng Nikaya' },
         { id: 'vinaya', label: '2. Luật (Vinaya)', desc: 'Tỳ Kheo Ni, Sa-di, Tu nữ & Cư sĩ' },
@@ -57,7 +58,7 @@ export default function Home({ auth, courses, activeClassesCount, monastery, yea
                                     Buddhist Courses
                                 </h1>
                                 <p className="text-[11px] text-stone-500 font-medium tracking-wider uppercase">
-                                    Hệ Thống Đào Tạo Phật Học
+                                    Buddhist Learning System
                                 </p>
                             </div>
                         </div>
@@ -75,15 +76,27 @@ export default function Home({ auth, courses, activeClassesCount, monastery, yea
                                 </Link>
                             ) : (
                                 <div className="flex items-center gap-2">
-                                    <Link
-                                        href={route('login')}
-                                        className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white shadow-sm shadow-amber-600/25 transition"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                                        </svg>
-                                        Đăng Nhập
-                                    </Link>
+                                    {!hasAdmin ? (
+                                        <Link
+                                            href={route('setup')}
+                                            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold bg-amber-700 hover:bg-amber-800 text-white shadow-sm shadow-amber-700/25 transition"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                                            </svg>
+                                            Thiết Lập Quản Trị Viên
+                                        </Link>
+                                    ) : (
+                                        <Link
+                                            href={route('login')}
+                                            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white shadow-sm shadow-amber-600/25 transition"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                            </svg>
+                                            Đăng Nhập
+                                        </Link>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -116,15 +129,27 @@ export default function Home({ auth, courses, activeClassesCount, monastery, yea
                             </p>
 
                             <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
-                                <Link
-                                    href={route('login')}
-                                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-600/25 transition transform hover:-translate-y-0.5"
-                                >
-                                    <span>Đăng Nhập</span>
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                    </svg>
-                                </Link>
+                                {!hasAdmin ? (
+                                    <Link
+                                        href={route('setup')}
+                                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-amber-700 hover:bg-amber-800 text-white shadow-lg shadow-amber-700/25 transition transform hover:-translate-y-0.5"
+                                    >
+                                        <span>Thiết Lập Quản Trị Viên</span>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                        </svg>
+                                    </Link>
+                                ) : (
+                                    <Link
+                                        href={route('login')}
+                                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-600/25 transition transform hover:-translate-y-0.5"
+                                    >
+                                        <span>Đăng Nhập</span>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                        </svg>
+                                    </Link>
+                                )}
 
                                 <a
                                     href="#chuong-trinh"

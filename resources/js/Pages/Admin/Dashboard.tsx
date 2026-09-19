@@ -23,7 +23,7 @@ interface ClassItem {
     registered_students: Array<{
         id: number;
         name: string;
-        cccd: string;
+        username: string;
         email: string;
         status: string;
     }>;
@@ -98,9 +98,9 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Class Management (Quản lý Lớp học)</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Class Management</h2>}
         >
-            <Head title="Class Management - Viên Không Ni" />
+            <Head title="Class Management" />
 
             <div className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
                 {/* Flash Messages */}
@@ -117,10 +117,10 @@ export default function Dashboard({ auth, classes, stats, courses, currentFilter
                 <div className="bg-gradient-to-r from-stone-900 via-stone-800 to-amber-950 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
                         <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30 mb-2">
-                            Tu viện Viên Không Ni – Châu Pha, Tp. Hồ Chí Minh
+                            Buddhist Courses
                         </div>
                         <h1 className="text-2xl font-serif font-bold text-white tracking-wide">
-                            LỚP HỌC & TIẾN ĐỘ ĐÀO TẠO
+                            Buddhist Courses & Training Progress
                         </h1>
                         <p className="text-xs text-stone-300 mt-1 max-w-xl">
                             Track active courses, student progress metrics, lock/unlock classes after 3-month durations, and manage study materials according to monastic guidelines.

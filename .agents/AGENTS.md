@@ -9,7 +9,7 @@
 | Layer | Technology | Version | Notes & Conventions |
 | :--- | :--- | :--- | :--- |
 | **Backend Runtime** | **PHP** | `^8.3` | Modern strict typing, constructor promotion |
-| **Backend Framework** | **Laravel** | `^11.x` | HMVC Architecture using `nwidart/laravel-modules` |
+| **Backend Framework** | **Laravel** | `^11.x` | Standard MVC Monolith with Inertia.js |
 | **Monolith Bridge** | **Inertia.js** | `v1.x` | Backend: `inertiajs/inertia-laravel`<br>Frontend: `@inertiajs/react` |
 | **Frontend Framework**| **React** | `^18/19` | Client SPA with React (`createInertiaApp` in `resources/js/app.tsx`) |
 | **Language (FE)** | **TypeScript**| `^5.x` | Strict types; checked during `npm run build` (`tsc && vite build`) |
@@ -23,26 +23,32 @@
 
 ---
 
-## 2. Directory Architecture (HMVC)
+## 2. Directory Architecture (Standard MVC)
 
 ```text
-├── Modules/                   # HMVC Modules (Backend Logic)
-│   ├── Users/                 # User & Role management
-│   ├── Lesson/                # Course categories & Lessons (Curriculum)
-│   └── Student/               # Student portal & learning progression
-├── app/                       # Global Core Logic (Http/Kernel, Global Models)
-├── database/                  # Global migrations, factories, seeders
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/       # Controllers grouped by domain: Admin/, Student/, Auth/
+│   │   ├── Middleware/        # Route & Role Middleware (RoleMiddleware, etc.)
+│   │   └── Requests/          # Form Request validation classes
+│   ├── Models/                # Eloquent Models (Course, Lesson, CourseClass, User, Question, etc.)
+│   └── Providers/             # Core Service Providers
+├── database/
+│   ├── migrations/            # Database schema migrations
+│   ├── factories/             # Model factories
+│   └── seeders/               # Database seeders (BuddhistCurriculumSeeder, UserSeeder)
+├── routes/
+│   ├── web.php                # Core application & Inertia routes (/admin, /student, /)
+│   ├── auth.php               # Authentication & password management routes
+│   └── api.php                # API endpoints
 ├── resources/
 │   ├── js/
-│   │   ├── Pages/             # Inertia views (Centralized frontend)
-│   │   │   ├── Admin/
-│   │   │   ├── Student/
-│   │   │   └── Auth/
-│   │   ├── Components/        # Reusable UI components
-│   │   ├── types/             # Shared TS global interfaces
+│   │   ├── Pages/             # Inertia views (Admin/, Student/, Auth/, Home/)
+│   │   ├── Components/        # Reusable UI components & layouts
+│   │   ├── types/             # Shared TS global interfaces (models, props)
 │   │   └── utils/             # Utility helpers (e.g. cn() class merger)
 │   └── sass/app.scss          # Core styling entry
-└── start                      # Unified launch script (Sail + Vite on Node 22)
+└── start.local                # Local launch script (Sail + Vite on Node 22)
 ```
 
 ---
@@ -51,18 +57,18 @@
 
 Before executing tasks, AI Agents MUST read the following rule files located in `.agents/rules/`:
 
-1. [01-architecture-hmvc.md](file:///Users/itcvn/Pet-Projects/online-learning/.agents/rules/01-architecture-hmvc.md): Rules for HMVC module boundaries, centralized frontend, and cross-module communication.
+1. [01-architecture.md](file:///Users/itcvn/Pet-Projects/online-learning/.agents/rules/01-architecture.md): Rules for standard Laravel MVC architecture, controller grouping, and centralized Inertia frontend.
 2. [02-security.md](file:///Users/itcvn/Pet-Projects/online-learning/.agents/rules/02-security.md): Security practices including RBAC roles, standard authentication, Mass Assignment prevention, and Inertia state leaks.
 3. [03-coding-standards.md](file:///Users/itcvn/Pet-Projects/online-learning/.agents/rules/03-coding-standards.md): PHP 8.3 strict typing, constructor promotion, TypeScript standards, and Tailwind UI patterns.
 
 ---
 
-## 4. Key Domain Entities
+## 4. Key Domain Entities & Workflow
 
-- **Users Module**: Manages `User` and `Role` entities. Admins create users and define roles (Administrator, Teacher, Student).
-- **Lesson Module**: Manages `CourseCategory` (hierarchical) and `Lesson` entities. Course Categories hold essay and quiz questions. Lessons support multiple video and document links.
-- **Student Module**: Enforces the 5-step learning pipeline:
-  `Self-Study -> Video -> Practice Quizzes (10x) -> Final Exam -> Master Incorrect Questions`.
+- **Users & Roles**: Managed by `UserManagerController` and `User` model with `role` column (`admin`, `teacher`, `student`). Authentication uses `username` or `email`.
+- **Curriculum & Materials**: Managed by `ClassManagerController`, `MaterialController`, `QuestionBankController`. Courses have categories (`category` string enum), classes (`CourseClass`), lessons (`Lesson`), and questions (`Question`).
+- **Student Progression**: Enforces the 5-step learning pipeline in `StudentCourseController`:
+  `Self-Study (Reading) -> Video -> Practice Quizzes -> Final Exam -> Master Incorrect Questions`.
 
 ---
 

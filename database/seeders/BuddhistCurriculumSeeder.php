@@ -5,84 +5,18 @@ namespace Database\Seeders;
 use App\Models\Course;
 use App\Models\CourseClass;
 use App\Models\Lesson;
-use App\Models\MaterialFeedback;
 use App\Models\Question;
-use App\Models\StudentExamAttempt;
-use App\Models\StudentIncorrectQuestion;
-use App\Models\StudentProgress;
-use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class BuddhistCurriculumSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Seed core Buddhist Curriculum (Courses, Classes, Lessons, and Questions).
+     * Does not seed sample users; admin account is created during initial setup.
      */
     public function run(): void
     {
-        // 1. Create Core Users
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@vienkhongni.vn'],
-            [
-                'name' => 'Vien Khong Ni Abbot (Vien Chu)',
-                'cccd' => '001099000001',
-                'password' => Hash::make('password'),
-                'role' => 'admin',
-                'phone' => '0901234567',
-                'status' => 'active',
-            ]
-        );
-
-        $teacher = User::firstOrCreate(
-            ['email' => 'teacher@vienkhongni.vn'],
-            [
-                'name' => 'Sayalay Teacher Dhammananda',
-                'cccd' => '001099000002',
-                'password' => Hash::make('password'),
-                'role' => 'teacher',
-                'phone' => '0907654321',
-                'status' => 'active',
-            ]
-        );
-
-        $student1 = User::firstOrCreate(
-            ['email' => 'vientue@vienkhongni.vn'],
-            [
-                'name' => 'Bhikkhuni Vien Tue',
-                'cccd' => '079199000001',
-                'password' => Hash::make('password'),
-                'role' => 'student',
-                'phone' => '0912345678',
-                'status' => 'active',
-            ]
-        );
-
-        $student2 = User::firstOrCreate(
-            ['email' => 'tinhnhu@vienkhongni.vn'],
-            [
-                'name' => 'Samaneri Tinh Nhu',
-                'cccd' => '079199000002',
-                'password' => Hash::make('password'),
-                'role' => 'student',
-                'phone' => '0923456789',
-                'status' => 'active',
-            ]
-        );
-
-        $student3 = User::firstOrCreate(
-            ['email' => 'nguyenvanan@gmail.com'],
-            [
-                'name' => 'Lay Devotee Nguyen Van An',
-                'cccd' => '079199000003',
-                'password' => Hash::make('password'),
-                'role' => 'student',
-                'phone' => '0934567890',
-                'status' => 'active',
-            ]
-        );
-
-        // 2. Pre-seed Curriculum Courses from PDF Specification
+        // 1. Pre-seed Curriculum Courses from Specification
         $coursesData = [
             // Category 1: Dhamma (Pháp)
             [
@@ -177,7 +111,7 @@ class BuddhistCurriculumSeeder extends Seeder
             Course::updateOrCreate(['slug' => $c['slug']], $c);
         }
 
-        // 3. Create Sample Classes (Active, Completed, Upcoming)
+        // 2. Create Sample Classes (Active, Completed, Upcoming)
         $abhidhammaCourse = Course::where('slug', 'abhidhammattha-sangaha')->first();
         $paliGrammarCourse = Course::where('slug', 'pali-grammar')->first();
         $dhammaCourse = Course::where('slug', 'essential-dhamma')->first();
@@ -198,7 +132,7 @@ class BuddhistCurriculumSeeder extends Seeder
         );
 
         // Completed Class
-        $completedClass = CourseClass::updateOrCreate(
+        CourseClass::updateOrCreate(
             ['code' => 'VNK-DHM-2504'],
             [
                 'course_id' => $dhammaCourse->id,
@@ -213,7 +147,7 @@ class BuddhistCurriculumSeeder extends Seeder
         );
 
         // Upcoming Class
-        $upcomingClass = CourseClass::updateOrCreate(
+        CourseClass::updateOrCreate(
             ['code' => 'VNK-PAL-2602'],
             [
                 'course_id' => $paliGrammarCourse->id,
@@ -227,25 +161,7 @@ class BuddhistCurriculumSeeder extends Seeder
             ]
         );
 
-        // Enroll Students into Active Class
-        $activeClass->students()->syncWithoutDetaching([
-            $student1->id => ['enrolled_at' => now()->subMonth(), 'status' => 'enrolled'],
-            $student2->id => ['enrolled_at' => now()->subMonth(), 'status' => 'enrolled'],
-            $student3->id => ['enrolled_at' => now()->subMonth(), 'status' => 'enrolled'],
-        ]);
-
-        // Enroll Students into Completed Class
-        $completedClass->students()->syncWithoutDetaching([
-            $student1->id => ['enrolled_at' => now()->subMonths(4), 'status' => 'completed', 'final_grade' => 95.0, 'completed_at' => now()->subMonth()],
-            $student2->id => ['enrolled_at' => now()->subMonths(4), 'status' => 'completed', 'final_grade' => 88.0, 'completed_at' => now()->subMonth()],
-        ]);
-
-        // Register Student for Upcoming Class
-        $upcomingClass->students()->syncWithoutDetaching([
-            $student3->id => ['enrolled_at' => now()->subDays(3), 'status' => 'enrolled'],
-        ]);
-
-        // 4. Create Lessons for Abhidhamma Course
+        // 3. Create Lessons for Abhidhamma Course
         $lesson1 = Lesson::updateOrCreate(
             ['course_id' => $abhidhammaCourse->id, 'slug' => 'lesson-1-four-paramattha-dhammas'],
             [
@@ -254,11 +170,11 @@ class BuddhistCurriculumSeeder extends Seeder
                 'summary' => 'Introduction to Paramattha Dhamma: Citta (Consciousness), Cetasika (Mental Factors), Rupa (Matter), and Nibbana.',
                 'reading_content' => "# Bốn Pháp Chân Đế (Cattāri Paramatthadhamma)\n\nTrong Vi Diệu Pháp (Abhidhamma), Đức Phật phân tích toàn bộ thực tại hiện hữu thành bốn pháp chân đế vô thượng:\n\n1. **Tâm (Citta)**: Thực tính biết cảnh. Có 89 hoặc 121 thứ tâm tuỳ theo phân loại.\n2. **Tâm sở (Cetasika)**: Những yếu tố đồng sinh cùng tâm, phối hợp để tạo nên trạng thái cảm thọ, tư niệm. Có 52 tâm sở.\n3. **Sắc pháp (Rūpa)**: Những hiện tượng vật lý, hình tướng sinh diệt do duyên. Có 28 sắc pháp.\n4. **Niết-bàn (Nibbāna)**: Thực tại vô vi, tịch tịnh, dứt trừ phiền não và khổ đau luân hồi.\n\nNgười tu học cần phân biệt rõ giữa Chân đế (Paramattha Sacca) và Tục đế (Sammuti Sacca) để thoát khỏi sự chấp ngã sai lầm.",
                 'reading_file_url' => 'https://example.com/documents/vien-khong-ni-abhidhamma-bai-1.pdf',
-                'video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', // Embedded video clip
+                'video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
             ]
         );
 
-        $lesson2 = Lesson::updateOrCreate(
+        Lesson::updateOrCreate(
             ['course_id' => $abhidhammaCourse->id, 'slug' => 'lesson-2-wholesome-consciousness'],
             [
                 'title' => 'Lesson 2: Wholesome Consciousness (Tâm Thiện Dục Giới)',
@@ -270,7 +186,7 @@ class BuddhistCurriculumSeeder extends Seeder
             ]
         );
 
-        // 5. Question Bank for Lesson 1
+        // 4. Question Bank for Lesson 1
         $questions = [
             [
                 'question_text' => 'Bao nhiêu pháp chân đế (Paramattha Dhamma) được giảng trong Thắng Pháp Tập Yếu Luận?',
@@ -334,99 +250,5 @@ class BuddhistCurriculumSeeder extends Seeder
                 $q
             );
         }
-
-        // 6. Student Progress Samples
-        // Student 1 (Bhikkhuni Vien Tue) has completed reading, video, and finished 10 practice repetitions!
-        StudentProgress::updateOrCreate(
-            ['user_id' => $student1->id, 'class_id' => $activeClass->id, 'lesson_id' => $lesson1->id],
-            [
-                'reading_completed' => true,
-                'reading_completed_at' => now()->subDays(5),
-                'video_completed' => true,
-                'video_completed_at' => now()->subDays(4),
-                'practice_count' => 10,
-                'practice_completed' => true,
-                'practice_completed_at' => now()->subDays(2),
-                'exam_completed' => true,
-                'exam_completed_at' => now()->subDay(),
-                'exam_score' => 80.0,
-                'is_completed' => false, // has 1 incorrect question left to review!
-            ]
-        );
-
-        // Student 1 missed Question 4 during exam -> stored in incorrect questions log
-        $q4 = Question::where('course_id', $abhidhammaCourse->id)->skip(3)->first();
-        if ($q4) {
-            StudentIncorrectQuestion::updateOrCreate(
-                [
-                    'user_id' => $student1->id,
-                    'class_id' => $activeClass->id,
-                    'lesson_id' => $lesson1->id,
-                    'question_id' => $q4->id,
-                ],
-                [
-                    'last_chosen_option' => 'B',
-                    'is_resolved' => false,
-                ]
-            );
-        }
-
-        // Record Exam Attempt for Student 1
-        StudentExamAttempt::updateOrCreate(
-            ['user_id' => $student1->id, 'class_id' => $activeClass->id, 'lesson_id' => $lesson1->id, 'attempt_type' => 'exam'],
-            [
-                'total_questions' => 5,
-                'correct_count' => 4,
-                'incorrect_count' => 1,
-                'review_needed_count' => 1,
-                'score' => 80.0,
-                'answers_summary' => [
-                    'q1' => 'correct',
-                    'q2' => 'correct',
-                    'q3' => 'correct',
-                    'q4' => 'incorrect',
-                    'q5' => 'correct',
-                ],
-            ]
-        );
-
-        // Student 2 has completed reading and video, practice count is at 4 / 10
-        StudentProgress::updateOrCreate(
-            ['user_id' => $student2->id, 'class_id' => $activeClass->id, 'lesson_id' => $lesson1->id],
-            [
-                'reading_completed' => true,
-                'reading_completed_at' => now()->subDays(3),
-                'video_completed' => true,
-                'video_completed_at' => now()->subDays(2),
-                'practice_count' => 4,
-                'practice_completed' => false,
-                'exam_completed' => false,
-                'is_completed' => false,
-            ]
-        );
-
-        // Student 3 has only completed reading
-        StudentProgress::updateOrCreate(
-            ['user_id' => $student3->id, 'class_id' => $activeClass->id, 'lesson_id' => $lesson1->id],
-            [
-                'reading_completed' => true,
-                'reading_completed_at' => now()->subDay(),
-                'video_completed' => false,
-                'practice_count' => 0,
-                'practice_completed' => false,
-                'exam_completed' => false,
-                'is_completed' => false,
-            ]
-        );
-
-        // 7. Sample Material Feedback from Student
-        MaterialFeedback::updateOrCreate(
-            ['lesson_id' => $lesson1->id, 'user_id' => $student2->id],
-            [
-                'content' => 'In section 3 regarding Mental Factors, the note mentions 52 cetasikas, could the monastery please clarify the list of 14 akusala cetasikas in the next reading update?',
-                'status' => 'pending',
-                'admin_notes' => null,
-            ]
-        );
     }
 }

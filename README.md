@@ -1,6 +1,6 @@
-# Viên Không Ni – Buddhist Courses Platform
+# Buddhist Courses Platform
 
-A comprehensive Buddhist education and course management platform built for **Tu Viện Viên Không Ni** (*Viên Không Ni Buddhist Monastery*), situated in Ấp 4, Xã Châu Pha, Tp. Hồ Chí Minh (Facebook: [Tu Viện Viên Không Ni](https://www.facebook.com/share/1DCWqsCZSY/?mibextid=wwXIfr)).
+A comprehensive Buddhist education and course management platform\
 
 The platform enforces a strict **5-step sequential learning progression** for students and provides robust **cohort lifecycle management** for monastery instructors and administrators.
 
@@ -191,21 +191,7 @@ erDiagram
 
 ---
 
-## 6. Demo Accounts & Testing Credentials
-
-The database seeder (`php artisan db:seed`) provides pre-configured accounts:
-
-| Role | Name | Username | Password | Default Redirect |
-| :--- | :--- | :--- | :--- | :--- |
-| **Manager / Admin** | Abbot Admin (Viên Chủ) | `admin_01` | `password` | `/admin/dashboard` |
-| **Teacher** | Sayalay Dhammananda | `teacher_01` | `password` | `/admin/dashboard` |
-| **Student 1** | Bhikkhuni Vien Tue | `student_01` | `password` | `/student/dashboard` |
-| **Student 2** | Samaneri Tinh Nhu | `student_02` | `password` | `/student/dashboard` |
-| **Student 3 (Lay)** | Nguyen Van An | `student_03` | `password` | `/student/dashboard` |
-
----
-
-## 7. Setup & Execution Guide
+## 6. Setup & Execution Guide
 
 ### 1. Environment & Dependencies
 ```bash

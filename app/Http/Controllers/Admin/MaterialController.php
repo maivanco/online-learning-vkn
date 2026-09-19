@@ -60,7 +60,7 @@ class MaterialController extends Controller
                 'user' => [
                     'id' => $fb->user->id,
                     'name' => $fb->user->name,
-                    'cccd' => $fb->user->cccd,
+                    'username' => $fb->user->username,
                 ],
                 'lesson' => [
                     'id' => $fb->lesson->id,

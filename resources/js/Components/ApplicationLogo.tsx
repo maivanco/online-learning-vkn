@@ -2,7 +2,7 @@ import { ImgHTMLAttributes } from 'react';
 
 export default function ApplicationLogo({
     className = 'h-9 w-auto object-contain',
-    alt = 'Viên Không Ni – Buddhist Courses',
+    alt = 'Buddhist Courses',
     ...props
 }: ImgHTMLAttributes<HTMLImageElement>) {
     return (

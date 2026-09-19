@@ -21,7 +21,7 @@ class LoginRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $identifier = $this->input('login') ?? $this->input('cccd') ?? $this->input('email');
+        $identifier = $this->input('login') ?? $this->input('username') ?? $this->input('email');
         if ($identifier) {
             $this->merge(['login' => $identifier]);
         }
@@ -52,18 +52,18 @@ class LoginRequest extends FormRequest
         $login = trim((string) $this->input('login'));
         $password = (string) $this->input('password');
 
-        // Check whether user entered an email address or a Citizen ID (CCCD)
+        // Check whether user entered an email address or username
         $isEmail = filter_var($login, FILTER_VALIDATE_EMAIL);
-        $credentials = $isEmail ? ['email' => $login, 'password' => $password] : ['cccd' => $login, 'password' => $password];
+        $credentials = $isEmail ? ['email' => $login, 'password' => $password] : ['username' => $login, 'password' => $password];
 
         if (! Auth::attempt($credentials, $this->boolean('remember'))) {
             // Also try fallback to email if numeric or vice versa
-            $fallbackCredentials = $isEmail ? ['cccd' => $login, 'password' => $password] : ['email' => $login, 'password' => $password];
+            $fallbackCredentials = $isEmail ? ['username' => $login, 'password' => $password] : ['email' => $login, 'password' => $password];
             if (! Auth::attempt($fallbackCredentials, $this->boolean('remember'))) {
                 RateLimiter::hit($this->throttleKey());
 
                 throw ValidationException::withMessages([
-                    'login' => 'Invalid Citizen ID (CCCD), email, or password.',
+                    'login' => 'Invalid username, email, or password.',
                 ]);
             }
         }

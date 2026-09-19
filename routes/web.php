@@ -3,11 +3,12 @@
 use App\Http\Controllers\Admin\ClassManagerController;
 use App\Http\Controllers\Admin\MaterialController;
 use App\Http\Controllers\Admin\QuestionBankController;
-use App\Http\Controllers\Admin\StudentManagerController;
+use App\Http\Controllers\Admin\UserManagerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Student\StudentCourseController;
 use App\Models\Course;
 use App\Models\CourseClass;
+use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -22,10 +23,12 @@ use Inertia\Inertia;
 Route::get('/', function () {
     $courses = Course::withCount(['lessons', 'classes'])->orderBy('order')->get();
     $activeClassesCount = CourseClass::where('status', 'active')->count();
+    $hasAdmin = User::where('role', 'admin')->exists();
 
     return Inertia::render('Home/Index', [
         'courses' => $courses,
         'activeClassesCount' => $activeClassesCount,
+        'hasAdmin' => $hasAdmin,
         'monastery' => [
             'name' => 'Viên Không Ni',
             'tagline' => 'Buddhist Courses – Con Đường Học Pháp & Hành Pháp',
@@ -73,10 +76,17 @@ Route::middleware(['auth', 'role:admin,teacher'])->prefix('admin')->name('admin.
     Route::put('/questions/{id}', [QuestionBankController::class, 'update'])->name('questions.update');
     Route::delete('/questions/{id}', [QuestionBankController::class, 'destroy'])->name('questions.destroy');
 
-    // Students Management & Website Password
-    Route::get('/students', [StudentManagerController::class, 'index'])->name('students.index');
-    Route::post('/students', [StudentManagerController::class, 'store'])->name('students.store');
-    Route::put('/students/{id}/password', [StudentManagerController::class, 'updatePassword'])->name('students.password');
+    // Users & Roles Management
+    Route::get('/users', [UserManagerController::class, 'index'])->name('users.index');
+    Route::post('/users', [UserManagerController::class, 'store'])->name('users.store');
+    Route::put('/users/{id}', [UserManagerController::class, 'update'])->name('users.update');
+    Route::put('/users/{id}/password', [UserManagerController::class, 'updatePassword'])->name('users.password');
+    Route::delete('/users/{id}', [UserManagerController::class, 'destroy'])->name('users.destroy');
+
+    // Backward-compatible student routes
+    Route::get('/students', fn () => redirect()->route('admin.users.index', ['role' => 'student']))->name('students.index');
+    Route::post('/students', [UserManagerController::class, 'store'])->name('students.store');
+    Route::put('/students/{id}/password', [UserManagerController::class, 'updatePassword'])->name('students.password');
 });
 
 // Profile Management (for all authenticated users)

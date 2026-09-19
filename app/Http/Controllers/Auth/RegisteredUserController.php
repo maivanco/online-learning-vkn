@@ -19,8 +19,12 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): Response
+    public function create(): Response|RedirectResponse
     {
+        if (User::where('role', 'admin')->doesntExist()) {
+            return redirect()->route('setup');
+        }
+
         return Inertia::render('Auth/Register');
     }
 

@@ -63,7 +63,7 @@ class ClassManagerController extends Controller
                 'registered_students' => $cls->students->map(fn($s) => [
                     'id' => $s->id,
                     'name' => $s->name,
-                    'cccd' => $s->cccd,
+                    'username' => $s->username,
                     'email' => $s->email,
                     'status' => $s->pivot->status,
                 ]),
@@ -128,7 +128,7 @@ class ClassManagerController extends Controller
             return [
                 'id' => $student->id,
                 'name' => $student->name,
-                'cccd' => $student->cccd,
+                'username' => $student->username,
                 'email' => $student->email,
                 'phone' => $student->phone,
                 'enrollment_status' => $student->pivot->status,
@@ -145,7 +145,7 @@ class ClassManagerController extends Controller
         $enrolledIds = $class->students->pluck('id')->toArray();
         $availableStudents = User::where('role', 'student')
             ->whereNotIn('id', $enrolledIds)
-            ->select('id', 'name', 'cccd', 'email')
+            ->select('id', 'name', 'username', 'email')
             ->get();
 
         return Inertia::render('Admin/Classes/Show', [

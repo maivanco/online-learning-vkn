@@ -103,7 +103,7 @@ export default function QuestionBankIndex({ auth, questions, courses, selectedCo
             user={auth.user}
             header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Question Bank (Ngân Hàng Đề Thi & Ôn Luyện)</h2>}
         >
-            <Head title="Question Bank - Viên Không Ni" />
+            <Head title="Question Bank - Buddhist Courses" />
 
             <div className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
                 {/* Flash Messages */}

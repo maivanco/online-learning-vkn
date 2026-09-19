@@ -256,7 +256,7 @@ export default function LessonPlayer({
 
                     <div className="flex items-center gap-3 text-xs">
                         <span className="font-mono text-stone-300 hidden md:inline">
-                            Học viên: {auth.user.name} ({auth.user.cccd})
+                            Học viên: {auth.user.name} {auth.user.username ? `(${auth.user.username})` : ''}
                         </span>
                         {progress.is_completed && (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">

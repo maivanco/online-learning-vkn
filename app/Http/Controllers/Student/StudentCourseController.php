@@ -88,7 +88,7 @@ class StudentCourseController extends Controller
             'upcomingClasses' => $upcomingClasses,
             'user' => [
                 'name' => $user->name,
-                'cccd' => $user->cccd,
+                'username' => $user->username,
                 'email' => $user->email,
             ],
         ]);

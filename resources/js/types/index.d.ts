@@ -2,7 +2,7 @@ export interface User {
     id: number;
     name: string;
     email: string;
-    cccd?: string;
+    username?: string;
     role?: 'admin' | 'teacher' | 'student';
     phone?: string;
     status?: string;

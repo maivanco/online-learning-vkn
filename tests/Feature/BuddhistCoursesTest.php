@@ -32,7 +32,7 @@ class BuddhistCoursesTest extends TestCase
         $this->admin = User::create([
             'name' => 'Abbot Admin',
             'email' => 'admin@vienkhongni.vn',
-            'cccd' => '001099000001',
+            'username' => 'admin',
             'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
@@ -40,7 +40,7 @@ class BuddhistCoursesTest extends TestCase
         $this->teacher = User::create([
             'name' => 'Sayalay Teacher',
             'email' => 'teacher@vienkhongni.vn',
-            'cccd' => '001099000002',
+            'username' => 'teacher',
             'password' => Hash::make('password'),
             'role' => 'teacher',
         ]);
@@ -48,7 +48,7 @@ class BuddhistCoursesTest extends TestCase
         $this->student = User::create([
             'name' => 'Bhikkhuni Vien Tue',
             'email' => 'student@vienkhongni.vn',
-            'cccd' => '079199000001',
+            'username' => 'student',
             'password' => Hash::make('password'),
             'role' => 'student',
         ]);
@@ -103,10 +103,10 @@ class BuddhistCoursesTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_user_can_login_using_cccd(): void
+    public function test_user_can_login_using_username(): void
     {
         $response = $this->post('/login', [
-            'login' => '079199000001',
+            'login' => 'student',
             'password' => 'password',
         ]);
 
@@ -114,10 +114,10 @@ class BuddhistCoursesTest extends TestCase
         $response->assertRedirect(route('dashboard'));
     }
 
-    public function test_manager_can_login_using_cccd_and_redirects_to_dashboard(): void
+    public function test_manager_can_login_using_username_and_redirects_to_dashboard(): void
     {
         $response = $this->post('/login', [
-            'login' => '001099000001',
+            'login' => 'admin',
             'password' => 'password',
         ]);
 

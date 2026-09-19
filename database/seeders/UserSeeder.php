@@ -14,14 +14,6 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::updateOrCreate(
-            ['email' => 'siteowner@local.dev'],
-            [
-                'name' => 'Admin',
-                'password' => Hash::make('-^])$Eqy_r>1>dMi'), // default password
-                'role' => 'admin',
-                'status' => 'active',
-            ]
-        );
+        // Initial setup has zero users. Administrator account is created during initial setup wizard.
     }
 }

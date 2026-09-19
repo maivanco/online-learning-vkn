@@ -34,7 +34,7 @@ interface FeedbackItem {
     user: {
         id: number;
         name: string;
-        cccd: string;
+        username: string;
     };
     lesson: {
         id: number;
@@ -121,7 +121,7 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
             user={auth.user}
             header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Materials & Lecture Videos (Tài liệu & Video)</h2>}
         >
-            <Head title="Materials Management - Viên Không Ni" />
+            <Head title="Materials Management - Buddhist Courses" />
 
             <div className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
                 {/* Flash Messages */}
@@ -305,7 +305,7 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                         <div className="flex items-start justify-between gap-4 mb-2">
                                             <div>
                                                 <span className="font-semibold text-gray-900 text-sm">
-                                                    {fb.user.name} (CCCD: {fb.user.cccd})
+                                                    {fb.user.name} (Username: {fb.user.username})
                                                 </span>
                                                 <div className="text-[11px] text-amber-800 mt-0.5">
                                                     Material: <span className="font-semibold">{fb.lesson.title}</span> &bull; {fb.lesson.course_title}
