@@ -21,7 +21,10 @@ use Inertia\Inertia;
 
 // Public Landing Page showcasing Viên Không Ni Monastery and Course Catalog
 Route::get('/', function () {
-    $courses = Course::withCount(['lessons', 'classes'])->orderBy('order')->get();
+    $courses = Course::with(['parent', 'children' => fn($q) => $q->withCount(['lessons', 'classes'])->orderBy('order')])
+        ->withCount(['lessons', 'classes'])
+        ->orderBy('order')
+        ->get();
     $activeClassesCount = CourseClass::count();
     $hasAdmin = User::where('role', 'admin')->exists();
 

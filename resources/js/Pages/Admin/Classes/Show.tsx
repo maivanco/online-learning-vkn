@@ -95,7 +95,7 @@ export default function ClassShow({ auth, classItem, students, availableStudents
                         <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
                             <Link href={route('admin.dashboard')} className="hover:text-amber-700">{t('classes.nav_classes')}</Link>
                             <span>/</span>
-                            <span>{classItem.code}</span>
+                            <span>#{classItem.id}</span>
                         </div>
                         <h2 className="font-serif font-bold text-xl text-gray-900 leading-tight">
                             {classItem.name}
@@ -153,11 +153,11 @@ export default function ClassShow({ auth, classItem, students, availableStudents
                         </div>
 
                         <div>
-                            <span className="text-[11px] font-medium uppercase text-gray-400">{t('classes.duration_period')}</span>
-                            <p className="font-semibold text-gray-900 text-sm mt-0.5">{t('classes.duration_display', { months: String(classItem.duration_months) })}</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                                {classItem.start_date || 'N/A'} &rarr; {classItem.end_date || 'N/A'}
-                            </p>
+                            <span className="text-[11px] font-medium uppercase text-gray-400">Description</span>
+                            <p className="text-xs text-gray-700 mt-0.5 line-clamp-2">{classItem.description || '—'}</p>
+                            <span className="text-[11px] text-gray-400 mt-1 block">
+                                {classItem.lessons.length} lessons
+                            </span>
                         </div>
 
                         <div>
@@ -167,9 +167,9 @@ export default function ClassShow({ auth, classItem, students, availableStudents
                                 <span className="text-xs text-gray-500">{t('classes.students_count', { count: '' }).trim()}</span>
                             </div>
                             <span className={`inline-block mt-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                                classItem.status === 'active' ? 'bg-amber-100 text-amber-800' : classItem.status === 'completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
+                                classItem.is_locked ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
                             }`}>
-                                {classItem.status.toUpperCase()}
+                                {classItem.is_locked ? 'LOCKED' : 'ACTIVE'}
                             </span>
                         </div>
 
@@ -328,7 +328,7 @@ export default function ClassShow({ auth, classItem, students, availableStudents
                             {t('classes.danger_zone_remove')}
                         </h4>
                         <p className="text-xs text-stone-600 mt-1">
-                            {t('classes.danger_zone_desc', { name: classItem.name, code: classItem.code })}
+                            {t('classes.danger_zone_desc', { name: classItem.name, code: String(classItem.id) })}
                         </p>
                     </div>
 
@@ -509,7 +509,7 @@ export default function ClassShow({ auth, classItem, students, availableStudents
                                 {classItem.name}
                             </div>
                             <div className="text-[11px] text-stone-500 font-mono">
-                                Code: {classItem.code} &bull; {classItem.course.title}
+                                #{classItem.id} &bull; {classItem.course.title}
                             </div>
                             <div className="text-[11px] text-red-700 pt-1">
                                 {t('classes.delete_consequence')}

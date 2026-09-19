@@ -112,6 +112,10 @@ class MaterialController extends Controller
             'order' => 'nullable|integer|min:1',
         ]);
 
+        if (trim(strip_tags($validated['reading_content'])) === '') {
+            return back()->withErrors(['reading_content' => 'The reading content field cannot be empty.']);
+        }
+
         $validated['slug'] = Str::slug($validated['title']) . '-' . rand(100, 999);
         $validated['order'] = $validated['order'] ?? (Lesson::where('course_id', $validated['course_id'])->max('order') + 1);
 
@@ -135,6 +139,10 @@ class MaterialController extends Controller
             'video_url' => 'nullable|url',
             'order' => 'required|integer|min:1',
         ]);
+
+        if (trim(strip_tags($validated['reading_content'])) === '') {
+            return back()->withErrors(['reading_content' => 'The reading content field cannot be empty.']);
+        }
 
         $lesson->update($validated);
 
@@ -182,6 +190,10 @@ class MaterialController extends Controller
             'category' => 'nullable|string|max:50',
         ]);
 
+        if (isset($validated['description']) && trim(strip_tags($validated['description'])) === '') {
+            $validated['description'] = null;
+        }
+
         $slug = !empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($validated['title']);
         $originalSlug = $slug;
         $counter = 1;
@@ -222,6 +234,10 @@ class MaterialController extends Controller
             'parent_id' => 'nullable|exists:courses,id',
             'category' => 'nullable|string|max:50',
         ]);
+
+        if (isset($validated['description']) && trim(strip_tags($validated['description'])) === '') {
+            $validated['description'] = null;
+        }
 
         if (!empty($validated['parent_id']) && (int) $validated['parent_id'] === $id) {
             return back()->withErrors(['parent_id' => 'A course catalog cannot be its own parent.']);

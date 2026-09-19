@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { useTranslation } from '@/utils/useTranslation';
+import RichTextEditor from '@/Components/RichTextEditor';
 
 interface Course {
     id: number;
@@ -415,9 +416,10 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                                 </p>
                                             )}
                                             {activeCourse?.description && (
-                                                <p className="text-xs text-gray-600 mt-1.5 bg-stone-50 p-2.5 rounded-lg border border-stone-100">
-                                                    {activeCourse.description}
-                                                </p>
+                                                <div
+                                                    className="text-xs text-stone-700 mt-1.5 bg-stone-50/80 p-3 rounded-lg border border-stone-200/80 prose prose-xs max-w-none"
+                                                    dangerouslySetInnerHTML={{ __html: activeCourse.description }}
+                                                />
                                             )}
                                         </div>
 
@@ -608,7 +610,7 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                     <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                         <div className="flex items-center justify-between border-b pb-3">
                             <h3 className="font-serif font-bold text-base text-gray-900">
-                                {t('materials.modal_create_material_title')}
+                                {t('materials.modal_create_lesson_title')}
                             </h3>
                             <button
                                 onClick={() => setIsCreateLessonModalOpen(false)}
@@ -662,8 +664,7 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
 
                             <div>
                                 <label className="block font-medium text-gray-700 mb-1">{t('materials.summary_label')}</label>
-                                <input
-                                    type="text"
+                                <textarea
                                     placeholder={t('materials.summary_placeholder')}
                                     value={lessonForm.data.summary}
                                     onChange={(e) => lessonForm.setData('summary', e.target.value)}
@@ -675,13 +676,12 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                 <label className="block font-medium text-gray-700 mb-1">
                                     {t('materials.reading_content_label')}
                                 </label>
-                                <textarea
-                                    rows={6}
-                                    placeholder={t('materials.reading_content_placeholder')}
+                                <RichTextEditor
                                     value={lessonForm.data.reading_content}
-                                    onChange={(e) => lessonForm.setData('reading_content', e.target.value)}
-                                    className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500 font-mono"
-                                    required
+                                    onChange={(html) => lessonForm.setData('reading_content', html)}
+                                    placeholder={t('materials.reading_content_placeholder')}
+                                    minHeight="180px"
+                                    error={lessonForm.errors.reading_content}
                                 />
                             </div>
 
@@ -788,12 +788,12 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
 
                             <div>
                                 <label className="block font-medium text-gray-700 mb-1">{t('materials.reading_content_label')}</label>
-                                <textarea
-                                    rows={7}
+                                <RichTextEditor
                                     value={editLessonForm.data.reading_content}
-                                    onChange={(e) => editLessonForm.setData('reading_content', e.target.value)}
-                                    className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500 font-mono"
-                                    required
+                                    onChange={(html) => editLessonForm.setData('reading_content', html)}
+                                    placeholder={t('materials.reading_content_placeholder')}
+                                    minHeight="200px"
+                                    error={editLessonForm.errors.reading_content}
                                 />
                             </div>
 
@@ -951,16 +951,13 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                 <label className="block font-medium text-gray-700 mb-1">
                                     {t('materials.description_label')}
                                 </label>
-                                <textarea
-                                    rows={3}
+                                <RichTextEditor
                                     value={createCatalogForm.data.description}
-                                    onChange={(e) => createCatalogForm.setData('description', e.target.value)}
+                                    onChange={(html) => createCatalogForm.setData('description', html)}
                                     placeholder={t('materials.description_placeholder')}
-                                    className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
+                                    minHeight="120px"
+                                    error={createCatalogForm.errors.description}
                                 />
-                                {createCatalogForm.errors.description && (
-                                    <p className="text-red-600 text-[11px] mt-1">{createCatalogForm.errors.description}</p>
-                                )}
                             </div>
 
                             <div className="flex justify-end gap-2 pt-3 border-t">
@@ -1075,15 +1072,13 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                 <label className="block font-medium text-gray-700 mb-1">
                                     {t('materials.description_label')}
                                 </label>
-                                <textarea
-                                    rows={3}
+                                <RichTextEditor
                                     value={editCatalogForm.data.description}
-                                    onChange={(e) => editCatalogForm.setData('description', e.target.value)}
-                                    className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
+                                    onChange={(html) => editCatalogForm.setData('description', html)}
+                                    placeholder={t('materials.description_placeholder')}
+                                    minHeight="120px"
+                                    error={editCatalogForm.errors.description}
                                 />
-                                {editCatalogForm.errors.description && (
-                                    <p className="text-red-600 text-[11px] mt-1">{editCatalogForm.errors.description}</p>
-                                )}
                             </div>
 
                             <div className="flex justify-end gap-2 pt-3 border-t">

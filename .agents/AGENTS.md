@@ -15,7 +15,8 @@
 | **Language (FE)** | **TypeScript**| `^5.x` | Strict types; checked during `npm run build` (`tsc && vite build`) |
 | **Build Tool** | **Vite** | `^5.x` | `laravel-vite-plugin` + `@vitejs/plugin-react` |
 | **Routing Helper** | **Ziggy** | `^2.0` | `tightenco/ziggy` + `@types/ziggy-js` — use `route('route.name')` in TSX |
-| **Styling & CSS** | **Tailwind CSS** + **Sass** | `^3.4` | `@tailwindcss/forms`, base SCSS in `resources/sass/app.scss` |
+| **Styling & CSS** | **Tailwind CSS** + **Sass** | `^3.4` | `@tailwindcss/forms`, `@tailwindcss/typography`, base SCSS in `resources/sass/app.scss` |
+| **Rich Text Editor** | **TipTap** | `^3.31` | `@tiptap/react` + starter-kit; standard editor component in `@/Components/RichTextEditor` |
 | **UI Components** | **shadcn/ui** style + **Headless UI** |  | Aliases `@/Components/ui`, `@/utils` (`clsx` + `tailwind-merge`), Heroicons |
 | **Database** | **MySQL** | `8.0` | Managed via Laravel Sail (`mysql/mysql-server:8.0`) on host port `3306` |
 | **Container Engine** | **Laravel Sail** | `^1.x` | Docker environment via `docker-compose.yml` (`sail-8.3/app`) |
@@ -69,6 +70,7 @@ Before executing tasks, AI Agents MUST read the following rule files located in 
 - **Curriculum & Materials**: Managed by `ClassManagerController`, `MaterialController`, `QuestionBankController`. Courses have categories (`category` string enum), classes (`CourseClass`), lessons (`Lesson`), and questions (`Question`).
 - **Student Progression**: Enforces the 5-step learning pipeline in `StudentCourseController`:
   `Self-Study (Reading) -> Video -> Practice Quizzes -> Final Exam -> Master Incorrect Questions`.
+- **Rich Text & Content Editing**: All formatted text areas (Course Catalog `description`, Lesson `reading_content`, articles, guides) **MUST** use the shared `RichTextEditor` component (`@/Components/RichTextEditor`) based on TipTap rather than raw `<textarea>`. Rich text is rendered via Tailwind `@tailwindcss/typography` (`prose prose-stone` / `prose prose-xs`) and normalized on the backend.
 
 ---
 

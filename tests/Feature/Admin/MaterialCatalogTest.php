@@ -338,4 +338,65 @@ class MaterialCatalogTest extends TestCase
             'id' => $lesson->id,
         ]);
     }
+
+    public function test_admin_can_save_and_normalize_catalog_with_rich_text(): void
+    {
+        // 1. Create catalog with rich HTML description
+        $response = $this->actingAs($this->admin)->post(route('admin.materials.catalogs.store'), [
+            'title' => 'Abhidhamma Advanced Studies',
+            'description' => '<p>Welcome to <strong>Abhidhamma</strong>. Key points:</p><ul><li>Citta</li><li>Cetasika</li></ul>',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('courses', [
+            'title' => 'Abhidhamma Advanced Studies',
+            'description' => '<p>Welcome to <strong>Abhidhamma</strong>. Key points:</p><ul><li>Citta</li><li>Cetasika</li></ul>',
+        ]);
+
+        // 2. Create catalog with empty editor tags -> should be saved as null
+        $responseEmpty = $this->actingAs($this->admin)->post(route('admin.materials.catalogs.store'), [
+            'title' => 'Catalog With Empty Editor Tags',
+            'description' => '<p><br></p>',
+        ]);
+
+        $responseEmpty->assertRedirect();
+        $this->assertDatabaseHas('courses', [
+            'title' => 'Catalog With Empty Editor Tags',
+            'description' => null,
+        ]);
+    }
+
+    public function test_admin_can_save_and_normalize_lesson_with_rich_text(): void
+    {
+        $course = Course::create([
+            'title' => 'Lesson Rich Text Course',
+            'slug' => 'lesson-rich-text-course',
+            'category' => 'dhamma',
+        ]);
+
+        // 1. Create lesson with rich text HTML reading content
+        $response = $this->actingAs($this->admin)->post(route('admin.materials.store'), [
+            'course_id' => $course->id,
+            'title' => 'Lesson With Rich Content',
+            'reading_content' => '<h2>Introduction</h2><p>This is <em>rich text</em> content for students.</p>',
+            'order' => 1,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('lessons', [
+            'course_id' => $course->id,
+            'title' => 'Lesson With Rich Content',
+            'reading_content' => '<h2>Introduction</h2><p>This is <em>rich text</em> content for students.</p>',
+        ]);
+
+        // 2. Create lesson with empty editor tags -> should fail validation because reading_content is required
+        $responseEmpty = $this->actingAs($this->admin)->post(route('admin.materials.store'), [
+            'course_id' => $course->id,
+            'title' => 'Lesson With Empty Editor',
+            'reading_content' => '<p><br></p>',
+            'order' => 2,
+        ]);
+
+        $responseEmpty->assertSessionHasErrors('reading_content');
+    }
 }

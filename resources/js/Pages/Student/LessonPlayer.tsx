@@ -407,10 +407,11 @@ export default function LessonPlayer({
                             </p>
                         </div>
 
-                        {/* Reading Markdown Content */}
-                        <div className="prose prose-stone max-w-none text-stone-800 text-sm leading-relaxed whitespace-pre-line font-serif bg-stone-50/60 p-6 rounded-2xl border border-stone-200/80">
-                            {lesson.reading_content || t('student.reading_updating')}
-                        </div>
+                        {/* Reading Markdown / Rich Text Content */}
+                        <div
+                            className="prose prose-stone max-w-none text-stone-800 text-sm leading-relaxed font-serif bg-stone-50/60 p-6 rounded-2xl border border-stone-200/80"
+                            dangerouslySetInnerHTML={{ __html: lesson.reading_content || t('student.reading_updating') }}
+                        />
 
                         {/* Optional Attached PDF/Document URL */}
                         {lesson.reading_file_url && (

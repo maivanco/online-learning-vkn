@@ -1,16 +1,24 @@
+import { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { useTranslation } from '@/utils/useTranslation';
 
 interface CourseItem {
     id: number;
+    parent_id?: number | null;
     title: string;
     slug: string;
     category: 'dhamma' | 'vinaya' | 'abhidhamma' | 'pali' | string;
-    target_audience: string;
-    description: string;
+    target_audience?: string;
+    description?: string | null;
     lessons_count: number;
     classes_count: number;
+    order?: number;
+    parent?: {
+        id: number;
+        title: string;
+    } | null;
+    children?: CourseItem[];
 }
 
 interface MonasteryInfo {
@@ -31,16 +39,73 @@ interface HomeProps extends PageProps {
 export default function Home({ auth, courses, activeClassesCount, monastery, year, hasAdmin = true }: HomeProps) {
     const t = useTranslation();
 
-    const categories = [
-        { id: 'dhamma', label: t('home.dhamma_title'), desc: t('home.dhamma_subtitle') },
-        { id: 'vinaya', label: t('home.vinaya_title'), desc: t('home.vinaya_subtitle') },
-        { id: 'abhidhamma', label: t('home.abhidhamma_title'), desc: t('home.abhidhamma_subtitle') },
-        { id: 'pali', label: t('home.pali_title'), desc: t('home.pali_subtitle') },
+    const categoryConfigs: Record<string, { num: string; label: string; desc: string }> = {
+        dhamma: { num: t('home.dhamma_num'), label: t('home.dhamma_title'), desc: t('home.dhamma_subtitle') },
+        vinaya: { num: t('home.vinaya_num'), label: t('home.vinaya_title'), desc: t('home.vinaya_subtitle') },
+        abhidhamma: { num: t('home.abhidhamma_num'), label: t('home.abhidhamma_title'), desc: t('home.abhidhamma_subtitle') },
+        pali: { num: t('home.pali_num'), label: t('home.pali_title'), desc: t('home.pali_subtitle') },
+    };
+
+    const extraCategoryKeys = Array.from(
+        new Set(
+            (courses || [])
+                .map((c) => c.category)
+                .filter((cat) => cat && !categoryConfigs[cat])
+        )
+    );
+
+    const allCategories = [
+        ...Object.entries(categoryConfigs).map(([id, cfg]) => ({
+            id,
+            num: cfg.num,
+            label: cfg.label,
+            desc: cfg.desc,
+        })),
+        ...extraCategoryKeys.map((cat, idx) => ({
+            id: cat,
+            num: cat === 'general' ? t('home.general_num') : String(Object.keys(categoryConfigs).length + idx + 1),
+            label: cat === 'general' ? t('home.general_title') : (cat.charAt(0).toUpperCase() + cat.slice(1)),
+            desc: cat === 'general' ? t('home.general_subtitle') : '',
+        })),
     ];
 
     const cleanedAddress = monastery?.address
         ? monastery.address.replace(/^[^,]+,\s*/, '')
         : '';
+
+    const [copiedField, setCopiedField] = useState<string | null>(null);
+    const [showQr, setShowQr] = useState(false);
+
+    const handleCopy = (text: string, field: string) => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                setCopiedField(field);
+                setTimeout(() => setCopiedField(null), 2000);
+            }).catch(() => {
+                fallbackCopy(text, field);
+            });
+        } else {
+            fallbackCopy(text, field);
+        }
+    };
+
+    const fallbackCopy = (text: string, field: string) => {
+        try {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            setCopiedField(field);
+            setTimeout(() => setCopiedField(null), 2000);
+        } catch {
+            // fallback ignore
+        }
+    };
 
     return (
         <>
@@ -162,32 +227,6 @@ export default function Home({ auth, courses, activeClassesCount, monastery, yea
                                 </a>
                             </div>
 
-                            {/* Contact & Facebook Bar */}
-                            <div className="mt-8 pt-6 border-t border-stone-200 max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 text-xs text-stone-600">
-                                {cleanedAddress && (
-                                    <div className="flex items-center gap-2">
-                                        <svg className="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        <span>{cleanedAddress}</span>
-                                    </div>
-                                )}
-
-                                {monastery?.facebook && (
-                                    <a
-                                        href={monastery.facebook}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-medium transition"
-                                    >
-                                        <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                                        </svg>
-                                        {t('home.facebook_page')}
-                                    </a>
-                                )}
-                            </div>
                         </div>
                     </div>
 
@@ -261,99 +300,107 @@ export default function Home({ auth, courses, activeClassesCount, monastery, yea
                             </p>
                         </div>
 
-                        {/* Four Core Categories Grid */}
+                        {/* Course Categories Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {/* 1. Dhamma (Discourse) */}
-                            <div className="bg-white rounded-3xl border border-stone-200 p-8 space-y-4 shadow-xs hover:border-amber-500/60 hover:shadow-lg transition">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-serif font-bold text-base shadow-xs">
-                                        {t('home.dhamma_num')}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-serif font-bold text-xl text-stone-900">{t('home.dhamma_title')}</h3>
-                                        <p className="text-xs font-medium text-amber-700">{t('home.dhamma_subtitle')}</p>
-                                    </div>
-                                </div>
-                                <ul className="space-y-2.5 text-xs text-stone-600 pt-3 border-t border-stone-100">
-                                    <li className="flex items-start gap-2.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0"></span>
-                                        <span><strong className="text-stone-800">{t('home.dhamma_point_1_title')}</strong> {t('home.dhamma_point_1_desc')}</span>
-                                    </li>
-                                    <li className="flex items-start gap-2.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0"></span>
-                                        <span><strong className="text-stone-800">{t('home.dhamma_point_2_title')}</strong> {t('home.dhamma_point_2_desc')}</span>
-                                    </li>
-                                </ul>
-                            </div>
+                            {allCategories.map((category) => {
+                                const categoryCourses = (courses || []).filter((c) => c.category === category.id);
+                                const topLevelCourses = categoryCourses.filter(
+                                    (c) => !c.parent_id || !categoryCourses.some((parent) => parent.id === c.parent_id)
+                                );
 
-                            {/* 2. Vinaya (Discipline) */}
-                            <div className="bg-white rounded-3xl border border-stone-200 p-8 space-y-4 shadow-xs hover:border-amber-500/60 hover:shadow-lg transition">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-serif font-bold text-base shadow-xs">
-                                        {t('home.vinaya_num')}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-serif font-bold text-xl text-stone-900">{t('home.vinaya_title')}</h3>
-                                        <p className="text-xs font-medium text-amber-700">{t('home.vinaya_subtitle')}</p>
-                                    </div>
-                                </div>
-                                <ul className="space-y-2.5 text-xs text-stone-600 pt-3 border-t border-stone-100">
-                                    <li className="flex items-start gap-2.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0"></span>
-                                        <span><strong className="text-stone-800">{t('home.vinaya_point_1_title')}</strong> {t('home.vinaya_point_1_desc')}</span>
-                                    </li>
-                                    <li className="flex items-start gap-2.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0"></span>
-                                        <span><strong className="text-stone-800">{t('home.vinaya_point_2_title')}</strong> {t('home.vinaya_point_2_desc')}</span>
-                                    </li>
-                                </ul>
-                            </div>
+                                return (
+                                    <div
+                                        key={category.id}
+                                        className="bg-white rounded-3xl border border-stone-200 p-8 space-y-4 shadow-xs hover:border-amber-500/60 hover:shadow-lg transition flex flex-col justify-between"
+                                    >
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-serif font-bold text-base shadow-xs shrink-0">
+                                                    {category.num}
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-serif font-bold text-xl text-stone-900">{category.label}</h3>
+                                                    {category.desc && (
+                                                        <p className="text-xs font-medium text-amber-700">{category.desc}</p>
+                                                    )}
+                                                </div>
+                                            </div>
 
-                            {/* 3. Abhidhamma (Higher Teachings) */}
-                            <div className="bg-white rounded-3xl border border-stone-200 p-8 space-y-4 shadow-xs hover:border-amber-500/60 hover:shadow-lg transition">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-serif font-bold text-base shadow-xs">
-                                        {t('home.abhidhamma_num')}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-serif font-bold text-xl text-stone-900">{t('home.abhidhamma_title')}</h3>
-                                        <p className="text-xs font-medium text-amber-700">{t('home.abhidhamma_subtitle')}</p>
-                                    </div>
-                                </div>
-                                <ul className="space-y-2.5 text-xs text-stone-600 pt-3 border-t border-stone-100">
-                                    <li className="flex items-start gap-2.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0"></span>
-                                        <span><strong className="text-stone-800">{t('home.abhidhamma_point_1_title')}</strong> {t('home.abhidhamma_point_1_desc')}</span>
-                                    </li>
-                                </ul>
-                            </div>
+                                            <ul className="space-y-3 text-xs text-stone-600 pt-3 border-t border-stone-100">
+                                                {topLevelCourses.length === 0 ? (
+                                                    <li className="text-xs text-stone-400 italic py-2">
+                                                        {t('home.no_courses_in_category')}
+                                                    </li>
+                                                ) : (
+                                                    topLevelCourses.map((course) => {
+                                                        const children = (course.children && course.children.length > 0)
+                                                            ? course.children
+                                                            : categoryCourses.filter((c) => c.parent_id === course.id);
 
-                            {/* 4. Pali (Canonical Language) */}
-                            <div className="bg-white rounded-3xl border border-stone-200 p-8 space-y-4 shadow-xs hover:border-amber-500/60 hover:shadow-lg transition">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-serif font-bold text-base shadow-xs">
-                                        {t('home.pali_num')}
+                                                        return (
+                                                            <li key={course.id} className="flex items-start gap-2.5">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0"></span>
+                                                                <div className="flex-1 space-y-1">
+                                                                    <div className="text-stone-700 leading-relaxed">
+                                                                        <strong className="text-stone-900 font-semibold">
+                                                                            {course.title}{course.description ? ':' : ''}
+                                                                        </strong>{' '}
+                                                                        {course.description && (
+                                                                            <span
+                                                                                className="text-stone-600 inline prose prose-stone prose-xs max-w-none [&>p]:inline [&>p]:m-0"
+                                                                                dangerouslySetInnerHTML={{ __html: course.description }}
+                                                                            />
+                                                                        )}
+                                                                    </div>
+
+                                                                    {(course.lessons_count > 0 || course.classes_count > 0) && (
+                                                                        <div className="flex items-center gap-2 pt-0.5 text-[10px] text-stone-400">
+                                                                            {course.lessons_count > 0 && (
+                                                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 font-medium">
+                                                                                    {course.lessons_count} {course.lessons_count === 1 ? t('home.lesson_unit') : t('home.lessons_count')}
+                                                                                </span>
+                                                                            )}
+                                                                            {course.lessons_count > 0 && course.classes_count > 0 && (
+                                                                                <span>•</span>
+                                                                            )}
+                                                                            {course.classes_count > 0 && (
+                                                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200/60 font-medium">
+                                                                                    {course.classes_count} {t('home.classes_count')}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+
+                                                                    {children.length > 0 && (
+                                                                        <ul className="pl-3 mt-1.5 space-y-1 border-l-2 border-amber-200/70 text-[11px] text-stone-500">
+                                                                            {children.map((child) => (
+                                                                                <li key={child.id} className="flex items-start gap-1.5">
+                                                                                    <span className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0"></span>
+                                                                                    <div>
+                                                                                        <strong className="text-stone-800 font-medium">
+                                                                                            {child.title}{child.description ? ':' : ''}
+                                                                                        </strong>{' '}
+                                                                                        {child.description && (
+                                                                                            <span
+                                                                                                className="text-stone-500 inline prose prose-stone prose-xs [&>p]:inline [&>p]:m-0"
+                                                                                                dangerouslySetInnerHTML={{ __html: child.description }}
+                                                                                            />
+                                                                                        )}
+                                                                                    </div>
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    )}
+                                                                </div>
+                                                            </li>
+                                                        );
+                                                    })
+                                                )}
+                                            </ul>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 className="font-serif font-bold text-xl text-stone-900">{t('home.pali_title')}</h3>
-                                        <p className="text-xs font-medium text-amber-700">{t('home.pali_subtitle')}</p>
-                                    </div>
-                                </div>
-                                <ul className="space-y-2.5 text-xs text-stone-600 pt-3 border-t border-stone-100">
-                                    <li className="flex items-start gap-2.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0"></span>
-                                        <span><strong className="text-stone-800">{t('home.pali_point_1_title')}</strong> {t('home.pali_point_1_desc')}</span>
-                                    </li>
-                                    <li className="flex items-start gap-2.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0"></span>
-                                        <span><strong className="text-stone-800">{t('home.pali_point_2_title')}</strong> {t('home.pali_point_2_desc')}</span>
-                                    </li>
-                                    <li className="flex items-start gap-2.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0"></span>
-                                        <span><strong className="text-stone-800">{t('home.pali_point_3_title')}</strong> {t('home.pali_point_3_desc')}</span>
-                                    </li>
-                                </ul>
-                            </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </main>
@@ -361,8 +408,9 @@ export default function Home({ auth, courses, activeClassesCount, monastery, yea
                 {/* Footer */}
                 <footer className="bg-stone-50 border-t border-stone-200 text-stone-600 py-12">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            <div className="space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8">
+                            {/* Brand & System Overview */}
+                            <div className="md:col-span-1 lg:col-span-4 space-y-3">
                                 <div className="flex items-center gap-2.5">
                                     <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
                                         <svg className="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -376,20 +424,9 @@ export default function Home({ auth, courses, activeClassesCount, monastery, yea
                                 </p>
                             </div>
 
-                            <div className="space-y-2 text-xs">
-                                <h4 className="font-serif font-bold text-stone-900">{t('home.footer_address_title')}</h4>
-                                {cleanedAddress && (
-                                    <p className="text-stone-600 leading-relaxed">
-                                        {cleanedAddress}
-                                    </p>
-                                )}
-                                <p className="text-stone-500 text-[11px] pt-1">
-                                    {t('home.footer_address_note')}
-                                </p>
-                            </div>
-
-                            <div className="space-y-3 text-xs">
-                                <h4 className="font-serif font-bold text-stone-900">{t('home.footer_connect_title')}</h4>
+                            {/* Social Connect */}
+                            <div className="md:col-span-1 lg:col-span-4 space-y-3 text-xs">
+                                <h4 className="font-serif font-bold text-sm text-stone-900">{t('home.footer_connect_title')}</h4>
                                 {monastery?.facebook && (
                                     <a
                                         href={monastery.facebook}
@@ -403,6 +440,113 @@ export default function Home({ auth, courses, activeClassesCount, monastery, yea
                                         {t('home.facebook_page')}
                                     </a>
                                 )}
+                            </div>
+
+                            {/* Monastery Donation Section */}
+                            <div className="md:col-span-1 lg:col-span-4 space-y-2.5 text-xs">
+                                <div className="flex items-center justify-between gap-2">
+                                    <h4 className="font-serif font-bold text-sm text-stone-900 flex items-center gap-1.5">
+                                        <svg className="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                        </svg>
+                                        <span>{t('home.footer_donation_title')}</span>
+                                    </h4>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowQr(!showQr)}
+                                        className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-800 hover:text-amber-900 bg-amber-100/70 hover:bg-amber-100 px-2.5 py-0.5 rounded-lg border border-amber-300/80 transition cursor-pointer shrink-0"
+                                    >
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                        </svg>
+                                        {showQr ? t('home.footer_hide_qr') : t('home.footer_view_qr')}
+                                    </button>
+                                </div>
+                                <p className="text-[11px] text-stone-500 leading-relaxed">
+                                    {t('home.footer_donation_desc')}
+                                </p>
+                                <div className="bg-white rounded-2xl border border-stone-200/90 p-3.5 space-y-2 shadow-2xs">
+                                    {/* Bank */}
+                                    <div className="flex items-start justify-between gap-2">
+                                        <span className="text-stone-500 text-[11px] shrink-0">{t('home.footer_bank_name')}:</span>
+                                        <span className="font-semibold text-stone-800 text-right text-[11px]">{t('home.footer_bank_val')}</span>
+                                    </div>
+
+                                    {/* Account Number */}
+                                    <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-stone-100">
+                                        <span className="text-stone-500 text-[11px] shrink-0">{t('home.footer_account_number')}:</span>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="font-mono font-bold text-amber-700 text-xs tracking-wider">0121000887514</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleCopy('0121000887514', 'account')}
+                                                title={t('home.footer_copy')}
+                                                className="p-1 rounded text-stone-400 hover:text-amber-700 hover:bg-amber-50 transition cursor-pointer"
+                                            >
+                                                {copiedField === 'account' ? (
+                                                    <span className="text-[10px] text-emerald-600 font-medium flex items-center gap-0.5">
+                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                        {t('home.footer_copied')}
+                                                    </span>
+                                                ) : (
+                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                    </svg>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Account Name */}
+                                    <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-stone-100">
+                                        <span className="text-stone-500 text-[11px] shrink-0">{t('home.footer_account_name')}:</span>
+                                        <span className="font-semibold text-stone-800 uppercase text-[11px]">NI VIEN VIEN KHONG</span>
+                                    </div>
+
+                                    {/* Transfer Reference */}
+                                    <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-stone-100">
+                                        <span className="text-stone-500 text-[11px] shrink-0">{t('home.footer_transfer_ref')}:</span>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="font-mono font-bold text-stone-800 text-[11px] bg-stone-100 px-1.5 py-0.5 rounded">WEB DONATE</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleCopy('WEB DONATE', 'ref')}
+                                                title={t('home.footer_copy')}
+                                                className="p-1 rounded text-stone-400 hover:text-amber-700 hover:bg-amber-50 transition cursor-pointer"
+                                            >
+                                                {copiedField === 'ref' ? (
+                                                    <span className="text-[10px] text-emerald-600 font-medium flex items-center gap-0.5">
+                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                        {t('home.footer_copied')}
+                                                    </span>
+                                                ) : (
+                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                    </svg>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Expandable VietQR Code */}
+                                    {showQr && (
+                                        <div className="pt-2 border-t border-stone-100 flex flex-col items-center text-center space-y-1.5">
+                                            <div className="p-2 bg-stone-50 rounded-xl border border-stone-200/90 shadow-2xs max-w-[180px]">
+                                                <img
+                                                    src="https://img.vietqr.io/image/970436-0121000887514-compact2.png?amount=0&addInfo=WEB%20DONATE&accountName=NI%20VIEN%20VIEN%20KHONG"
+                                                    alt="VietQR Vietcombank NI VIEN VIEN KHONG"
+                                                    className="w-full h-auto rounded"
+                                                    loading="lazy"
+                                                />
+                                            </div>
+                                            <span className="text-[10px] text-stone-400">VietQR • Vietcombank (0121000887514)</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
