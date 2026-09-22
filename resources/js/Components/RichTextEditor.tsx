@@ -1,9 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
+import Image from '@tiptap/extension-image';
+import axios from 'axios';
+import MediaLibraryModal, { SelectedMediaPayload } from '@/Components/Media/MediaLibraryModal';
 
 export interface RichTextEditorProps {
     value: string;
@@ -26,6 +29,34 @@ export default function RichTextEditor({
     disabled = false,
     className = '',
 }: RichTextEditorProps) {
+    const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+    const [isUploadingDirect, setIsUploadingDirect] = useState(false);
+
+    // Direct background upload helper for paste/drop
+    const uploadAndInsertImage = async (file: File) => {
+        setIsUploadingDirect(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await axios.post('/admin/media', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            const uploaded = res.data.data;
+            if (uploaded && editor) {
+                editor.chain().focus().setImage({
+                    src: uploaded.url,
+                    alt: uploaded.alt_text || uploaded.original_name,
+                    title: uploaded.original_name,
+                }).run();
+            }
+        } catch (err) {
+            console.error('Direct paste/drop image upload failed', err);
+            alert('Failed to upload dropped/pasted image. Please check format/size.');
+        } finally {
+            setIsUploadingDirect(false);
+        }
+    };
+
     const editor = useEditor({
         editable: !disabled,
         extensions: [
@@ -41,6 +72,13 @@ export default function RichTextEditor({
                     class: 'text-amber-700 underline font-medium hover:text-amber-800',
                 },
             }),
+            Image.configure({
+                inline: false,
+                allowBase64: false,
+                HTMLAttributes: {
+                    class: 'rounded-xl max-w-full my-3 shadow-2xs border border-stone-200 block mx-auto',
+                },
+            }),
             Placeholder.configure({
                 placeholder,
             }),
@@ -51,6 +89,32 @@ export default function RichTextEditor({
                 class: `prose prose-stone prose-sm max-w-none focus:outline-none p-3.5 text-stone-800 leading-relaxed`,
                 style: `min-height: ${minHeight};`,
                 ...(id ? { id } : {}),
+            },
+            handlePaste: (view, event) => {
+                const items = event.clipboardData?.items;
+                if (!items) return false;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const file = items[i].getAsFile();
+                        if (file) {
+                            event.preventDefault();
+                            uploadAndInsertImage(file);
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            },
+            handleDrop: (view, event, slice, moved) => {
+                if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+                    const file = event.dataTransfer.files[0];
+                    if (file.type.startsWith('image/')) {
+                        event.preventDefault();
+                        uploadAndInsertImage(file);
+                        return true;
+                    }
+                }
+                return false;
             },
         },
         onUpdate: ({ editor }) => {
@@ -88,6 +152,29 @@ export default function RichTextEditor({
             return;
         }
         editor.chain().focus().extendMarkRange('link').setLink({ href: url.trim() }).run();
+    };
+
+    const handleSelectMedia = (payload: SelectedMediaPayload) => {
+        if (!editor) return;
+
+        if (payload.media_type === 'image') {
+            editor
+                .chain()
+                .focus()
+                .setImage({
+                    src: payload.url,
+                    alt: payload.alt_text || payload.original_name,
+                    title: payload.original_name,
+                })
+                .run();
+        } else {
+            // Document attachment
+            const cleanUrl = payload.url;
+            const docName = payload.original_name || 'Attached Document';
+            const sizeLabel = payload.file_size ? ` (${Math.round(payload.file_size / 1024)} KB)` : '';
+            const htmlBadge = `<p><a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold border border-stone-300 transition my-1.5 no-underline">📎 <span>${docName}${sizeLabel}</span></a></p>`;
+            editor.chain().focus().insertContent(htmlBadge).run();
+        }
     };
 
     const buttonClass = (isActive: boolean) =>
@@ -227,6 +314,26 @@ export default function RichTextEditor({
                     </svg>
                 </button>
 
+                {/* Media Library Trigger */}
+                <button
+                    type="button"
+                    title="Insert Media / Image / Document"
+                    onClick={() => setIsMediaModalOpen(true)}
+                    className="px-2 py-1 text-xs font-semibold rounded transition flex items-center justify-center gap-1.5 h-[26px] bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/80 shadow-2xs"
+                >
+                    <svg className="w-3.5 h-3.5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Media</span>
+                </button>
+
+                {isUploadingDirect && (
+                    <div className="flex items-center space-x-1 text-[11px] text-amber-700 font-medium px-2 py-0.5 bg-amber-50 rounded">
+                        <div className="w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                        <span>Uploading...</span>
+                    </div>
+                )}
+
                 <div className="w-[1px] h-4 bg-stone-300 mx-1" />
 
                 {/* Undo / Redo */}
@@ -269,6 +376,13 @@ export default function RichTextEditor({
                     {error}
                 </div>
             )}
+
+            {/* Reusable Media Library Modal */}
+            <MediaLibraryModal
+                isOpen={isMediaModalOpen}
+                onClose={() => setIsMediaModalOpen(false)}
+                onSelect={handleSelectMedia}
+            />
         </div>
     );
 }

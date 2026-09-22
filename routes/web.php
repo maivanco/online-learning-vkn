@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ClassManagerController;
 use App\Http\Controllers\Admin\MaterialController;
+use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\QuestionBankController;
 use App\Http\Controllers\Admin\UserManagerController;
 use App\Http\Controllers\ProfileController;
@@ -88,6 +89,12 @@ Route::middleware(['auth', 'role:admin,teacher'])->prefix('admin')->name('admin.
     Route::put('/materials/{id}', [MaterialController::class, 'update'])->name('materials.update');
     Route::delete('/materials/{id}', [MaterialController::class, 'destroy'])->name('materials.destroy');
     Route::put('/feedbacks/{id}', [MaterialController::class, 'updateFeedback'])->name('feedbacks.update');
+
+    // Media Library (Reusable Assets Management)
+    Route::get('/media', [MediaController::class, 'index'])->name('media.index');
+    Route::post('/media', [MediaController::class, 'store'])->name('media.store');
+    Route::patch('/media/{id}', [MediaController::class, 'update'])->name('media.update');
+    Route::delete('/media/{id}', [MediaController::class, 'destroy'])->name('media.destroy');
 
     // Courses Catalog Management (CRUD)
     Route::post('/materials/catalogs', [MaterialController::class, 'storeCatalog'])->name('materials.catalogs.store');
