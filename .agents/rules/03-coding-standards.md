@@ -56,3 +56,15 @@
      ```
    - **Backend Normalization**: In Laravel controllers, use `trim(strip_tags($content)) === ''` checks to ensure empty editor tags (like `<p></p>`) are converted to `null` (if nullable) or flagged as empty (if required).
 
+## Language, Communication & Localization Standards
+
+1. **AI Agent Response Language**:
+   - AI agents MUST ALWAYS write conversation responses, implementation plans, walkthroughs, summaries, code comments, and docblocks strictly in **English**.
+   - Do NOT respond or write explanations in Vietnamese or other non-English languages unless explicitly requested by the user in a specific turn.
+
+2. **UI & Code Localization**:
+   - **No Hardcoded Non-English Strings**: Never hardcode Vietnamese (or any other non-English language) directly in React TSX/JSX files, Blade templates, controllers, or notifications.
+   - **Centralized Translation Files**: All user-facing localized strings must be placed strictly in Laravel translation files under `lang/vi/*.php` (e.g., `lang/vi/classes.php`, `lang/vi/common.php`, `lang/vi/courses.php`).
+   - **Symmetric English Dictionaries**: Every key added to `lang/vi/*.php` MUST have a corresponding English translation in `lang/en/*.php`.
+   - **Frontend Translation Access**: In React components, always use `useTranslation()` / `t('file.key')` rather than raw text.
+   - **Backend Translation Access**: In PHP controllers, form requests, and mailables, use `__('file.key')` or `trans('file.key')`.

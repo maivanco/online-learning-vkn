@@ -60,7 +60,7 @@ Before executing tasks, AI Agents MUST read the following rule files located in 
 
 1. [01-architecture.md](file:///Users/itcvn/Pet-Projects/online-learning/.agents/rules/01-architecture.md): Rules for standard Laravel MVC architecture, controller grouping, and centralized Inertia frontend.
 2. [02-security.md](file:///Users/itcvn/Pet-Projects/online-learning/.agents/rules/02-security.md): Security practices including RBAC roles, standard authentication, Mass Assignment prevention, and Inertia state leaks.
-3. [03-coding-standards.md](file:///Users/itcvn/Pet-Projects/online-learning/.agents/rules/03-coding-standards.md): PHP 8.3 strict typing, constructor promotion, TypeScript standards, and Tailwind UI patterns.
+3. [03-coding-standards.md](file:///Users/itcvn/Pet-Projects/online-learning/.agents/rules/03-coding-standards.md): PHP 8.3 strict typing, constructor promotion, TypeScript standards, Tailwind UI patterns, and Language & Localization rules.
 
 ---
 
@@ -71,6 +71,9 @@ Before executing tasks, AI Agents MUST read the following rule files located in 
 - **Student Progression**: Enforces the 5-step learning pipeline in `StudentCourseController`:
   `Self-Study (Reading) -> Video -> Practice Quizzes -> Final Exam -> Master Incorrect Questions`.
 - **Rich Text & Content Editing**: All formatted text areas (Course Catalog `description`, Lesson `reading_content`, articles, guides) **MUST** use the shared `RichTextEditor` component (`@/Components/RichTextEditor`) based on TipTap rather than raw `<textarea>`. Rich text is rendered via Tailwind `@tailwindcss/typography` (`prose prose-stone` / `prose prose-xs`) and normalized on the backend.
+- **Language & Localization Standard**:
+  - **AI Agent Response Language**: All AI assistant responses, plans, walkthroughs, code comments, and docblocks MUST strictly be written in **English**.
+  - **Code & UI Localization**: No non-English (e.g., Vietnamese) strings may be hardcoded in React TSX components, Blade views, or PHP logic. All localized strings must reside in `lang/vi/*.php` with symmetric `lang/en/*.php` entries, accessed via `useTranslation()` / `t(...)` in frontend or `__()` / `trans()` in backend.
 
 ---
 
