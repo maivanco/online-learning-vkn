@@ -6,13 +6,15 @@ import { useTranslation } from '@/utils/useTranslation';
 
 interface ExamQuestion {
     id: number;
+    question_type?: 'quiz' | 'essay';
     question_text: string;
-    option_a: string;
-    option_b: string;
-    option_c: string;
-    option_d: string;
+    option_a?: string | null;
+    option_b?: string | null;
+    option_c?: string | null;
+    option_d?: string | null;
     is_answered: boolean;
     chosen_option?: string | null;
+    essay_answer?: string | null;
     is_correct?: boolean;
     correct_option?: string;
     explanation?: string;
@@ -57,6 +59,7 @@ export default function ClassExam({
 
     const [questions, setQuestions] = useState<ExamQuestion[]>(initialQuestions);
     const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
+    const [essayDrafts, setEssayDrafts] = useState<Record<number, string>>({});
     const [submittingQuestionId, setSubmittingQuestionId] = useState<number | null>(null);
     const [answeredCount, setAnsweredCount] = useState<number>(initialAnsweredCount);
     const [isCompleted, setIsCompleted] = useState<boolean>(initialIsCompleted);
@@ -65,6 +68,9 @@ export default function ClassExam({
     const [incorrectCount, setIncorrectCount] = useState<number>(examAttempt?.incorrect_count ?? 0);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    const quizQuestions = questions.filter((q) => (q.question_type ?? 'quiz') === 'quiz');
+    const essayQuestions = questions.filter((q) => q.question_type === 'essay');
+
     const handleSelectOption = (questionId: number, option: string) => {
         setSelectedAnswers((prev) => ({
             ...prev,
@@ -72,7 +78,14 @@ export default function ClassExam({
         }));
     };
 
-    const handleSubmitQuestion = async (questionId: number) => {
+    const handleEssayChange = (questionId: number, text: string) => {
+        setEssayDrafts((prev) => ({
+            ...prev,
+            [questionId]: text,
+        }));
+    };
+
+    const handleSubmitQuizQuestion = async (questionId: number) => {
         const chosen = selectedAnswers[questionId];
         if (!chosen) return;
 
@@ -118,6 +131,60 @@ export default function ClassExam({
                 setErrorMessage(err.response.data.error);
             } else {
                 setErrorMessage('An error occurred while submitting your answer. Please try again.');
+            }
+        } finally {
+            setSubmittingQuestionId(null);
+        }
+    };
+
+    const handleSubmitEssayQuestion = async (questionId: number) => {
+        const essayText = essayDrafts[questionId]?.trim();
+        if (!essayText) {
+            setErrorMessage(t('student.essay_empty_warning'));
+            return;
+        }
+
+        setSubmittingQuestionId(questionId);
+        setErrorMessage(null);
+
+        try {
+            const res = await axios.post(route('student.class.exam.question-submit', classItem.id), {
+                question_id: questionId,
+                essay_answer: essayText,
+            });
+
+            const data = res.data;
+
+            // Update questions state with locked result
+            setQuestions((prev) =>
+                prev.map((q) => {
+                    if (q.id === questionId) {
+                        return {
+                            ...q,
+                            is_answered: true,
+                            essay_answer: data.essay_answer ?? essayText,
+                            is_correct: data.is_correct,
+                            explanation: data.explanation,
+                        };
+                    }
+                    return q;
+                })
+            );
+
+            setAnsweredCount(data.answered_count);
+            setCorrectCount(data.correct_count);
+            setIncorrectCount(data.incorrect_count);
+            setCurrentScore(data.score);
+
+            if (data.is_exam_completed) {
+                setIsCompleted(true);
+            }
+        } catch (err: any) {
+            console.error(err);
+            if (err.response?.data?.error) {
+                setErrorMessage(err.response.data.error);
+            } else {
+                setErrorMessage('An error occurred while submitting your essay answer. Please try again.');
             }
         } finally {
             setSubmittingQuestionId(null);
@@ -267,137 +334,274 @@ export default function ClassExam({
                     </div>
                 </div>
 
-                {/* Questions List */}
-                <div className="space-y-6">
-                    {questions.map((q, idx) => {
-                        const isAnswered = q.is_answered;
-                        const currentChosen = isAnswered ? q.chosen_option : selectedAnswers[q.id];
-                        const isSubmitting = submittingQuestionId === q.id;
+                {/* PART 1: MULTIPLE CHOICE QUIZZES */}
+                {quizQuestions.length > 0 && (
+                    <div className="space-y-4 pt-2">
+                        <div className="flex items-center gap-2 border-b border-stone-200 pb-3">
+                            <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs">
+                                1
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-serif font-bold text-stone-900">
+                                    {t('student.exam_part_quiz', { count: quizQuestions.length.toString() })}
+                                </h2>
+                                <p className="text-xs text-stone-500">
+                                    {t('student.exam_part_quiz_desc')}
+                                </p>
+                            </div>
+                        </div>
 
-                        return (
-                            <div
-                                key={q.id}
-                                className={`bg-white rounded-3xl border p-6 sm:p-8 shadow-sm transition space-y-5 ${
-                                    isAnswered
-                                        ? q.is_correct
-                                            ? 'border-emerald-300 bg-emerald-50/20'
-                                            : 'border-red-300 bg-red-50/20'
-                                        : 'border-stone-200'
-                                }`}
-                            >
-                                {/* Question Header */}
-                                <div className="flex items-start justify-between gap-4">
-                                    <div className="font-serif font-bold text-stone-900 text-base leading-snug">
-                                        <span className="text-amber-800 mr-2">
-                                            {t('student.question_prefix', { number: (idx + 1).toString() })}
-                                        </span>
-                                        {q.question_text}
-                                    </div>
+                        <div className="space-y-6">
+                            {quizQuestions.map((q, idx) => {
+                                const isAnswered = q.is_answered;
+                                const currentChosen = isAnswered ? q.chosen_option : selectedAnswers[q.id];
+                                const isSubmitting = submittingQuestionId === q.id;
 
-                                    {isAnswered && (
-                                        <span
-                                            className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 uppercase tracking-wide ${
-                                                q.is_correct ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-red-100 text-red-800 border border-red-300'
-                                            }`}
-                                        >
-                                            {q.is_correct ? t('student.correct_badge') : t('student.incorrect_badge')}
-                                        </span>
-                                    )}
-                                </div>
-
-                                {/* Options */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                                    {(['A', 'B', 'C', 'D'] as const).map((opt) => {
-                                        const text = opt === 'A' ? q.option_a : opt === 'B' ? q.option_b : opt === 'C' ? q.option_c : q.option_d;
-                                        const isSelected = currentChosen === opt;
-                                        const isCorrectChoice = isAnswered && q.correct_option === opt;
-                                        const isWrongChoice = isAnswered && isSelected && !q.is_correct;
-
-                                        let optionClasses = 'bg-stone-50 border-stone-200 text-stone-700 hover:border-stone-300';
-                                        if (isAnswered) {
-                                            if (isCorrectChoice) {
-                                                optionClasses = 'bg-emerald-100 border-emerald-500 font-semibold text-emerald-950';
-                                            } else if (isWrongChoice) {
-                                                optionClasses = 'bg-red-100 border-red-500 font-semibold text-red-950 line-through';
-                                            } else {
-                                                optionClasses = 'bg-stone-50 border-stone-200 text-stone-400 opacity-60';
-                                            }
-                                        } else if (isSelected) {
-                                            optionClasses = 'bg-amber-100/80 border-amber-500 font-semibold text-amber-950 shadow-sm ring-1 ring-amber-500';
-                                        }
-
-                                        return (
-                                            <label
-                                                key={opt}
-                                                className={`p-3.5 rounded-2xl border flex items-center gap-3 transition ${
-                                                    isAnswered ? 'cursor-default' : 'cursor-pointer'
-                                                } ${optionClasses}`}
-                                            >
-                                                <input
-                                                    type="radio"
-                                                    name={`question-${q.id}`}
-                                                    value={opt}
-                                                    checked={isSelected}
-                                                    disabled={isAnswered}
-                                                    onChange={() => handleSelectOption(q.id, opt)}
-                                                    className="text-amber-600 focus:ring-amber-500"
-                                                />
-                                                <span className="leading-normal">
-                                                    <strong className="mr-1 font-bold">{opt}.</strong> {text}
+                                return (
+                                    <div
+                                        key={q.id}
+                                        className={`bg-white rounded-3xl border p-6 sm:p-8 shadow-sm transition space-y-5 ${
+                                            isAnswered
+                                                ? q.is_correct
+                                                    ? 'border-emerald-300 bg-emerald-50/20'
+                                                    : 'border-red-300 bg-red-50/20'
+                                                : 'border-stone-200'
+                                        }`}
+                                    >
+                                        {/* Question Header */}
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="font-serif font-bold text-stone-900 text-base leading-snug">
+                                                <span className="text-amber-800 mr-2">
+                                                    {t('student.question_prefix', { number: (idx + 1).toString() })}
                                                 </span>
-                                            </label>
-                                        );
-                                    })}
-                                </div>
-
-                                {/* Action / Confirmation */}
-                                {!isAnswered ? (
-                                    <div className="flex items-center justify-between pt-2 border-t border-stone-100">
-                                        <span className="text-[11px] text-stone-500 italic">
-                                            {t('student.class_exam_desc')}
-                                        </span>
-
-                                        <button
-                                            type="button"
-                                            disabled={!currentChosen || isSubmitting}
-                                            onClick={() => handleSubmitQuestion(q.id)}
-                                            className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs disabled:opacity-40 transition shadow-sm"
-                                        >
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                            </svg>
-                                            <span>
-                                                {isSubmitting ? t('student.checking') : t('student.class_exam_confirm_btn')}
-                                            </span>
-                                        </button>
-                                    </div>
-                                ) : (
-                                    /* Locked Result & Explanation */
-                                    <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-2 text-xs">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2 font-semibold text-stone-900">
-                                                <span>{t('student.correct_answer_label')}</span>
-                                                <span className="text-emerald-700 font-bold px-2 py-0.5 rounded bg-emerald-100">{q.correct_option}</span>
+                                                {q.question_text}
                                             </div>
-                                            <span className="text-[11px] font-medium text-stone-500 flex items-center gap-1">
-                                                <svg className="w-3.5 h-3.5 text-stone-400" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                                                </svg>
-                                                {t('student.class_exam_answered_badge')}
-                                            </span>
+
+                                            {isAnswered && (
+                                                <span
+                                                    className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 uppercase tracking-wide ${
+                                                        q.is_correct ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-red-100 text-red-800 border border-red-300'
+                                                    }`}
+                                                >
+                                                    {q.is_correct ? t('student.correct_badge') : t('student.incorrect_badge')}
+                                                </span>
+                                            )}
                                         </div>
-                                        {q.explanation && (
-                                            <p className="text-stone-700 italic pt-1 border-t border-stone-200/60 leading-relaxed">
-                                                <span className="font-semibold text-amber-900 not-italic mr-1">{t('student.explanation_label')}</span>
-                                                {q.explanation}
-                                            </p>
+
+                                        {/* Options */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                            {(['A', 'B', 'C', 'D'] as const).map((opt) => {
+                                                const text = opt === 'A' ? q.option_a : opt === 'B' ? q.option_b : opt === 'C' ? q.option_c : q.option_d;
+                                                const isSelected = currentChosen === opt;
+                                                const isCorrectChoice = isAnswered && q.correct_option === opt;
+                                                const isWrongChoice = isAnswered && isSelected && !q.is_correct;
+
+                                                let optionClasses = 'bg-stone-50 border-stone-200 text-stone-700 hover:border-stone-300';
+                                                if (isAnswered) {
+                                                    if (isCorrectChoice) {
+                                                        optionClasses = 'bg-emerald-100 border-emerald-500 font-semibold text-emerald-950';
+                                                    } else if (isWrongChoice) {
+                                                        optionClasses = 'bg-red-100 border-red-500 font-semibold text-red-950 line-through';
+                                                    } else {
+                                                        optionClasses = 'bg-stone-50 border-stone-200 text-stone-400 opacity-60';
+                                                    }
+                                                } else if (isSelected) {
+                                                    optionClasses = 'bg-amber-100/80 border-amber-500 font-semibold text-amber-950 shadow-sm ring-1 ring-amber-500';
+                                                }
+
+                                                return (
+                                                    <label
+                                                        key={opt}
+                                                        className={`p-3.5 rounded-2xl border flex items-center gap-3 transition ${
+                                                            isAnswered ? 'cursor-default' : 'cursor-pointer'
+                                                        } ${optionClasses}`}
+                                                    >
+                                                        <input
+                                                            type="radio"
+                                                            name={`question-${q.id}`}
+                                                            value={opt}
+                                                            checked={isSelected}
+                                                            disabled={isAnswered}
+                                                            onChange={() => handleSelectOption(q.id, opt)}
+                                                            className="text-amber-600 focus:ring-amber-500"
+                                                        />
+                                                        <span className="leading-normal">
+                                                            <strong className="mr-1 font-bold">{opt}.</strong> {text}
+                                                        </span>
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Action / Confirmation */}
+                                        {!isAnswered ? (
+                                            <div className="flex items-center justify-between pt-2 border-t border-stone-100">
+                                                <span className="text-[11px] text-stone-500 italic">
+                                                    {t('student.class_exam_desc')}
+                                                </span>
+
+                                                <button
+                                                    type="button"
+                                                    disabled={!currentChosen || isSubmitting}
+                                                    onClick={() => handleSubmitQuizQuestion(q.id)}
+                                                    className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs disabled:opacity-40 transition shadow-sm"
+                                                >
+                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                    </svg>
+                                                    <span>
+                                                        {isSubmitting ? t('student.checking') : t('student.class_exam_confirm_btn')}
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            /* Locked Result & Explanation */
+                                            <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-2 text-xs">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2 font-semibold text-stone-900">
+                                                        <span>{t('student.correct_answer_label')}</span>
+                                                        <span className="text-emerald-700 font-bold px-2 py-0.5 rounded bg-emerald-100">{q.correct_option}</span>
+                                                    </div>
+                                                    <span className="text-[11px] font-medium text-stone-500 flex items-center gap-1">
+                                                        <svg className="w-3.5 h-3.5 text-stone-400" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                                                        </svg>
+                                                        {t('student.class_exam_answered_badge')}
+                                                    </span>
+                                                </div>
+                                                {q.explanation && (
+                                                    <p className="text-stone-700 italic pt-1 border-t border-stone-200/60 leading-relaxed">
+                                                        <span className="font-semibold text-amber-900 not-italic mr-1">{t('student.explanation_label')}</span>
+                                                        {q.explanation}
+                                                    </p>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
-                                )}
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* PART 2: ESSAY QUESTIONS */}
+                {essayQuestions.length > 0 && (
+                    <div className="space-y-4 pt-6">
+                        <div className="flex items-center gap-2 border-b border-stone-200 pb-3">
+                            <div className="w-7 h-7 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-xs">
+                                2
                             </div>
-                        );
-                    })}
-                </div>
+                            <div>
+                                <h2 className="text-lg font-serif font-bold text-stone-900">
+                                    {t('student.exam_part_essay', { count: essayQuestions.length.toString() })}
+                                </h2>
+                                <p className="text-xs text-stone-500">
+                                    {t('student.exam_part_essay_desc')}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            {essayQuestions.map((q, idx) => {
+                                const isAnswered = q.is_answered;
+                                const essayDraft = essayDrafts[q.id] ?? '';
+                                const isSubmitting = submittingQuestionId === q.id;
+
+                                return (
+                                    <div
+                                        key={q.id}
+                                        className={`bg-white rounded-3xl border p-6 sm:p-8 shadow-sm transition space-y-5 ${
+                                            isAnswered ? 'border-teal-300 bg-teal-50/20' : 'border-stone-200'
+                                        }`}
+                                    >
+                                        {/* Question Header */}
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="font-serif font-bold text-stone-900 text-base leading-snug">
+                                                <span className="text-teal-800 mr-2">
+                                                    {t('student.question_prefix', { number: (idx + 1).toString() })}
+                                                </span>
+                                                {q.question_text}
+                                            </div>
+
+                                            <span
+                                                className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 uppercase tracking-wide ${
+                                                    isAnswered ? 'bg-teal-100 text-teal-800 border border-teal-300' : 'bg-stone-100 text-stone-600 border border-stone-300'
+                                                }`}
+                                            >
+                                                {isAnswered ? t('student.essay_submitted_badge') : t('questions.badge_essay')}
+                                            </span>
+                                        </div>
+
+                                        {/* Essay Input Area / Submitted Answer View */}
+                                        {!isAnswered ? (
+                                            <div className="space-y-3">
+                                                <textarea
+                                                    rows={6}
+                                                    value={essayDraft}
+                                                    onChange={(e) => handleEssayChange(q.id, e.target.value)}
+                                                    placeholder={t('student.essay_answer_placeholder')}
+                                                    className="w-full rounded-2xl border-stone-300 bg-stone-50/50 p-4 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-teal-600 focus:bg-white focus:ring-teal-600 shadow-inner resize-y transition leading-relaxed"
+                                                />
+
+                                                <div className="flex items-center justify-between pt-2 border-t border-stone-100">
+                                                    <span className="text-[11px] text-stone-400">
+                                                        {essayDraft.length > 0 ? `${essayDraft.length} ký tự` : ''}
+                                                    </span>
+
+                                                    <button
+                                                        type="button"
+                                                        disabled={!essayDraft.trim() || isSubmitting}
+                                                        onClick={() => handleSubmitEssayQuestion(q.id)}
+                                                        className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-medium text-xs disabled:opacity-40 transition shadow-sm"
+                                                    >
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                        </svg>
+                                                        <span>
+                                                            {isSubmitting ? t('student.checking') : t('student.essay_submit_btn')}
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {/* Student Submitted Answer */}
+                                                <div className="bg-stone-50 p-4 sm:p-5 rounded-2xl border border-stone-200 space-y-2 text-xs">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="font-semibold text-stone-800">
+                                                            {t('student.your_essay_answer')}
+                                                        </span>
+                                                        <span className="text-[11px] font-medium text-stone-500 flex items-center gap-1">
+                                                            <svg className="w-3.5 h-3.5 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                                                            </svg>
+                                                            {t('student.class_exam_answered_badge')}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-stone-700 whitespace-pre-wrap leading-relaxed pt-1 border-t border-stone-200/60 font-serif text-sm">
+                                                        {q.essay_answer}
+                                                    </div>
+                                                </div>
+
+                                                {/* Sample Guide / Grading Criteria if present */}
+                                                {q.explanation && (
+                                                    <div className="bg-amber-50/70 p-4 rounded-2xl border border-amber-200 space-y-1.5 text-xs text-amber-950">
+                                                        <span className="font-semibold text-amber-900 block">
+                                                            {t('student.essay_sample_guide')}
+                                                        </span>
+                                                        <p className="italic text-stone-700 leading-relaxed">
+                                                            {q.explanation}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );

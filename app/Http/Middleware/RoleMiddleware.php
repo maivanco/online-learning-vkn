@@ -22,6 +22,10 @@ class RoleMiddleware
         }
 
         if (! empty($roles) && ! in_array($user->role, $roles)) {
+            if ($request->expectsJson()) {
+                abort(403, 'Unauthorized access.');
+            }
+
             // If student tries to access admin area, redirect to student dashboard
             if ($user->isStudent()) {
                 return redirect()->route('student.dashboard')->with('error', 'Unauthorized access.');

@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\CourseClass;
 use App\Models\Lesson;
 use App\Models\Question;
+use App\Models\StudentExamAttempt;
 use App\Models\StudentIncorrectQuestion;
 use App\Models\StudentProgress;
 use App\Models\User;
@@ -262,6 +263,70 @@ class BuddhistCoursesTest extends TestCase
         ]);
     }
 
+    public function test_class_final_exam_with_quiz_and_essay_questions(): void
+    {
+        $this->actingAs($this->student);
+
+        // Create an essay question for the course
+        $essayQuestion = Question::create([
+            'course_id' => $this->course->id,
+            'lesson_id' => $this->lesson->id,
+            'question_type' => Question::TYPE_ESSAY,
+            'question_text' => 'Explain the four noble truths in the context of daily practice.',
+            'explanation' => 'Dukkha, Samudaya, Nirodha, Magga reference criteria.',
+            'type' => 'exam',
+        ]);
+
+        // Complete reading, video, practice to unlock exam
+        $this->post(route('student.reading.complete', [$this->class->id, $this->lesson->id]));
+        $this->post(route('student.video.complete', [$this->class->id, $this->lesson->id]));
+        for ($i = 1; $i <= 10; $i++) {
+            $this->post(route('student.practice.record', [$this->class->id, $this->lesson->id]));
+        }
+
+        // Access exam - total 2 questions (1 quiz + 1 essay)
+        $examResponse = $this->get(route('student.class.exam', $this->class->id));
+        $examResponse->assertStatus(200);
+        $examResponse->assertInertia(fn ($page) =>
+            $page->component('Student/ClassExam')
+                ->where('classItem.id', $this->class->id)
+                ->where('totalQuestions', 2)
+        );
+
+        // Submit quiz question
+        $submitQuizResponse = $this->postJson(route('student.class.exam.question-submit', $this->class->id), [
+            'question_id' => $this->question->id,
+            'chosen_option' => 'C',
+        ]);
+        $submitQuizResponse->assertJson([
+            'question_id' => $this->question->id,
+            'question_type' => 'quiz',
+            'is_correct' => true,
+            'is_exam_completed' => false,
+            'answered_count' => 1,
+        ]);
+
+        // Submit essay question
+        $submitEssayResponse = $this->postJson(route('student.class.exam.question-submit', $this->class->id), [
+            'question_id' => $essayQuestion->id,
+            'essay_answer' => 'The four noble truths explain suffering, its origin in craving, its cessation in Nibbana, and the eightfold path.',
+        ]);
+        $submitEssayResponse->assertJson([
+            'question_id' => $essayQuestion->id,
+            'question_type' => 'essay',
+            'is_correct' => true,
+            'is_exam_completed' => true,
+            'answered_count' => 2,
+        ]);
+
+        // Verify class status completed
+        $this->assertDatabaseHas('class_user', [
+            'class_id' => $this->class->id,
+            'user_id' => $this->student->id,
+            'status' => 'completed',
+        ]);
+    }
+
     public function test_admin_can_view_class_details_with_completed_students(): void
     {
         $this->actingAs($this->admin);
@@ -361,5 +426,149 @@ class BuddhistCoursesTest extends TestCase
             'user_id' => $newStudent->id,
         ]);
     }
+
+    public function test_teacher_can_view_student_exam_result_with_quizzes_and_essays(): void
+    {
+        $this->actingAs($this->teacher);
+
+        // Create an essay question for the course
+        $essayQuestion = Question::create([
+            'course_id' => $this->course->id,
+            'lesson_id' => $this->lesson->id,
+            'question_type' => Question::TYPE_ESSAY,
+            'question_text' => 'Describe the practice of mindfulness of breathing.',
+            'explanation' => 'Anapanasati sutta reference criteria.',
+            'type' => 'exam',
+        ]);
+
+        // Student submits exam attempt
+        StudentExamAttempt::create([
+            'user_id' => $this->student->id,
+            'class_id' => $this->class->id,
+            'attempt_type' => 'exam',
+            'total_questions' => 2,
+            'correct_count' => 1,
+            'incorrect_count' => 1,
+            'score' => 50.0,
+            'answers_summary' => [
+                $this->question->id => [
+                    'question_type' => 'quiz',
+                    'chosen' => 'C',
+                    'correct' => 'C',
+                    'is_correct' => true,
+                    'explanation' => $this->question->explanation,
+                ],
+                $essayQuestion->id => [
+                    'question_type' => 'essay',
+                    'essay_answer' => 'Mindfulness of breathing involves observing in-and-out breaths with clear comprehension.',
+                    'is_correct' => false,
+                    'score' => null,
+                ],
+            ],
+        ]);
+
+        $response = $this->getJson(route('admin.classes.student-exam-result', [$this->class->id, $this->student->id]));
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'student' => ['id', 'name', 'username', 'email'],
+            'exam_attempt' => ['id', 'score', 'total_questions', 'correct_count', 'incorrect_count'],
+            'questions' => [
+                '*' => ['id', 'question_type', 'question_text', 'is_answered', 'chosen_option', 'essay_answer'],
+            ],
+            'metrics' => ['total_questions', 'answered_count', 'quiz_count', 'essay_count', 'quizzes_correct', 'essays_pending'],
+        ]);
+
+        $response->assertJson([
+            'metrics' => [
+                'total_questions' => 2,
+                'quiz_count' => 1,
+                'essay_count' => 1,
+                'quizzes_correct' => 1,
+                'essays_pending' => 1,
+            ],
+        ]);
+    }
+
+    public function test_teacher_can_grade_student_essay_question_and_recalculate_score(): void
+    {
+        $this->actingAs($this->teacher);
+
+        // Create an essay question for the course
+        $essayQuestion = Question::create([
+            'course_id' => $this->course->id,
+            'lesson_id' => $this->lesson->id,
+            'question_type' => Question::TYPE_ESSAY,
+            'question_text' => 'Describe the practice of mindfulness of breathing.',
+            'explanation' => 'Anapanasati sutta reference criteria.',
+            'type' => 'exam',
+        ]);
+
+        // Student submits exam attempt with quiz correct and essay pending
+        StudentExamAttempt::create([
+            'user_id' => $this->student->id,
+            'class_id' => $this->class->id,
+            'attempt_type' => 'exam',
+            'total_questions' => 2,
+            'correct_count' => 1,
+            'incorrect_count' => 1,
+            'score' => 50.0,
+            'answers_summary' => [
+                $this->question->id => [
+                    'question_type' => 'quiz',
+                    'chosen' => 'C',
+                    'correct' => 'C',
+                    'is_correct' => true,
+                    'explanation' => $this->question->explanation,
+                ],
+                $essayQuestion->id => [
+                    'question_type' => 'essay',
+                    'essay_answer' => 'Mindfulness of breathing calm bodily formations.',
+                    'is_correct' => false,
+                    'score' => null,
+                ],
+            ],
+        ]);
+
+        // Teacher grades essay with 90 points out of 100
+        $gradeResponse = $this->postJson(route('admin.classes.grade-essay', [$this->class->id, $this->student->id]), [
+            'question_id' => $essayQuestion->id,
+            'score' => 90,
+            'feedback' => 'Well expressed explanation of bodily formations.',
+        ]);
+
+        $gradeResponse->assertStatus(200);
+        $gradeResponse->assertJson([
+            'question_id' => $essayQuestion->id,
+            'score' => 90.0,
+            'teacher_feedback' => 'Well expressed explanation of bodily formations.',
+            'overall_score' => 95.0, // (100 + 90) / 2 = 95.0%
+        ]);
+
+        // Verify StudentExamAttempt record updated
+        $attempt = StudentExamAttempt::where('user_id', $this->student->id)->where('class_id', $this->class->id)->first();
+        $this->assertEquals(95.0, (float) $attempt->score);
+        $this->assertEquals(2, $attempt->correct_count);
+        $this->assertEquals(90.0, (float) $attempt->answers_summary[$essayQuestion->id]['score']);
+
+        // Verify class_user final_grade updated
+        $this->assertDatabaseHas('class_user', [
+            'class_id' => $this->class->id,
+            'user_id' => $this->student->id,
+            'final_grade' => 95.0,
+        ]);
+    }
+
+    public function test_student_cannot_grade_essay_questions(): void
+    {
+        $this->actingAs($this->student);
+
+        $response = $this->postJson(route('admin.classes.grade-essay', [$this->class->id, $this->student->id]), [
+            'question_id' => $this->question->id,
+            'score' => 100,
+        ]);
+
+        $response->assertStatus(403);
+    }
 }
+
 

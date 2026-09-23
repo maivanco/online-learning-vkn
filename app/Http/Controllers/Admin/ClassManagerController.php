@@ -8,9 +8,11 @@ use App\Models\CourseClass;
 use App\Models\Lesson;
 use App\Models\MaterialFeedback;
 use App\Models\Question;
+use App\Models\StudentExamAttempt;
 use App\Models\StudentProgress;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -91,8 +93,14 @@ class ClassManagerController extends Controller
 
         $lessons = $class->course->lessons;
 
+        // Preload exam attempts for all enrolled students in this class
+        $examAttempts = StudentExamAttempt::where('class_id', $class->id)
+            ->where('attempt_type', 'exam')
+            ->get()
+            ->keyBy('user_id');
+
         // Map enrolled students with granular progress metrics
-        $studentsProgress = $class->students->map(function ($student) use ($class, $lessons) {
+        $studentsProgress = $class->students->map(function ($student) use ($class, $lessons, $examAttempts) {
             $studentProgressRecords = StudentProgress::where('class_id', $class->id)
                 ->where('user_id', $student->id)
                 ->get()
@@ -115,6 +123,7 @@ class ClassManagerController extends Controller
 
             $completedLessonsCount = $lessonProgressList->where('is_completed', true)->count();
             $incompleteLessons = $lessons->count() - $completedLessonsCount;
+            $examAttempt = $examAttempts->get($student->id);
 
             return [
                 'id' => $student->id,
@@ -123,12 +132,20 @@ class ClassManagerController extends Controller
                 'email' => $student->email,
                 'phone' => $student->phone,
                 'enrollment_status' => $student->pivot->status,
-                'final_grade' => $student->pivot->final_grade,
+                'final_grade' => $student->pivot->final_grade ?? $examAttempt?->score,
                 'completed_at' => !empty($student->pivot->completed_at) ? Carbon::parse($student->pivot->completed_at)->format('Y-m-d') : null,
                 'progress_percentage' => $lessons->count() > 0 ? round(($completedLessonsCount / $lessons->count()) * 100) : 0,
                 'completed_lessons_count' => $completedLessonsCount,
                 'incomplete_lessons_count' => $incompleteLessons,
                 'lessons_progress' => $lessonProgressList,
+                'exam_attempt' => $examAttempt ? [
+                    'id' => $examAttempt->id,
+                    'score' => (float) $examAttempt->score,
+                    'total_questions' => $examAttempt->total_questions,
+                    'correct_count' => $examAttempt->correct_count,
+                    'incorrect_count' => $examAttempt->incorrect_count,
+                    'is_completed' => !empty($examAttempt->answers_summary),
+                ] : null,
             ];
         });
 
@@ -245,6 +262,226 @@ class ClassManagerController extends Controller
         $class->students()->detach($userId);
 
         return back()->with('success', 'Student removed from class.');
+    }
+
+    /**
+     * Get detailed exam results (quizzes and essays) for a specific student in a class.
+     */
+    public function getStudentExamResult(Request $request, int $id, int $userId): JsonResponse
+    {
+        $class = CourseClass::with(['course.lessons'])->findOrFail($id);
+        $student = User::where('role', 'student')->findOrFail($userId);
+
+        $studentPivot = $class->students()->where('users.id', $userId)->first()?->pivot;
+
+        // Retrieve all questions for the course
+        $questions = Question::with('lesson:id,title')
+            ->where('course_id', $class->course_id)
+            ->orderBy('id')
+            ->get();
+
+        $examAttempt = StudentExamAttempt::where('user_id', $userId)
+            ->where('class_id', $id)
+            ->where('attempt_type', 'exam')
+            ->latest()
+            ->first();
+
+        $answersSummary = $examAttempt?->answers_summary ?? [];
+        $totalQuestions = $questions->count();
+        $answeredCount = count($answersSummary);
+
+        $questionsPayload = $questions->map(function ($q) use ($answersSummary) {
+            $answerRecord = $answersSummary[$q->id] ?? null;
+            $hasAnswered = ($answerRecord !== null);
+
+            $score = null;
+            if (isset($answerRecord['score'])) {
+                $score = (float) $answerRecord['score'];
+            } elseif (isset($answerRecord['teacher_score'])) {
+                $score = (float) $answerRecord['teacher_score'];
+            }
+
+            return [
+                'id' => $q->id,
+                'lesson_id' => $q->lesson_id,
+                'lesson_title' => $q->lesson?->title,
+                'question_type' => $q->question_type ?? Question::TYPE_QUIZ,
+                'question_text' => $q->question_text,
+                'option_a' => $q->option_a,
+                'option_b' => $q->option_b,
+                'option_c' => $q->option_c,
+                'option_d' => $q->option_d,
+                'correct_option' => $q->correct_option,
+                'explanation' => $q->explanation,
+                'is_answered' => $hasAnswered,
+                'chosen_option' => $answerRecord['chosen'] ?? null,
+                'essay_answer' => $answerRecord['essay_answer'] ?? null,
+                'is_correct' => isset($answerRecord['is_correct']) ? (bool) $answerRecord['is_correct'] : null,
+                'score' => $score,
+                'teacher_score' => $score,
+                'teacher_feedback' => $answerRecord['teacher_feedback'] ?? null,
+                'graded_at' => $answerRecord['graded_at'] ?? null,
+                'graded_by' => $answerRecord['graded_by'] ?? null,
+                'graded_by_name' => $answerRecord['graded_by_name'] ?? null,
+            ];
+        });
+
+        $quizQuestions = $questions->filter(fn($q) => $q->isQuiz());
+        $essayQuestions = $questions->filter(fn($q) => $q->isEssay());
+
+        $quizzesCorrect = $quizQuestions->filter(function ($q) use ($answersSummary) {
+            return isset($answersSummary[$q->id]) && !empty($answersSummary[$q->id]['is_correct']);
+        })->count();
+
+        $essaysGraded = $essayQuestions->filter(function ($q) use ($answersSummary) {
+            return isset($answersSummary[$q->id]) && (isset($answersSummary[$q->id]['score']) || isset($answersSummary[$q->id]['teacher_score']));
+        })->count();
+
+        return response()->json([
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'username' => $student->username,
+                'email' => $student->email,
+                'enrollment_status' => $studentPivot?->status ?? 'enrolled',
+                'final_grade' => $studentPivot?->final_grade ?? $examAttempt?->score,
+            ],
+            'exam_attempt' => $examAttempt ? [
+                'id' => $examAttempt->id,
+                'score' => (float) $examAttempt->score,
+                'total_questions' => $examAttempt->total_questions,
+                'correct_count' => $examAttempt->correct_count,
+                'incorrect_count' => $examAttempt->incorrect_count,
+                'is_completed' => ($totalQuestions > 0 && $answeredCount >= $totalQuestions),
+                'created_at' => $examAttempt->created_at?->format('Y-m-d H:i'),
+                'updated_at' => $examAttempt->updated_at?->format('Y-m-d H:i'),
+            ] : null,
+            'questions' => $questionsPayload,
+            'metrics' => [
+                'total_questions' => $totalQuestions,
+                'answered_count' => $answeredCount,
+                'quiz_count' => $quizQuestions->count(),
+                'essay_count' => $essayQuestions->count(),
+                'quizzes_correct' => $quizzesCorrect,
+                'essays_graded' => $essaysGraded,
+                'essays_pending' => $essayQuestions->count() - $essaysGraded,
+                'is_completed' => ($totalQuestions > 0 && $answeredCount >= $totalQuestions),
+            ],
+        ]);
+    }
+
+    /**
+     * Grade a submitted essay question for a student and recalculate overall score.
+     */
+    public function gradeEssayQuestion(Request $request, int $id, int $userId): JsonResponse
+    {
+        $validated = $request->validate([
+            'question_id' => 'required|exists:questions,id',
+            'score' => 'required|numeric|min:0|max:100',
+            'feedback' => 'nullable|string',
+        ]);
+
+        $class = CourseClass::findOrFail($id);
+        $student = User::where('role', 'student')->findOrFail($userId);
+        $question = Question::where('course_id', $class->course_id)->findOrFail((int) $validated['question_id']);
+
+        if (! $question->isEssay()) {
+            return response()->json(['error' => 'Only essay questions can be graded manually by teacher.'], 422);
+        }
+
+        $allQuestions = Question::where('course_id', $class->course_id)->get();
+        $totalQuestionsCount = $allQuestions->count();
+
+        $examAttempt = StudentExamAttempt::firstOrCreate(
+            ['user_id' => $userId, 'class_id' => $id, 'attempt_type' => 'exam'],
+            [
+                'total_questions' => $totalQuestionsCount,
+                'correct_count' => 0,
+                'incorrect_count' => 0,
+                'review_needed_count' => 0,
+                'score' => 0,
+                'answers_summary' => [],
+            ]
+        );
+
+        $summary = $examAttempt->answers_summary ?? [];
+        $existing = $summary[$question->id] ?? [];
+        $scoreVal = round((float) $validated['score'], 1);
+
+        $summary[$question->id] = array_merge($existing, [
+            'question_type' => Question::TYPE_ESSAY,
+            'essay_answer' => $existing['essay_answer'] ?? '',
+            'score' => $scoreVal,
+            'teacher_score' => $scoreVal,
+            'teacher_feedback' => $validated['feedback'] ?? null,
+            'is_correct' => ($scoreVal >= 50.0),
+            'graded_at' => now()->toDateTimeString(),
+            'graded_by' => $request->user()?->id,
+            'graded_by_name' => $request->user()?->name,
+        ]);
+
+        // Recalculate total score and counts
+        $totalScoreSum = 0;
+        $correctCount = 0;
+        $incorrectCount = 0;
+
+        foreach ($allQuestions as $q) {
+            $ans = $summary[$q->id] ?? null;
+            if ($q->isEssay()) {
+                if (isset($ans['score']) || isset($ans['teacher_score'])) {
+                    $qScore = (float) ($ans['score'] ?? $ans['teacher_score']);
+                    $totalScoreSum += $qScore;
+                    if ($qScore >= 50.0) {
+                        $correctCount++;
+                    } else {
+                        $incorrectCount++;
+                    }
+                } else {
+                    $incorrectCount++;
+                }
+            } else {
+                if (isset($ans['is_correct']) && $ans['is_correct']) {
+                    $totalScoreSum += 100;
+                    $correctCount++;
+                } else {
+                    $incorrectCount++;
+                }
+            }
+        }
+
+        $finalScore = $totalQuestionsCount > 0 ? round($totalScoreSum / $totalQuestionsCount, 1) : 0;
+
+        $examAttempt->total_questions = $totalQuestionsCount;
+        $examAttempt->correct_count = $correctCount;
+        $examAttempt->incorrect_count = $incorrectCount;
+        $examAttempt->review_needed_count = $incorrectCount;
+        $examAttempt->score = $finalScore;
+        $examAttempt->answers_summary = $summary;
+        $examAttempt->save();
+
+        // Update student final_grade in class pivot
+        $class->students()->updateExistingPivot($userId, [
+            'final_grade' => $finalScore,
+        ]);
+
+        return response()->json([
+            'message' => 'Essay score and feedback updated successfully.',
+            'question_id' => $question->id,
+            'score' => $scoreVal,
+            'teacher_score' => $scoreVal,
+            'teacher_feedback' => $validated['feedback'] ?? null,
+            'is_correct' => ($scoreVal >= 50.0),
+            'graded_at' => now()->toDateTimeString(),
+            'graded_by_name' => $request->user()?->name,
+            'overall_score' => $finalScore,
+            'exam_attempt' => [
+                'id' => $examAttempt->id,
+                'score' => $finalScore,
+                'correct_count' => $correctCount,
+                'incorrect_count' => $incorrectCount,
+                'total_questions' => $totalQuestionsCount,
+            ],
+        ]);
     }
 
     /**

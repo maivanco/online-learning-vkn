@@ -102,6 +102,16 @@ return [
     'continue_exam' => 'Continue Exam',
     'view_exam_results' => 'View Exam Results',
     'final_grade_badge' => 'Graduation Grade: :score%',
+    'exam_part_quiz' => 'Part 1: Multiple Choice Quizzes (:count)',
+    'exam_part_essay' => 'Part 2: Essay Questions (:count)',
+    'exam_part_quiz_desc' => 'Select the most accurate option from the choices given below.',
+    'exam_part_essay_desc' => 'Write your detailed response or doctrinal exposition in the answer area below.',
+    'essay_answer_placeholder' => 'Type your essay answer here...',
+    'essay_submit_btn' => 'Lock & Submit Essay',
+    'essay_submitted_badge' => 'Essay Submitted',
+    'your_essay_answer' => 'Your Submitted Answer:',
+    'essay_sample_guide' => 'Sample Answer / Evaluation Guide:',
+    'essay_empty_warning' => 'Please enter your essay answer before submitting.',
 
     // Feedback
     'feedback_modal_title' => 'Feedback & Report Material Correction',

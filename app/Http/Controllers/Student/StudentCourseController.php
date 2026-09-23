@@ -400,6 +400,7 @@ class StudentCourseController extends Controller
 
             $payload = [
                 'id' => $q->id,
+                'question_type' => $q->question_type ?? Question::TYPE_QUIZ,
                 'question_text' => $q->question_text,
                 'option_a' => $q->option_a,
                 'option_b' => $q->option_b,
@@ -407,6 +408,7 @@ class StudentCourseController extends Controller
                 'option_d' => $q->option_d,
                 'is_answered' => $hasAnswered,
                 'chosen_option' => $answerRecord['chosen'] ?? null,
+                'essay_answer' => $answerRecord['essay_answer'] ?? null,
             ];
 
             // If question has been submitted or exam is completed, include correct option & explanation
@@ -447,16 +449,15 @@ class StudentCourseController extends Controller
     }
 
     /**
-     * Submit an answer for a single question in the Class Final Exam.
+     * Submit an answer for a single question (Quiz or Essay) in the Class Final Exam.
      * Once submitted, the answer for this question is permanently locked and cannot be changed.
      */
     public function submitClassExamQuestion(Request $request, int $classId): JsonResponse
     {
         $user = $request->user();
 
-        $validated = $request->validate([
+        $request->validate([
             'question_id' => 'required|exists:questions,id',
-            'chosen_option' => 'required|in:A,B,C,D',
         ]);
 
         $class = CourseClass::with('course.lessons')->findOrFail($classId);
@@ -474,8 +475,20 @@ class StudentCourseController extends Controller
             ], 422);
         }
 
-        $question = Question::where('course_id', $class->course_id)->findOrFail($validated['question_id']);
+        $question = Question::where('course_id', $class->course_id)->findOrFail((int) $request->input('question_id'));
         $totalQuestions = Question::where('course_id', $class->course_id)->count();
+
+        if ($question->isEssay()) {
+            $validated = $request->validate([
+                'question_id' => 'required|exists:questions,id',
+                'essay_answer' => 'required|string|min:1',
+            ]);
+        } else {
+            $validated = $request->validate([
+                'question_id' => 'required|exists:questions,id',
+                'chosen_option' => 'required|in:A,B,C,D',
+            ]);
+        }
 
         // Get or create active exam attempt
         $examAttempt = StudentExamAttempt::firstOrCreate(
@@ -497,22 +510,32 @@ class StudentCourseController extends Controller
             return response()->json([
                 'error' => 'This question has already been submitted and locked.',
                 'question_id' => $question->id,
-                'chosen_option' => $summary[$question->id]['chosen'],
-                'is_correct' => $summary[$question->id]['is_correct'],
+                'chosen_option' => $summary[$question->id]['chosen'] ?? null,
+                'essay_answer' => $summary[$question->id]['essay_answer'] ?? null,
+                'is_correct' => $summary[$question->id]['is_correct'] ?? false,
                 'correct_option' => $question->correct_option,
                 'explanation' => $question->explanation,
             ], 400);
         }
 
-        $isCorrect = ($question->correct_option === $validated['chosen_option']);
-
-        // Record the answer
-        $summary[$question->id] = [
-            'chosen' => $validated['chosen_option'],
-            'correct' => $question->correct_option,
-            'is_correct' => $isCorrect,
-            'explanation' => $question->explanation,
-        ];
+        if ($question->isEssay()) {
+            $isCorrect = true;
+            $summary[$question->id] = [
+                'question_type' => Question::TYPE_ESSAY,
+                'essay_answer' => $validated['essay_answer'],
+                'is_correct' => $isCorrect,
+                'explanation' => $question->explanation,
+            ];
+        } else {
+            $isCorrect = ($question->correct_option === $validated['chosen_option']);
+            $summary[$question->id] = [
+                'question_type' => Question::TYPE_QUIZ,
+                'chosen' => $validated['chosen_option'],
+                'correct' => $question->correct_option,
+                'is_correct' => $isCorrect,
+                'explanation' => $question->explanation,
+            ];
+        }
 
         $answeredCount = count($summary);
         $correctCount = collect($summary)->where('is_correct', true)->count();
@@ -539,7 +562,9 @@ class StudentCourseController extends Controller
 
         return response()->json([
             'question_id' => $question->id,
-            'chosen_option' => $validated['chosen_option'],
+            'question_type' => $question->question_type ?? Question::TYPE_QUIZ,
+            'chosen_option' => $validated['chosen_option'] ?? null,
+            'essay_answer' => $validated['essay_answer'] ?? null,
             'is_correct' => $isCorrect,
             'correct_option' => $question->correct_option,
             'explanation' => $question->explanation,
@@ -571,7 +596,7 @@ class StudentCourseController extends Controller
             return back()->with('error', 'You must complete all lessons before taking the final exam.');
         }
 
-        $submittedAnswers = $request->input('answers', []); // [question_id => chosen_option]
+        $submittedAnswers = $request->input('answers', []); // [question_id => chosen_option or essay_answer]
         $questions = Question::where('course_id', $class->course_id)->get();
         $totalQuestions = $questions->count();
 
@@ -592,15 +617,33 @@ class StudentCourseController extends Controller
         foreach ($questions as $q) {
             // Only set if not already locked
             if (! isset($summary[$q->id]) && isset($submittedAnswers[$q->id])) {
-                $chosen = $submittedAnswers[$q->id];
-                $isCorrect = ($chosen === $q->correct_option);
+                if ($q->isEssay()) {
+                    $essayText = is_string($submittedAnswers[$q->id])
+                        ? $submittedAnswers[$q->id]
+                        : ($submittedAnswers[$q->id]['essay_answer'] ?? '');
 
-                $summary[$q->id] = [
-                    'chosen' => $chosen,
-                    'correct' => $q->correct_option,
-                    'is_correct' => $isCorrect,
-                    'explanation' => $q->explanation,
-                ];
+                    $summary[$q->id] = [
+                        'question_type' => Question::TYPE_ESSAY,
+                        'essay_answer' => $essayText,
+                        'is_correct' => true,
+                        'explanation' => $q->explanation,
+                    ];
+                } else {
+                    $chosen = is_string($submittedAnswers[$q->id])
+                        ? $submittedAnswers[$q->id]
+                        : ($submittedAnswers[$q->id]['chosen'] ?? null);
+
+                    if ($chosen) {
+                        $isCorrect = ($chosen === $q->correct_option);
+                        $summary[$q->id] = [
+                            'question_type' => Question::TYPE_QUIZ,
+                            'chosen' => $chosen,
+                            'correct' => $q->correct_option,
+                            'is_correct' => $isCorrect,
+                            'explanation' => $q->explanation,
+                        ];
+                    }
+                }
             }
         }
 

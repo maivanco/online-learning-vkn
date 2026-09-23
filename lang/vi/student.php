@@ -102,6 +102,16 @@ return [
     'continue_exam' => 'Tiếp Tục Làm Bài Thi',
     'view_exam_results' => 'Xem Kết Quả Bài Thi',
     'final_grade_badge' => 'Điểm tốt nghiệp: :score%',
+    'exam_part_quiz' => 'Phần 1: Câu Hỏi Trắc Nghiệm (:count câu)',
+    'exam_part_essay' => 'Phần 2: Câu Hỏi Tự Luận (:count câu)',
+    'exam_part_quiz_desc' => 'Chọn phương án chính xác nhất trong 4 phương án cho sẵn dưới đây.',
+    'exam_part_essay_desc' => 'Trình bày câu trả lời tự luận hoặc giải thích giáo lý chi tiết vào khung nhập liệu bên dưới.',
+    'essay_answer_placeholder' => 'Nhập nội dung bài làm tự luận của bạn tại đây...',
+    'essay_submit_btn' => 'Khóa & Nộp Bài Tự Luận',
+    'essay_submitted_badge' => 'Đã Nộp Tự Luận',
+    'your_essay_answer' => 'Bài làm đã nộp của bạn:',
+    'essay_sample_guide' => 'Gợi ý đáp án / Dàn ý hướng dẫn chấm:',
+    'essay_empty_warning' => 'Vui lòng nhập nội dung câu trả lời tự luận trước khi nộp.',
 
     // Feedback
     'feedback_modal_title' => 'Góp Ý & Báo Lỗi Chỉnh Sửa Tài Liệu',

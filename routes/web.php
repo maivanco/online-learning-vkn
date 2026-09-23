@@ -20,7 +20,7 @@ use Inertia\Inertia;
 |--------------------------------------------------------------------------
 */
 
-// Public Landing Page showcasing Viên Không Ni Monastery and Course Catalog
+// Public Landing Page showcasing Course Catalog
 Route::get('/', function () {
     $allCourses = Course::with([
         'user:id,name,username',
@@ -81,6 +81,8 @@ Route::middleware(['auth', 'role:admin,teacher'])->prefix('admin')->name('admin.
     Route::post('/classes/{id}/toggle-lock', [ClassManagerController::class, 'toggleLock'])->name('classes.toggle-lock');
     Route::post('/classes/{id}/students', [ClassManagerController::class, 'addStudent'])->name('classes.add-student');
     Route::delete('/classes/{id}/students/{userId}', [ClassManagerController::class, 'removeStudent'])->name('classes.remove-student');
+    Route::get('/classes/{id}/students/{userId}/exam-result', [ClassManagerController::class, 'getStudentExamResult'])->name('classes.student-exam-result');
+    Route::post('/classes/{id}/students/{userId}/grade-essay', [ClassManagerController::class, 'gradeEssayQuestion'])->name('classes.grade-essay');
     Route::delete('/classes/{id}', [ClassManagerController::class, 'destroy'])->name('classes.destroy');
 
     // Materials Management (Reading, Videos, Student Feedback)
