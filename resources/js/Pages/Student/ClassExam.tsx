@@ -1,0 +1,404 @@
+import { useState } from 'react';
+import { Head, Link } from '@inertiajs/react';
+import axios from 'axios';
+import { PageProps } from '@/types';
+import { useTranslation } from '@/utils/useTranslation';
+
+interface ExamQuestion {
+    id: number;
+    question_text: string;
+    option_a: string;
+    option_b: string;
+    option_c: string;
+    option_d: string;
+    is_answered: boolean;
+    chosen_option?: string | null;
+    is_correct?: boolean;
+    correct_option?: string;
+    explanation?: string;
+}
+
+interface ClassExamProps extends PageProps {
+    classItem: {
+        id: number;
+        name: string;
+        course: {
+            id: number;
+            title: string;
+            category: string;
+        };
+    };
+    questions: ExamQuestion[];
+    totalQuestions: number;
+    answeredCount: number;
+    isCompleted: boolean;
+    examAttempt?: {
+        id: number;
+        score: number;
+        correct_count: number;
+        incorrect_count: number;
+        total_questions: number;
+    } | null;
+    finalGrade?: number | null;
+}
+
+export default function ClassExam({
+    auth,
+    classItem,
+    questions: initialQuestions,
+    totalQuestions,
+    answeredCount: initialAnsweredCount,
+    isCompleted: initialIsCompleted,
+    examAttempt,
+    finalGrade,
+    flash,
+}: ClassExamProps) {
+    const t = useTranslation();
+
+    const [questions, setQuestions] = useState<ExamQuestion[]>(initialQuestions);
+    const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
+    const [submittingQuestionId, setSubmittingQuestionId] = useState<number | null>(null);
+    const [answeredCount, setAnsweredCount] = useState<number>(initialAnsweredCount);
+    const [isCompleted, setIsCompleted] = useState<boolean>(initialIsCompleted);
+    const [currentScore, setCurrentScore] = useState<number>(examAttempt?.score ?? finalGrade ?? 0);
+    const [correctCount, setCorrectCount] = useState<number>(examAttempt?.correct_count ?? 0);
+    const [incorrectCount, setIncorrectCount] = useState<number>(examAttempt?.incorrect_count ?? 0);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+    const handleSelectOption = (questionId: number, option: string) => {
+        setSelectedAnswers((prev) => ({
+            ...prev,
+            [questionId]: option,
+        }));
+    };
+
+    const handleSubmitQuestion = async (questionId: number) => {
+        const chosen = selectedAnswers[questionId];
+        if (!chosen) return;
+
+        setSubmittingQuestionId(questionId);
+        setErrorMessage(null);
+
+        try {
+            const res = await axios.post(route('student.class.exam.question-submit', classItem.id), {
+                question_id: questionId,
+                chosen_option: chosen,
+            });
+
+            const data = res.data;
+
+            // Update questions state with locked result
+            setQuestions((prev) =>
+                prev.map((q) => {
+                    if (q.id === questionId) {
+                        return {
+                            ...q,
+                            is_answered: true,
+                            chosen_option: data.chosen_option,
+                            is_correct: data.is_correct,
+                            correct_option: data.correct_option,
+                            explanation: data.explanation,
+                        };
+                    }
+                    return q;
+                })
+            );
+
+            setAnsweredCount(data.answered_count);
+            setCorrectCount(data.correct_count);
+            setIncorrectCount(data.incorrect_count);
+            setCurrentScore(data.score);
+
+            if (data.is_exam_completed) {
+                setIsCompleted(true);
+            }
+        } catch (err: any) {
+            console.error(err);
+            if (err.response?.data?.error) {
+                setErrorMessage(err.response.data.error);
+            } else {
+                setErrorMessage('An error occurred while submitting your answer. Please try again.');
+            }
+        } finally {
+            setSubmittingQuestionId(null);
+        }
+    };
+
+    const progressPercentage = totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 0;
+
+    return (
+        <div className="min-h-screen bg-stone-100 font-sans text-stone-900 flex flex-col">
+            <Head title={`${t('student.class_exam_title')} - ${classItem.name}`} />
+
+            {/* Header */}
+            <header className="bg-stone-900 text-stone-100 border-b border-stone-800 sticky top-0 z-40 shadow">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <Link href={route('student.dashboard')} className="text-stone-400 hover:text-white transition flex items-center gap-1.5 text-xs">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            <span className="hidden sm:inline">{t('student.back_to_dashboard')}</span>
+                        </Link>
+                        <span className="text-stone-600 hidden sm:inline">/</span>
+                        <span className="font-serif font-bold text-sm text-amber-200 truncate max-w-[280px] sm:max-w-md">
+                            {classItem.name}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-xs">
+                        <span className="font-mono text-stone-300 hidden md:inline">
+                            {t('student.student_label', { name: auth.user.name, username: auth.user.username ? `(${auth.user.username})` : '' })}
+                        </span>
+                        {isCompleted && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                                {t('student.status_graduated')}
+                            </span>
+                        )}
+                    </div>
+                </div>
+            </header>
+
+            {/* Main Content Area */}
+            <main className="flex-1 py-8 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full space-y-6">
+                {/* Flash Notice */}
+                {flash?.success && (
+                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl text-xs flex items-center gap-2 shadow-sm">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        {flash.success}
+                    </div>
+                )}
+
+                {errorMessage && (
+                    <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-2xl text-xs flex items-center gap-2 shadow-sm">
+                        <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                        {errorMessage}
+                    </div>
+                )}
+
+                {/* Hero Header */}
+                <div className="relative overflow-hidden bg-gradient-to-r from-stone-900 via-amber-950 to-stone-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
+                    <div className="relative z-10 space-y-2">
+                        <div className="flex items-center gap-2">
+                            <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider">
+                                {t('student.class_exam_badge')}
+                            </span>
+                            <span className="text-xs text-stone-300 font-medium">
+                                {classItem.course.title} &bull; <span className="uppercase">{classItem.course.category}</span>
+                            </span>
+                        </div>
+                        <h1 className="text-2xl sm:text-3xl font-serif font-bold text-amber-100 tracking-tight">
+                            {classItem.name} - {t('student.class_exam_title')}
+                        </h1>
+                        <p className="text-xs sm:text-sm text-stone-300 leading-relaxed max-w-2xl">
+                            {t('student.class_exam_desc')}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Graduation Celebration Banner when Exam is Completed */}
+                {isCompleted && (
+                    <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-400/80 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-sm">
+                        <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-inner">
+                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+
+                        <div className="max-w-md mx-auto space-y-1">
+                            <h3 className="font-serif font-bold text-2xl text-emerald-950">
+                                {t('student.class_exam_completed_title')}
+                            </h3>
+                            <p className="text-xs text-emerald-800">
+                                {t('student.class_exam_completed_desc', { course: classItem.course.title })}
+                            </p>
+                        </div>
+
+                        {/* Result Score Card */}
+                        <div className="inline-flex flex-wrap items-center justify-center gap-4 bg-white px-6 py-4 rounded-2xl border border-emerald-200 shadow-sm text-xs">
+                            <div className="text-center px-3 border-r border-stone-200">
+                                <div className="text-2xl font-serif font-bold text-emerald-800">{currentScore}%</div>
+                                <div className="text-[11px] font-medium text-stone-500 uppercase tracking-wider">{t('student.final_grade_badge', { score: '' })}</div>
+                            </div>
+                            <div className="text-center px-3 border-r border-stone-200">
+                                <div className="text-xl font-bold text-emerald-700">{correctCount}</div>
+                                <div className="text-[11px] font-medium text-stone-500">{t('student.class_exam_correct_stat', { count: '' })}</div>
+                            </div>
+                            <div className="text-center px-3 border-r border-stone-200">
+                                <div className="text-xl font-bold text-red-600">{incorrectCount}</div>
+                                <div className="text-[11px] font-medium text-stone-500">{t('student.class_exam_incorrect_stat', { count: '' })}</div>
+                            </div>
+                            <div className="text-center px-3">
+                                <div className="text-xl font-bold text-stone-800">{totalQuestions}</div>
+                                <div className="text-[11px] font-medium text-stone-500">{t('student.class_exam_total_stat', { count: '' })}</div>
+                            </div>
+                        </div>
+
+                        <div className="pt-2">
+                            <Link
+                                href={route('student.dashboard')}
+                                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs shadow transition"
+                            >
+                                {t('student.back_to_dashboard')}
+                            </Link>
+                        </div>
+                    </div>
+                )}
+
+                {/* Progress Tracker Card */}
+                <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-stone-700">
+                            {t('student.class_exam_status_progress', {
+                                answered: answeredCount.toString(),
+                                total: totalQuestions.toString(),
+                            })}
+                        </span>
+                        <span className="font-bold text-amber-800">{progressPercentage}%</span>
+                    </div>
+                    <div className="w-full bg-stone-100 rounded-full h-2.5 overflow-hidden border border-stone-200">
+                        <div
+                            className="bg-amber-600 h-2.5 rounded-full transition-all duration-300"
+                            style={{ width: `${progressPercentage}%` }}
+                        ></div>
+                    </div>
+                </div>
+
+                {/* Questions List */}
+                <div className="space-y-6">
+                    {questions.map((q, idx) => {
+                        const isAnswered = q.is_answered;
+                        const currentChosen = isAnswered ? q.chosen_option : selectedAnswers[q.id];
+                        const isSubmitting = submittingQuestionId === q.id;
+
+                        return (
+                            <div
+                                key={q.id}
+                                className={`bg-white rounded-3xl border p-6 sm:p-8 shadow-sm transition space-y-5 ${
+                                    isAnswered
+                                        ? q.is_correct
+                                            ? 'border-emerald-300 bg-emerald-50/20'
+                                            : 'border-red-300 bg-red-50/20'
+                                        : 'border-stone-200'
+                                }`}
+                            >
+                                {/* Question Header */}
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="font-serif font-bold text-stone-900 text-base leading-snug">
+                                        <span className="text-amber-800 mr-2">
+                                            {t('student.question_prefix', { number: (idx + 1).toString() })}
+                                        </span>
+                                        {q.question_text}
+                                    </div>
+
+                                    {isAnswered && (
+                                        <span
+                                            className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 uppercase tracking-wide ${
+                                                q.is_correct ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-red-100 text-red-800 border border-red-300'
+                                            }`}
+                                        >
+                                            {q.is_correct ? t('student.correct_badge') : t('student.incorrect_badge')}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Options */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                    {(['A', 'B', 'C', 'D'] as const).map((opt) => {
+                                        const text = opt === 'A' ? q.option_a : opt === 'B' ? q.option_b : opt === 'C' ? q.option_c : q.option_d;
+                                        const isSelected = currentChosen === opt;
+                                        const isCorrectChoice = isAnswered && q.correct_option === opt;
+                                        const isWrongChoice = isAnswered && isSelected && !q.is_correct;
+
+                                        let optionClasses = 'bg-stone-50 border-stone-200 text-stone-700 hover:border-stone-300';
+                                        if (isAnswered) {
+                                            if (isCorrectChoice) {
+                                                optionClasses = 'bg-emerald-100 border-emerald-500 font-semibold text-emerald-950';
+                                            } else if (isWrongChoice) {
+                                                optionClasses = 'bg-red-100 border-red-500 font-semibold text-red-950 line-through';
+                                            } else {
+                                                optionClasses = 'bg-stone-50 border-stone-200 text-stone-400 opacity-60';
+                                            }
+                                        } else if (isSelected) {
+                                            optionClasses = 'bg-amber-100/80 border-amber-500 font-semibold text-amber-950 shadow-sm ring-1 ring-amber-500';
+                                        }
+
+                                        return (
+                                            <label
+                                                key={opt}
+                                                className={`p-3.5 rounded-2xl border flex items-center gap-3 transition ${
+                                                    isAnswered ? 'cursor-default' : 'cursor-pointer'
+                                                } ${optionClasses}`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name={`question-${q.id}`}
+                                                    value={opt}
+                                                    checked={isSelected}
+                                                    disabled={isAnswered}
+                                                    onChange={() => handleSelectOption(q.id, opt)}
+                                                    className="text-amber-600 focus:ring-amber-500"
+                                                />
+                                                <span className="leading-normal">
+                                                    <strong className="mr-1 font-bold">{opt}.</strong> {text}
+                                                </span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Action / Confirmation */}
+                                {!isAnswered ? (
+                                    <div className="flex items-center justify-between pt-2 border-t border-stone-100">
+                                        <span className="text-[11px] text-stone-500 italic">
+                                            {t('student.class_exam_desc')}
+                                        </span>
+
+                                        <button
+                                            type="button"
+                                            disabled={!currentChosen || isSubmitting}
+                                            onClick={() => handleSubmitQuestion(q.id)}
+                                            className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs disabled:opacity-40 transition shadow-sm"
+                                        >
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                            </svg>
+                                            <span>
+                                                {isSubmitting ? t('student.checking') : t('student.class_exam_confirm_btn')}
+                                            </span>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    /* Locked Result & Explanation */
+                                    <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-2 text-xs">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 font-semibold text-stone-900">
+                                                <span>{t('student.correct_answer_label')}</span>
+                                                <span className="text-emerald-700 font-bold px-2 py-0.5 rounded bg-emerald-100">{q.correct_option}</span>
+                                            </div>
+                                            <span className="text-[11px] font-medium text-stone-500 flex items-center gap-1">
+                                                <svg className="w-3.5 h-3.5 text-stone-400" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                                                </svg>
+                                                {t('student.class_exam_answered_badge')}
+                                            </span>
+                                        </div>
+                                        {q.explanation && (
+                                            <p className="text-stone-700 italic pt-1 border-t border-stone-200/60 leading-relaxed">
+                                                <span className="font-semibold text-amber-900 not-italic mr-1">{t('student.explanation_label')}</span>
+                                                {q.explanation}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            </main>
+        </div>
+    );
+}

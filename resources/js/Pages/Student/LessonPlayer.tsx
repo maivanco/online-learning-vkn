@@ -1,22 +1,11 @@
 import { useState } from 'react';
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { PageProps } from '@/types';
 import { useTranslation } from '@/utils/useTranslation';
 
 interface Question {
     id: number;
-    question_text: string;
-    option_a: string;
-    option_b: string;
-    option_c: string;
-    option_d: string;
-}
-
-interface IncorrectQuestion {
-    id: number;
-    question_id: number;
-    last_chosen_option: string | null;
     question_text: string;
     option_a: string;
     option_b: string;
@@ -58,15 +47,11 @@ interface LessonPlayerProps extends PageProps {
         practice_count: number;
         practice_completed: boolean;
         practice_completed_at: string | null;
-        exam_completed: boolean;
-        exam_completed_at: string | null;
-        exam_score: number | null;
         is_completed: boolean;
     };
     questions: Question[];
-    unresolvedIncorrect: IncorrectQuestion[];
-    latestExamAttempt: any;
     userFeedbacks: any[];
+    isAllLessonsCompleted?: boolean;
 }
 
 export default function LessonPlayer({
@@ -76,9 +61,8 @@ export default function LessonPlayer({
     allLessons,
     progress,
     questions,
-    unresolvedIncorrect: initialUnresolved,
-    latestExamAttempt,
     userFeedbacks,
+    isAllLessonsCompleted,
     flash,
 }: LessonPlayerProps) {
     const t = useTranslation();
@@ -94,12 +78,9 @@ export default function LessonPlayer({
 
     const [activeVideoIndex, setActiveVideoIndex] = useState<number>(0);
 
-    // Current active pipeline tab (1 to 5)
+    // Current active pipeline tab (1 to 3)
     const [activeStep, setActiveStep] = useState<number>(() => {
-        if (progress.is_completed) return 5;
-        if (progress.exam_completed && initialUnresolved.length > 0) return 5;
-        if (progress.exam_completed) return 4;
-        if (progress.practice_completed) return 4;
+        if (progress.is_completed || progress.practice_completed) return 3;
         if (progress.video_completed) return 3;
         if (progress.reading_completed) return 2;
         return 1;
@@ -163,80 +144,6 @@ export default function LessonPlayer({
         });
     };
 
-    // Step 4: Final Exam state
-    const [examSelections, setExamSelections] = useState<Record<number, string>>({});
-    const [examResults, setExamResults] = useState<Record<number, { is_correct: boolean; correct_option: string; explanation: string }>>({});
-    const [isSubmittingExamQuestion, setIsSubmittingExamQuestion] = useState<number | null>(null);
-
-    const handleConfirmExamQuestion = async (questionId: number) => {
-        const chosen = examSelections[questionId];
-        if (!chosen) return;
-
-        setIsSubmittingExamQuestion(questionId);
-        try {
-            const res = await axios.post(route('student.practice.check', [classItem.id, lesson.id]), {
-                question_id: questionId,
-                chosen_option: chosen,
-            });
-            setExamResults((prev) => ({
-                ...prev,
-                [questionId]: res.data,
-            }));
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setIsSubmittingExamQuestion(null);
-        }
-    };
-
-    const [isSubmittingFullExam, setIsSubmittingFullExam] = useState(false);
-    const handleSubmitFullExam = () => {
-        setIsSubmittingFullExam(true);
-        router.post(route('student.exam.submit', [classItem.id, lesson.id]), {
-            answers: examSelections,
-        }, {
-            onSuccess: () => {
-                setActiveStep(5);
-            },
-            onFinish: () => {
-                setIsSubmittingFullExam(false);
-            },
-        });
-    };
-
-    // Step 5: Incorrect questions retry state
-    const [unresolvedList, setUnresolvedList] = useState<IncorrectQuestion[]>(initialUnresolved);
-    const [retrySelections, setRetrySelections] = useState<Record<number, string>>({});
-    const [retryResults, setRetryResults] = useState<Record<number, { is_correct: boolean; explanation: string; message: string }>>({});
-    const [isClearedAll, setIsClearedAll] = useState<boolean>(progress.is_completed);
-
-    const handleRetryIncorrectQuestion = async (questionId: number) => {
-        const chosen = retrySelections[questionId];
-        if (!chosen) return;
-
-        try {
-            const res = await axios.post(route('student.incorrect.retry', [classItem.id, lesson.id]), {
-                question_id: questionId,
-                chosen_option: chosen,
-            });
-
-            setRetryResults((prev) => ({
-                ...prev,
-                [questionId]: res.data,
-            }));
-
-            if (res.data.is_correct) {
-                // Remove question from unresolved list
-                setUnresolvedList((prev) => prev.filter((q) => q.question_id !== questionId));
-                if (res.data.all_cleared) {
-                    setIsClearedAll(true);
-                }
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
     // Handle feedback submission
     const handleSubmitFeedback = (e: React.FormEvent) => {
         e.preventDefault();
@@ -247,6 +154,10 @@ export default function LessonPlayer({
             },
         });
     };
+
+    // Determine next sibling lesson if available
+    const currentIndex = allLessons.findIndex((l) => l.id === lesson.id);
+    const nextLesson = currentIndex >= 0 && currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
 
     return (
         <div className="min-h-screen bg-stone-100 font-sans text-stone-900 flex flex-col">
@@ -277,21 +188,21 @@ export default function LessonPlayer({
                                 <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
-                                {t('student.course_completed')}
+                                {t('student.lesson_completed')}
                             </span>
                         )}
                     </div>
                 </div>
             </header>
 
-            {/* Stepper Navigation: 5-step strict sequence */}
+            {/* Stepper Navigation: 3-step sequential progression for lesson */}
             <div className="bg-white border-b border-stone-200 shadow-sm sticky top-16 z-30">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-                    <div className="grid grid-cols-5 gap-1 sm:gap-3 text-xs">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-4 text-xs">
                         {/* Step 1: Self-Study */}
                         <button
                             onClick={() => setActiveStep(1)}
-                            className={`p-2 rounded-xl text-center border transition flex flex-col items-center justify-center ${
+                            className={`p-3 rounded-2xl text-center border transition flex flex-col items-center justify-center ${
                                 activeStep === 1
                                     ? 'bg-amber-50 border-amber-500 text-amber-900 font-bold shadow-sm'
                                     : progress.reading_completed
@@ -300,7 +211,7 @@ export default function LessonPlayer({
                             }`}
                         >
                             <span className="text-[10px] uppercase font-semibold">{t('student.step_1')}</span>
-                            <span className="text-[11px] sm:text-xs truncate w-full">{t('student.step_1_title')}</span>
+                            <span className="text-xs sm:text-sm truncate w-full font-serif font-bold">{t('student.step_1_title')}</span>
                             <span className="text-[10px] mt-0.5">
                                 {progress.reading_completed ? t('student.step_1_done') : t('student.step_1_reading')}
                             </span>
@@ -310,7 +221,7 @@ export default function LessonPlayer({
                         <button
                             onClick={() => progress.reading_completed && setActiveStep(2)}
                             disabled={!progress.reading_completed}
-                            className={`p-2 rounded-xl text-center border transition flex flex-col items-center justify-center ${
+                            className={`p-3 rounded-2xl text-center border transition flex flex-col items-center justify-center ${
                                 activeStep === 2
                                     ? 'bg-amber-50 border-amber-500 text-amber-900 font-bold shadow-sm'
                                     : progress.video_completed
@@ -321,7 +232,7 @@ export default function LessonPlayer({
                             }`}
                         >
                             <span className="text-[10px] uppercase font-semibold">{t('student.step_2')}</span>
-                            <span className="text-[11px] sm:text-xs truncate w-full">{t('student.step_2_title')}</span>
+                            <span className="text-xs sm:text-sm truncate w-full font-serif font-bold">{t('student.step_2_title')}</span>
                             <span className="text-[10px] mt-0.5">
                                 {progress.video_completed ? t('student.step_2_watched') : progress.reading_completed ? t('student.step_2_ready') : t('student.step_locked')}
                             </span>
@@ -331,7 +242,7 @@ export default function LessonPlayer({
                         <button
                             onClick={() => progress.video_completed && setActiveStep(3)}
                             disabled={!progress.video_completed}
-                            className={`p-2 rounded-xl text-center border transition flex flex-col items-center justify-center ${
+                            className={`p-3 rounded-2xl text-center border transition flex flex-col items-center justify-center ${
                                 activeStep === 3
                                     ? 'bg-amber-50 border-amber-500 text-amber-900 font-bold shadow-sm'
                                     : progress.practice_completed
@@ -342,51 +253,9 @@ export default function LessonPlayer({
                             }`}
                         >
                             <span className="text-[10px] uppercase font-semibold">{t('student.step_3')}</span>
-                            <span className="text-[11px] sm:text-xs truncate w-full">{t('student.step_3_title')}</span>
+                            <span className="text-xs sm:text-sm truncate w-full font-serif font-bold">{t('student.step_3_title')}</span>
                             <span className="text-[10px] font-bold mt-0.5 text-amber-700">
                                 {progress.practice_completed ? t('student.step_3_done') : t('student.step_3_count', { count: progress.practice_count.toString() })}
-                            </span>
-                        </button>
-
-                        {/* Step 4: Final Exam */}
-                        <button
-                            onClick={() => progress.practice_completed && setActiveStep(4)}
-                            disabled={!progress.practice_completed}
-                            className={`p-2 rounded-xl text-center border transition flex flex-col items-center justify-center ${
-                                activeStep === 4
-                                    ? 'bg-amber-50 border-amber-500 text-amber-900 font-bold shadow-sm'
-                                    : progress.exam_completed
-                                    ? 'bg-stone-50 border-emerald-300 text-emerald-800'
-                                    : progress.practice_completed
-                                    ? 'bg-stone-50 border-amber-300 text-amber-800'
-                                    : 'bg-stone-100 border-stone-200 text-stone-400 opacity-60 cursor-not-allowed'
-                            }`}
-                        >
-                            <span className="text-[10px] uppercase font-semibold">{t('student.step_4')}</span>
-                            <span className="text-[11px] sm:text-xs truncate w-full">{t('student.step_4_title')}</span>
-                            <span className="text-[10px] mt-0.5">
-                                {progress.exam_completed ? `✓ ${progress.exam_score}%` : progress.practice_completed ? t('student.step_ready') : t('student.step_locked')}
-                            </span>
-                        </button>
-
-                        {/* Step 5: Master Incorrect Questions */}
-                        <button
-                            onClick={() => progress.exam_completed && setActiveStep(5)}
-                            disabled={!progress.exam_completed}
-                            className={`p-2 rounded-xl text-center border transition flex flex-col items-center justify-center ${
-                                activeStep === 5
-                                    ? 'bg-amber-50 border-amber-500 text-amber-900 font-bold shadow-sm'
-                                    : isClearedAll
-                                    ? 'bg-emerald-50 border-emerald-400 text-emerald-900 font-bold'
-                                    : progress.exam_completed
-                                    ? 'bg-amber-50 border-amber-300 text-amber-800'
-                                    : 'bg-stone-100 border-stone-200 text-stone-400 opacity-60 cursor-not-allowed'
-                            }`}
-                        >
-                            <span className="text-[10px] uppercase font-semibold">{t('student.step_5')}</span>
-                            <span className="text-[11px] sm:text-xs truncate w-full">{t('student.step_5_title')}</span>
-                            <span className="text-[10px] font-bold mt-0.5">
-                                {isClearedAll ? t('student.step_5_mastered') : progress.exam_completed ? t('student.step_5_count', { count: unresolvedList.length.toString() }) : t('student.step_locked')}
                             </span>
                         </button>
                     </div>
@@ -458,7 +327,7 @@ export default function LessonPlayer({
                             </div>
                         )}
 
-                        {/* SPECIFICATION REQUIREMENT: Feedback Button Directly Beneath Material */}
+                        {/* Feedback Button & Confirm Reading Completed */}
                         <div className="pt-4 border-t border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <button
                                 type="button"
@@ -570,7 +439,7 @@ export default function LessonPlayer({
                     </div>
                 )}
 
-                {/* STEP 3: PRACTICE QUIZ (Must repeat 10 times) */}
+                {/* STEP 3: PRACTICE QUIZ (10 repetitions) */}
                 {activeStep === 3 && (
                     <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-10 shadow-sm space-y-6">
                         <div className="border-b border-stone-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -602,6 +471,52 @@ export default function LessonPlayer({
                                 </div>
                             </div>
                         </div>
+
+                        {/* Lesson Completion Card if 10 repetitions completed */}
+                        {progress.is_completed && (
+                            <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-300 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+                                <div className="flex items-center gap-3 text-xs">
+                                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-serif font-bold text-sm text-emerald-950">
+                                            {t('student.lesson_celebration_title')}
+                                        </h4>
+                                        <p className="text-emerald-800 text-[11px] mt-0.5">
+                                            {t('student.lesson_celebration_desc', { title: lesson.title })}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0">
+                                    {isAllLessonsCompleted ? (
+                                        <Link
+                                            href={route('student.class.exam', classItem.id)}
+                                            className="px-4 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-semibold text-xs shadow transition flex items-center gap-1.5"
+                                        >
+                                            <span>{t('student.take_class_exam_button')}</span>
+                                        </Link>
+                                    ) : nextLesson ? (
+                                        <Link
+                                            href={route('student.lesson', [classItem.id, nextLesson.id])}
+                                            className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs shadow transition flex items-center gap-1.5"
+                                        >
+                                            <span>{t('student.next_lesson_button')}</span>
+                                        </Link>
+                                    ) : (
+                                        <Link
+                                            href={route('student.dashboard')}
+                                            className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs shadow transition"
+                                        >
+                                            {t('student.back_to_dashboard')}
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Questions List */}
                         <div className="space-y-6">
@@ -678,7 +593,7 @@ export default function LessonPlayer({
                                             </div>
                                         )}
 
-                                        {/* SPECIFICATION REQUIREMENT: Display result and explanation after choosing */}
+                                        {/* Display result and explanation after choosing */}
                                         {result && (
                                             <div className="bg-white/80 p-4 rounded-xl border border-stone-200 space-y-1.5 text-xs">
                                                 <div className="flex items-center gap-2 font-semibold text-stone-900">
@@ -715,278 +630,9 @@ export default function LessonPlayer({
                         </div>
                     </div>
                 )}
-
-                {/* STEP 4: FINAL EXAMINATION */}
-                {activeStep === 4 && (
-                    <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-10 shadow-sm space-y-6">
-                        <div className="border-b border-stone-100 pb-4">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                                {t('student.step_4_header')}
-                            </span>
-                            <h2 className="font-serif font-bold text-2xl text-stone-900 mt-2">
-                                {t('student.step_4_heading')}
-                            </h2>
-                            <p className="text-xs text-stone-500 mt-1">
-                                {t('student.step_4_desc')}
-                            </p>
-                        </div>
-
-                        {/* Prior attempt results display */}
-                        {latestExamAttempt && (
-                            <div className="bg-stone-50 border border-stone-200 rounded-2xl p-5 space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <h4 className="font-serif font-bold text-sm text-stone-900">
-                                        {t('student.latest_result_title')}
-                                    </h4>
-                                    <span className="text-base font-bold text-amber-800">
-                                        {t('student.score_label', { score: latestExamAttempt.score?.toString() || '0' })}
-                                    </span>
-                                </div>
-
-                                <div className="grid grid-cols-3 gap-3 text-center text-xs">
-                                    <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-emerald-900">
-                                        <div className="text-xl font-bold">{latestExamAttempt.correct_count}</div>
-                                        <div className="text-[11px] font-medium">{t('student.correct_count_label')}</div>
-                                    </div>
-
-                                    <div className="bg-red-50 border border-red-200 p-3 rounded-xl text-red-900">
-                                        <div className="text-xl font-bold">{latestExamAttempt.incorrect_count}</div>
-                                        <div className="text-[11px] font-medium">{t('student.incorrect_count_label')}</div>
-                                    </div>
-
-                                    <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl text-amber-900">
-                                        <div className="text-xl font-bold">{latestExamAttempt.review_needed_count}</div>
-                                        <div className="text-[11px] font-medium">{t('student.review_needed_count_label')}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Exam Questions */}
-                        <div className="space-y-6">
-                            {questions.map((q, idx) => {
-                                const currentChosen = examSelections[q.id];
-                                const result = examResults[q.id];
-
-                                return (
-                                    <div
-                                        key={q.id}
-                                        className="p-6 rounded-2xl border border-stone-200 bg-stone-50/50 space-y-4 text-xs"
-                                    >
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div className="font-semibold text-stone-900 text-sm">
-                                                <span className="font-bold text-amber-900 mr-2">{t('student.question_prefix', { number: (idx + 1).toString() })}</span>
-                                                {q.question_text}
-                                            </div>
-
-                                            {result && (
-                                                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                                                    result.is_correct ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                                                }`}>
-                                                    {result.is_correct ? t('student.badge_correct') : t('student.badge_incorrect')}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                            {(['A', 'B', 'C', 'D'] as const).map((opt) => {
-                                                const text = opt === 'A' ? q.option_a : opt === 'B' ? q.option_b : opt === 'C' ? q.option_c : q.option_d;
-                                                const isSelected = currentChosen === opt;
-
-                                                return (
-                                                    <label
-                                                        key={opt}
-                                                        className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition ${
-                                                            isSelected
-                                                                ? 'bg-amber-100/70 border-amber-500 font-semibold text-amber-950'
-                                                                : 'bg-white border-stone-200 hover:border-stone-300 text-stone-700'
-                                                        }`}
-                                                    >
-                                                        <input
-                                                            type="radio"
-                                                            name={`exam-${q.id}`}
-                                                            value={opt}
-                                                            checked={isSelected}
-                                                            onChange={() => setExamSelections((prev) => ({ ...prev, [q.id]: opt }))}
-                                                            className="text-amber-600 focus:ring-amber-500"
-                                                        />
-                                                        <span><strong className="mr-1">{opt}.</strong> {text}</span>
-                                                    </label>
-                                                );
-                                            })}
-                                        </div>
-
-                                        {!result && currentChosen && (
-                                            <div className="flex justify-end">
-                                                <button
-                                                    type="button"
-                                                    disabled={isSubmittingExamQuestion === q.id}
-                                                    onClick={() => handleConfirmExamQuestion(q.id)}
-                                                    className="px-3 py-1 rounded bg-stone-800 hover:bg-stone-900 text-white text-xs font-medium"
-                                                >
-                                                    {isSubmittingExamQuestion === q.id ? t('student.checking') : t('student.confirm_this_question')}
-                                                </button>
-                                            </div>
-                                        )}
-
-                                        {result && (
-                                            <div className="bg-white p-3 rounded-xl border border-stone-200 space-y-1">
-                                                <div className="font-semibold text-stone-900">
-                                                    {t('student.answer_label')} <span className="text-emerald-700 font-bold">{result.correct_option}</span>
-                                                </div>
-                                                <p className="text-stone-600 italic">
-                                                    {result.explanation}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        {/* Submit Full Exam */}
-                        <div className="pt-6 border-t border-stone-200 flex justify-end">
-                            <button
-                                type="button"
-                                onClick={handleSubmitFullExam}
-                                disabled={isSubmittingFullExam || Object.keys(examSelections).length < questions.length}
-                                className="px-6 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs shadow-md transition disabled:opacity-50"
-                            >
-                                {t('student.submit_exam')}
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* STEP 5: MASTER INCORRECT QUESTIONS */}
-                {activeStep === 5 && (
-                    <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-10 shadow-sm space-y-6">
-                        <div className="border-b border-stone-100 pb-4">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                                {t('student.step_5_header')}
-                            </span>
-                            <h2 className="font-serif font-bold text-2xl text-stone-900 mt-2">
-                                {t('student.step_5_heading')}
-                            </h2>
-                            <p className="text-xs text-stone-500 mt-1">
-                                {t('student.step_5_desc')}
-                            </p>
-                        </div>
-
-                        {/* Completion Celebration if 0 wrong remaining */}
-                        {isClearedAll || unresolvedList.length === 0 ? (
-                            <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-400/80 rounded-3xl p-8 text-center space-y-4 shadow-sm">
-                                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-inner">
-                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-
-                                <div className="max-w-md mx-auto">
-                                    <h3 className="font-serif font-bold text-xl text-emerald-950">
-                                        {t('student.celebration_title')}
-                                    </h3>
-                                    <p className="text-xs text-emerald-800 mt-1">
-                                        {t('student.celebration_desc', { title: lesson.title })}
-                                    </p>
-                                </div>
-
-                                <Link
-                                    href={route('student.dashboard')}
-                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs shadow transition"
-                                >
-                                    {t('student.return_to_dashboard')}
-                                </Link>
-                            </div>
-                        ) : (
-                            <div className="space-y-6">
-                                <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 text-xs text-amber-900 flex items-center justify-between">
-                                    <span>
-                                        {t('student.unresolved_remaining', { count: unresolvedList.length.toString() })}
-                                    </span>
-                                </div>
-
-                                {unresolvedList.map((iq, idx) => {
-                                    const currentChosen = retrySelections[iq.question_id];
-                                    const retryResult = retryResults[iq.question_id];
-
-                                    return (
-                                        <div
-                                            key={iq.id}
-                                            className="p-6 rounded-2xl border border-red-200 bg-red-50/20 space-y-4 text-xs"
-                                        >
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div className="font-semibold text-stone-900 text-sm">
-                                                    <span className="font-bold text-red-700 mr-2">{t('student.wrong_question_prefix', { number: (idx + 1).toString() })}</span>
-                                                    {iq.question_text}
-                                                </div>
-
-                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-100 text-red-800 uppercase">
-                                                    {t('student.need_correction')}
-                                                </span>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                {(['A', 'B', 'C', 'D'] as const).map((opt) => {
-                                                    const text = opt === 'A' ? iq.option_a : opt === 'B' ? iq.option_b : opt === 'C' ? iq.option_c : iq.option_d;
-                                                    const isSelected = currentChosen === opt;
-
-                                                    return (
-                                                        <label
-                                                            key={opt}
-                                                            className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition ${
-                                                                isSelected
-                                                                    ? 'bg-amber-100 border-amber-500 font-semibold text-amber-950'
-                                                                    : 'bg-white border-stone-200 hover:border-stone-300 text-stone-700'
-                                                            }`}
-                                                        >
-                                                            <input
-                                                                type="radio"
-                                                                name={`retry-${iq.question_id}`}
-                                                                value={opt}
-                                                                checked={isSelected}
-                                                                onChange={() => setRetrySelections((prev) => ({ ...prev, [iq.question_id]: opt }))}
-                                                                className="text-amber-600 focus:ring-amber-500"
-                                                            />
-                                                            <span><strong className="mr-1">{opt}.</strong> {text}</span>
-                                                        </label>
-                                                    );
-                                                })}
-                                            </div>
-
-                                            <div className="flex items-center justify-between pt-1">
-                                                <span className="text-[11px] text-stone-500 italic">
-                                                    {t('student.previous_choice', { choice: iq.last_chosen_option || 'N/A' })}
-                                                </span>
-
-                                                <button
-                                                    type="button"
-                                                    disabled={!currentChosen}
-                                                    onClick={() => handleRetryIncorrectQuestion(iq.question_id)}
-                                                    className="px-4 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs disabled:opacity-50"
-                                                >
-                                                    {t('student.check_and_fix')}
-                                                </button>
-                                            </div>
-
-                                            {retryResult && (
-                                                <div className={`p-3 rounded-xl border ${
-                                                    retryResult.is_correct ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-red-50 border-red-300 text-red-900'
-                                                }`}>
-                                                    <div className="font-semibold">{retryResult.message}</div>
-                                                    <p className="mt-1 italic">{retryResult.explanation}</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-                )}
             </main>
 
-            {/* Student Feedback Modal (Specification Requirement) */}
+            {/* Student Feedback Modal */}
             {isFeedbackModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-4 text-xs">

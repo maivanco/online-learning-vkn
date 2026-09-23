@@ -139,11 +139,14 @@ Route::middleware(['auth'])->prefix('student')->name('student.')->group(function
     Route::post('/classes/{classId}/lessons/{lessonId}/video-complete', [StudentCourseController::class, 'completeVideo'])->name('video.complete');
     Route::post('/classes/{classId}/lessons/{lessonId}/feedback', [StudentCourseController::class, 'submitFeedback'])->name('feedback.submit');
 
-    // Practice & Exam Actions
+    // Practice Actions (Per Lesson)
     Route::post('/classes/{classId}/lessons/{lessonId}/practice-check', [StudentCourseController::class, 'checkPracticeAnswer'])->name('practice.check');
     Route::post('/classes/{classId}/lessons/{lessonId}/practice-record', [StudentCourseController::class, 'recordPracticeAttempt'])->name('practice.record');
-    Route::post('/classes/{classId}/lessons/{lessonId}/exam-submit', [StudentCourseController::class, 'submitExam'])->name('exam.submit');
-    Route::post('/classes/{classId}/lessons/{lessonId}/incorrect-retry', [StudentCourseController::class, 'retryIncorrectQuestion'])->name('incorrect.retry');
+
+    // Class Final Exam Actions (1 Exam Per Class)
+    Route::get('/classes/{classId}/exam', [StudentCourseController::class, 'showClassExam'])->name('class.exam');
+    Route::post('/classes/{classId}/exam/question-submit', [StudentCourseController::class, 'submitClassExamQuestion'])->name('class.exam.question-submit');
+    Route::post('/classes/{classId}/exam-submit', [StudentCourseController::class, 'submitClassExam'])->name('class.exam.submit');
 });
 
 require __DIR__ . '/auth.php';

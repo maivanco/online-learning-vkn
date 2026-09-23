@@ -194,9 +194,13 @@ class BuddhistCoursesTest extends TestCase
         ]);
     }
 
-    public function test_strict_learning_pipeline_progression(): void
+    public function test_strict_learning_pipeline_progression_and_class_final_exam(): void
     {
         $this->actingAs($this->student);
+
+        // Before completing lessons, class final exam is locked
+        $examLockedResponse = $this->get(route('student.class.exam', $this->class->id));
+        $examLockedResponse->assertRedirect(route('student.dashboard'));
 
         // 1. Complete Reading
         $response = $this->post(route('student.reading.complete', [$this->class->id, $this->lesson->id]));
@@ -216,37 +220,46 @@ class BuddhistCoursesTest extends TestCase
         }
         $this->assertEquals(10, $progress->fresh()->practice_count);
         $this->assertTrue($progress->fresh()->practice_completed);
-
-        // 4. Submit Exam with wrong answer
-        $response = $this->post(route('student.exam.submit', [$this->class->id, $this->lesson->id]), [
-            'answers' => [
-                $this->question->id => 'A', // wrong answer
-            ],
-        ]);
-        $response->assertRedirect();
-
-        $this->assertTrue($progress->fresh()->exam_completed);
-        $this->assertFalse($progress->fresh()->is_completed); // Not completed because of wrong answer!
-
-        // Assert recorded in student_incorrect_questions
-        $this->assertDatabaseHas('student_incorrect_questions', [
-            'user_id' => $this->student->id,
-            'question_id' => $this->question->id,
-            'is_resolved' => false,
-        ]);
-
-        // 5. Retest incorrect question with correct answer 'C'
-        $retryResponse = $this->postJson(route('student.incorrect.retry', [$this->class->id, $this->lesson->id]), [
-            'question_id' => $this->question->id,
-            'chosen_option' => 'C',
-        ]);
-        $retryResponse->assertJson([
-            'is_correct' => true,
-            'all_cleared' => true,
-        ]);
-
-        // Now program is officially completed!
+        // Lesson is now completed!
         $this->assertTrue($progress->fresh()->is_completed);
+
+        // 4. Now that all lessons are completed, student can access the Class Final Exam
+        $examResponse = $this->get(route('student.class.exam', $this->class->id));
+        $examResponse->assertStatus(200);
+        $examResponse->assertInertia(fn ($page) =>
+            $page->component('Student/ClassExam')
+                ->where('classItem.id', $this->class->id)
+                ->where('totalQuestions', 1)
+        );
+
+        // 5. Submit single question on the class final exam
+        $submitQResponse = $this->postJson(route('student.class.exam.question-submit', $this->class->id), [
+            'question_id' => $this->question->id,
+            'chosen_option' => 'C', // Correct answer
+        ]);
+
+        $submitQResponse->assertJson([
+            'question_id' => $this->question->id,
+            'is_correct' => true,
+            'correct_option' => 'C',
+            'score' => 100,
+            'is_exam_completed' => true,
+        ]);
+
+        // 6. Attempting to re-submit same question is rejected (permanent lock)
+        $reSubmitResponse = $this->postJson(route('student.class.exam.question-submit', $this->class->id), [
+            'question_id' => $this->question->id,
+            'chosen_option' => 'A',
+        ]);
+        $reSubmitResponse->assertStatus(400);
+
+        // 7. Verify class enrollment is graduated with final grade
+        $this->assertDatabaseHas('class_user', [
+            'class_id' => $this->class->id,
+            'user_id' => $this->student->id,
+            'status' => 'completed',
+            'final_grade' => 100.0,
+        ]);
     }
 
     public function test_admin_can_view_class_details_with_completed_students(): void
