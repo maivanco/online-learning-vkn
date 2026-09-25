@@ -144,7 +144,7 @@ class DemoUserSeeder extends Seeder
             }
 
             StudentExamAttempt::updateOrCreate(
-                ['user_id' => $student1->id, 'class_id' => $activeClass->id, 'lesson_id' => $lesson1->id, 'attempt_type' => 'exam'],
+                ['user_id' => $student1->id, 'class_id' => $activeClass->id, 'course_id' => $activeClass->course_id, 'attempt_type' => 'exam'],
                 [
                     'total_questions' => 5,
                     'correct_count' => 4,
@@ -152,11 +152,14 @@ class DemoUserSeeder extends Seeder
                     'review_needed_count' => 1,
                     'score' => 80.0,
                     'answers_summary' => [
-                        'q1' => 'correct',
-                        'q2' => 'correct',
-                        'q3' => 'correct',
-                        'q4' => 'incorrect',
-                        'q5' => 'correct',
+                        'quiz' => [
+                            'q1' => ['question_type' => 'quiz', 'is_correct' => true],
+                            'q2' => ['question_type' => 'quiz', 'is_correct' => true],
+                            'q3' => ['question_type' => 'quiz', 'is_correct' => true],
+                            'q4' => ['question_type' => 'quiz', 'is_correct' => false],
+                            'q5' => ['question_type' => 'quiz', 'is_correct' => true],
+                        ],
+                        'essay' => [],
                     ],
                 ]
             );

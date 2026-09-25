@@ -15,7 +15,7 @@ class StudentExamAttempt extends Model
     protected $fillable = [
         'user_id',
         'class_id',
-        'lesson_id',
+        'course_id',
         'attempt_type', // practice, exam
         'total_questions',
         'correct_count',
@@ -44,8 +44,54 @@ class StudentExamAttempt extends Model
         return $this->belongsTo(CourseClass::class, 'class_id');
     }
 
-    public function lesson(): BelongsTo
+    public function course(): BelongsTo
     {
-        return $this->belongsTo(Lesson::class, 'lesson_id');
+        return $this->belongsTo(Course::class, 'course_id');
+    }
+
+    /**
+     * Get answers summary normalized to the structured format:
+     * ['quiz' => [...], 'essay' => [...]]
+     */
+    public function getNormalizedSummary(): array
+    {
+        $summary = $this->answers_summary ?? [];
+        if (! is_array($summary)) {
+            return ['quiz' => [], 'essay' => []];
+        }
+
+        if (! isset($summary['quiz']) && ! isset($summary['essay'])) {
+            $normalized = ['quiz' => [], 'essay' => []];
+            foreach ($summary as $qid => $val) {
+                if (is_array($val)) {
+                    $type = ($val['question_type'] ?? 'quiz') === 'essay' ? 'essay' : 'quiz';
+                    $normalized[$type][$qid] = $val;
+                }
+            }
+            return $normalized;
+        }
+
+        return [
+            'quiz' => (array) ($summary['quiz'] ?? []),
+            'essay' => (array) ($summary['essay'] ?? []),
+        ];
+    }
+
+    /**
+     * Get total number of answered questions across quiz and essay.
+     */
+    public function getAnsweredCountAttribute(): int
+    {
+        $norm = $this->getNormalizedSummary();
+        return count($norm['quiz']) + count($norm['essay']);
+    }
+
+    /**
+     * Retrieve answered record for a given question ID regardless of type.
+     */
+    public function getAnswerRecord(int $questionId): ?array
+    {
+        $norm = $this->getNormalizedSummary();
+        return $norm['quiz'][$questionId] ?? $norm['essay'][$questionId] ?? null;
     }
 }

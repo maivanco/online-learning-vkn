@@ -145,7 +145,7 @@ erDiagram
 5. `lessons`: `id`, `course_id`, `title`, `slug`, `order`, `summary`, `reading_content`, `reading_file_url`, `document_urls` (JSON), `video_url`, `video_urls` (JSON), timestamps.
 6. `questions`: `id`, `course_id`, `lesson_id` (nullable), `question_text`, `option_a`, `option_b`, `option_c`, `option_d`, `correct_option` (`A`|`B`|`C`|`D`), `explanation`, `type` (`practice`|`exam`|`both`), timestamps.
 7. `student_progress`: `id`, `user_id`, `class_id`, `lesson_id`, `reading_completed`, `reading_completed_at`, `video_completed`, `video_completed_at`, `practice_count` (integer 0–10), `practice_completed`, `practice_completed_at`, `exam_completed`, `exam_completed_at`, `exam_score`, `is_completed`, `completed_at`, timestamps.
-8. `student_exam_attempts`: `id`, `user_id`, `class_id`, `lesson_id`, `attempt_type` (`exam`), `total_questions`, `correct_count`, `incorrect_count`, `review_needed_count`, `score`, `answers_summary` (JSON), timestamps.
+8. `student_exam_attempts`: `id`, `user_id`, `class_id`, `course_id`, `attempt_type` (`exam`), `total_questions`, `correct_count`, `incorrect_count`, `review_needed_count`, `score`, `answers_summary` (JSON with `{'quiz':{},'essay':{}}`), timestamps.
 9. `student_incorrect_questions`: `id`, `user_id`, `class_id`, `lesson_id`, `question_id`, `last_chosen_option`, `is_resolved` (boolean), `resolved_at`, timestamps.
 10. `material_feedbacks`: `id`, `lesson_id`, `user_id`, `content`, `status` (`pending`|`reviewed`|`resolved`), `admin_notes`, timestamps.
 

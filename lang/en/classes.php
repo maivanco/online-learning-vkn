@@ -142,4 +142,8 @@ return [
     'correct_pct' => 'Correct (100%)',
     'incorrect_pct' => 'Incorrect (0%)',
     'no_questions_filter' => 'No questions match the selected filter.',
+    'quiz_section_heading' => 'Part 1: Multiple Choice Quizzes',
+    'quiz_section_desc' => 'Automatically graded based on student choice.',
+    'essay_section_heading' => 'Part 2: Essay Questions',
+    'essay_section_desc' => 'Subjective responses evaluated and graded by the teacher.',
 ];

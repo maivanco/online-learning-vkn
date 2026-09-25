@@ -67,7 +67,7 @@ class StudentCourseController extends Controller
                     ->first();
 
                 $studentPivot = $cls->students->firstWhere('id', $user->id)?->pivot;
-                $isGraduated = ($studentPivot?->status === 'completed' || ($examAttempt && $examAttempt->total_questions > 0 && count($examAttempt->answers_summary ?? []) >= $examAttempt->total_questions));
+                $isGraduated = ($studentPivot?->status === 'completed' || ($examAttempt && $examAttempt->total_questions > 0 && $examAttempt->answered_count >= $examAttempt->total_questions));
 
                 $enrollmentStatus = $isGraduated
                     ? 'completed'
@@ -97,7 +97,7 @@ class StudentCourseController extends Controller
                         'total_questions' => $examAttempt->total_questions,
                         'correct_count' => $examAttempt->correct_count,
                         'incorrect_count' => $examAttempt->incorrect_count,
-                        'is_completed' => $examAttempt->total_questions > 0 && count($examAttempt->answers_summary ?? []) >= $examAttempt->total_questions,
+                        'is_completed' => $examAttempt->total_questions > 0 && $examAttempt->answered_count >= $examAttempt->total_questions,
                     ] : null,
                     'lessons' => $lessonsData,
                 ];
@@ -395,18 +395,21 @@ class StudentCourseController extends Controller
             $examAttempt = StudentExamAttempt::create([
                 'user_id' => $user->id,
                 'class_id' => $classId,
+                'course_id' => $class->course_id,
                 'attempt_type' => 'exam',
                 'total_questions' => $totalQuestions,
                 'correct_count' => 0,
                 'incorrect_count' => 0,
                 'review_needed_count' => 0,
                 'score' => 0,
-                'answers_summary' => [],
+                'answers_summary' => ['quiz' => [], 'essay' => []],
             ]);
+        } elseif ($examAttempt && ! $examAttempt->course_id) {
+            $examAttempt->update(['course_id' => $class->course_id]);
         }
 
-        $answersSummary = $examAttempt?->answers_summary ?? [];
-        $answeredCount = count($answersSummary);
+        $normSummary = $examAttempt?->getNormalizedSummary() ?? ['quiz' => [], 'essay' => []];
+        $answeredCount = $examAttempt ? $examAttempt->answered_count : 0;
         $isCompleted = ($totalQuestions > 0 && $answeredCount >= $totalQuestions);
 
         $remainingSeconds = null;
@@ -421,8 +424,9 @@ class StudentCourseController extends Controller
         }
 
         // Questions payload with answered states locked
-        $questionsPayload = $questions->map(function ($q) use ($answersSummary, $isCompleted) {
-            $answerRecord = $answersSummary[$q->id] ?? null;
+        $questionsPayload = $questions->map(function ($q) use ($normSummary, $isCompleted) {
+            $typeKey = $q->isEssay() ? 'essay' : 'quiz';
+            $answerRecord = $normSummary[$typeKey][$q->id] ?? null;
             $hasAnswered = ($answerRecord !== null);
 
             $payload = [
@@ -545,41 +549,58 @@ class StudentCourseController extends Controller
         $examAttempt = StudentExamAttempt::firstOrCreate(
             ['user_id' => $user->id, 'class_id' => $classId, 'attempt_type' => 'exam'],
             [
+                'course_id' => $class->course_id,
                 'total_questions' => $totalQuestions,
                 'correct_count' => 0,
                 'incorrect_count' => 0,
                 'review_needed_count' => 0,
                 'score' => 0,
-                'answers_summary' => [],
+                'answers_summary' => ['quiz' => [], 'essay' => []],
             ]
         );
 
-        $summary = $examAttempt->answers_summary ?? [];
-
-        // Check if already submitted (Permanent lock: cannot re-submit answer for a question)
-        if (isset($summary[$question->id])) {
-            return response()->json([
-                'error' => 'This question has already been submitted and locked.',
-                'question_id' => $question->id,
-                'chosen_option' => $summary[$question->id]['chosen'] ?? null,
-                'essay_answer' => $summary[$question->id]['essay_answer'] ?? null,
-                'is_correct' => $summary[$question->id]['is_correct'] ?? false,
-                'correct_option' => $question->correct_option,
-                'explanation' => $question->explanation,
-            ], 400);
+        if (! $examAttempt->course_id) {
+            $examAttempt->course_id = $class->course_id;
         }
 
+        $summary = $examAttempt->getNormalizedSummary();
+
+        // Check if already submitted (Permanent lock: cannot re-submit answer for a question)
         if ($question->isEssay()) {
+            if (isset($summary['essay'][$question->id])) {
+                return response()->json([
+                    'error' => 'This question has already been submitted and locked.',
+                    'question_id' => $question->id,
+                    'chosen_option' => null,
+                    'essay_answer' => $summary['essay'][$question->id]['essay_answer'] ?? null,
+                    'is_correct' => $summary['essay'][$question->id]['is_correct'] ?? true,
+                    'correct_option' => null,
+                    'explanation' => $question->explanation,
+                ], 400);
+            }
+
             $isCorrect = true;
-            $summary[$question->id] = [
+            $summary['essay'][$question->id] = [
                 'question_type' => Question::TYPE_ESSAY,
                 'essay_answer' => $validated['essay_answer'],
                 'is_correct' => $isCorrect,
                 'explanation' => $question->explanation,
             ];
         } else {
+            if (isset($summary['quiz'][$question->id])) {
+                return response()->json([
+                    'error' => 'This question has already been submitted and locked.',
+                    'question_id' => $question->id,
+                    'chosen_option' => $summary['quiz'][$question->id]['chosen'] ?? null,
+                    'essay_answer' => null,
+                    'is_correct' => $summary['quiz'][$question->id]['is_correct'] ?? false,
+                    'correct_option' => $question->correct_option,
+                    'explanation' => $question->explanation,
+                ], 400);
+            }
+
             $isCorrect = ($question->correct_option === $validated['chosen_option']);
-            $summary[$question->id] = [
+            $summary['quiz'][$question->id] = [
                 'question_type' => Question::TYPE_QUIZ,
                 'chosen' => $validated['chosen_option'],
                 'correct' => $question->correct_option,
@@ -588,12 +609,15 @@ class StudentCourseController extends Controller
             ];
         }
 
-        $answeredCount = count($summary);
-        $correctCount = collect($summary)->where('is_correct', true)->count();
-        $incorrectCount = collect($summary)->where('is_correct', false)->count();
+        $answeredCount = count($summary['quiz']) + count($summary['essay']);
+        $correctCount = collect($summary['quiz'])->where('is_correct', true)->count()
+            + collect($summary['essay'])->where('is_correct', true)->count();
+        $incorrectCount = collect($summary['quiz'])->where('is_correct', false)->count()
+            + collect($summary['essay'])->where('is_correct', false)->count();
         $score = $totalQuestions > 0 ? round(($correctCount / $totalQuestions) * 100, 1) : 0;
         $isExamCompleted = ($answeredCount >= $totalQuestions);
 
+        $examAttempt->course_id = $class->course_id;
         $examAttempt->total_questions = $totalQuestions;
         $examAttempt->correct_count = $correctCount;
         $examAttempt->incorrect_count = $incorrectCount;
@@ -670,39 +694,45 @@ class StudentCourseController extends Controller
         $examAttempt = StudentExamAttempt::firstOrCreate(
             ['user_id' => $user->id, 'class_id' => $classId, 'attempt_type' => 'exam'],
             [
+                'course_id' => $class->course_id,
                 'total_questions' => $totalQuestions,
                 'correct_count' => 0,
                 'incorrect_count' => 0,
                 'review_needed_count' => 0,
                 'score' => 0,
-                'answers_summary' => [],
+                'answers_summary' => ['quiz' => [], 'essay' => []],
             ]
         );
 
-        $summary = $examAttempt->answers_summary ?? [];
+        if (! $examAttempt->course_id) {
+            $examAttempt->course_id = $class->course_id;
+        }
+
+        $summary = $examAttempt->getNormalizedSummary();
 
         foreach ($questions as $q) {
-            // Only set if not already locked
-            if (! isset($summary[$q->id]) && isset($submittedAnswers[$q->id])) {
-                if ($q->isEssay()) {
+            if ($q->isEssay()) {
+                if (! isset($summary['essay'][$q->id]) && isset($submittedAnswers[$q->id])) {
                     $essayText = is_string($submittedAnswers[$q->id])
                         ? $submittedAnswers[$q->id]
                         : ($submittedAnswers[$q->id]['essay_answer'] ?? '');
 
-                    $summary[$q->id] = [
+                    $summary['essay'][$q->id] = [
                         'question_type' => Question::TYPE_ESSAY,
                         'essay_answer' => $essayText,
                         'is_correct' => true,
                         'explanation' => $q->explanation,
                     ];
-                } else {
+                }
+            } else {
+                if (! isset($summary['quiz'][$q->id]) && isset($submittedAnswers[$q->id])) {
                     $chosen = is_string($submittedAnswers[$q->id])
                         ? $submittedAnswers[$q->id]
                         : ($submittedAnswers[$q->id]['chosen'] ?? null);
 
                     if ($chosen) {
                         $isCorrect = ($chosen === $q->correct_option);
-                        $summary[$q->id] = [
+                        $summary['quiz'][$q->id] = [
                             'question_type' => Question::TYPE_QUIZ,
                             'chosen' => $chosen,
                             'correct' => $q->correct_option,
@@ -714,12 +744,15 @@ class StudentCourseController extends Controller
             }
         }
 
-        $answeredCount = count($summary);
-        $correctCount = collect($summary)->where('is_correct', true)->count();
-        $incorrectCount = collect($summary)->where('is_correct', false)->count();
+        $answeredCount = count($summary['quiz']) + count($summary['essay']);
+        $correctCount = collect($summary['quiz'])->where('is_correct', true)->count()
+            + collect($summary['essay'])->where('is_correct', true)->count();
+        $incorrectCount = collect($summary['quiz'])->where('is_correct', false)->count()
+            + collect($summary['essay'])->where('is_correct', false)->count();
         $score = $totalQuestions > 0 ? round(($correctCount / $totalQuestions) * 100, 1) : 0;
         $isExamCompleted = ($answeredCount >= $totalQuestions);
 
+        $examAttempt->course_id = $class->course_id;
         $examAttempt->total_questions = $totalQuestions;
         $examAttempt->correct_count = $correctCount;
         $examAttempt->incorrect_count = $incorrectCount;

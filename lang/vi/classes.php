@@ -142,4 +142,8 @@ return [
     'correct_pct' => 'Chính xác (100%)',
     'incorrect_pct' => 'Chưa đúng (0%)',
     'no_questions_filter' => 'Không có câu hỏi nào phù hợp với bộ lọc đã chọn.',
+    'quiz_section_heading' => 'Phần 1: Câu hỏi Trắc nghiệm',
+    'quiz_section_desc' => 'Được hệ thống chấm tự động dựa trên lựa chọn của học viên.',
+    'essay_section_heading' => 'Phần 2: Câu hỏi Tự luận',
+    'essay_section_desc' => 'Câu hỏi tự luận do giảng viên chấm điểm và nhận xét trực tiếp.',
 ];

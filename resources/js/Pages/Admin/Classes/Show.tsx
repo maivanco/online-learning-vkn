@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import axios from 'axios';
@@ -26,6 +26,10 @@ interface ExamAttempt {
     is_completed: boolean;
     created_at?: string;
     updated_at?: string;
+    answers_summary?: {
+        quiz?: Record<string | number, any>;
+        essay?: Record<string | number, any>;
+    } | null;
 }
 
 interface StudentItem {
@@ -310,12 +314,20 @@ export default function ClassShow({ auth, classItem, students: initialStudents, 
         }
     };
 
-    const filteredExamQuestions = (examResultData?.questions || []).filter((q) => {
-        if (examFilter === 'quiz') return q.question_type === 'quiz';
-        if (examFilter === 'essay') return q.question_type === 'essay';
-        if (examFilter === 'incorrect') return q.is_answered && q.is_correct === false;
-        return true;
-    });
+    const filteredExamQuestions = useMemo(() => {
+        const questions = (examResultData?.questions || []).filter((q) => {
+            if (examFilter === 'quiz') return q.question_type === 'quiz';
+            if (examFilter === 'essay') return q.question_type === 'essay';
+            if (examFilter === 'incorrect') return q.is_answered && q.is_correct === false;
+            return true;
+        });
+
+        // Always display multiple-choice quiz questions first, then essay questions later
+        return [...questions].sort((a, b) => {
+            if (a.question_type === b.question_type) return 0;
+            return a.question_type === 'quiz' ? -1 : 1;
+        });
+    }, [examResultData?.questions, examFilter]);
 
     return (
         <AuthenticatedLayout
@@ -925,14 +937,46 @@ export default function ClassShow({ auth, classItem, students: initialStudents, 
                                         ) : (
                                             filteredExamQuestions.map((q, qIndex) => {
                                                 const isEssay = q.question_type === 'essay';
+                                                const isFirstQuiz = !isEssay && (qIndex === 0 || filteredExamQuestions[qIndex - 1]?.question_type === 'essay');
+                                                const isFirstEssay = isEssay && (qIndex === 0 || filteredExamQuestions[qIndex - 1]?.question_type !== 'essay');
 
                                                 return (
-                                                    <div
-                                                        key={q.id}
-                                                        className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5 space-y-4 transition hover:border-amber-300"
-                                                    >
-                                                        {/* Question Header */}
-                                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-100 pb-3">
+                                                    <div key={q.id} className="space-y-4">
+                                                        {examFilter === 'all' && isFirstQuiz && (
+                                                            <div className="flex items-center gap-2.5 pt-2 pb-1 border-b border-stone-200">
+                                                                <span className="w-6 h-6 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs">
+                                                                    1
+                                                                </span>
+                                                                <div>
+                                                                    <h4 className="text-xs font-bold uppercase tracking-wider text-blue-900">
+                                                                        {t('classes.quiz_section_heading')} ({examResultData.metrics.quiz_count})
+                                                                    </h4>
+                                                                    <p className="text-[11px] text-stone-500">
+                                                                        {t('classes.quiz_section_desc')}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {examFilter === 'all' && isFirstEssay && (
+                                                            <div className="flex items-center gap-2.5 pt-5 pb-1 border-b border-stone-200">
+                                                                <span className="w-6 h-6 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center font-bold text-xs">
+                                                                    2
+                                                                </span>
+                                                                <div>
+                                                                    <h4 className="text-xs font-bold uppercase tracking-wider text-purple-900">
+                                                                        {t('classes.essay_section_heading')} ({examResultData.metrics.essay_count})
+                                                                    </h4>
+                                                                    <p className="text-[11px] text-stone-500">
+                                                                        {t('classes.essay_section_desc')}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5 space-y-4 transition hover:border-amber-300">
+                                                            {/* Question Header */}
+                                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-100 pb-3">
                                                             <div className="flex items-center gap-2 flex-wrap">
                                                                 <span className="font-bold text-stone-900 text-xs">
                                                                     {t('classes.question_prefix')} #{qIndex + 1}
@@ -1196,6 +1240,7 @@ export default function ClassShow({ auth, classItem, students: initialStudents, 
                                                                 </div>
                                                             </div>
                                                         )}
+                                                        </div>
                                                     </div>
                                                 );
                                             })

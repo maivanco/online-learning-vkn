@@ -445,24 +445,29 @@ class BuddhistCoursesTest extends TestCase
         StudentExamAttempt::create([
             'user_id' => $this->student->id,
             'class_id' => $this->class->id,
+            'course_id' => $this->class->course_id,
             'attempt_type' => 'exam',
             'total_questions' => 2,
             'correct_count' => 1,
             'incorrect_count' => 1,
             'score' => 50.0,
             'answers_summary' => [
-                $this->question->id => [
-                    'question_type' => 'quiz',
-                    'chosen' => 'C',
-                    'correct' => 'C',
-                    'is_correct' => true,
-                    'explanation' => $this->question->explanation,
+                'quiz' => [
+                    $this->question->id => [
+                        'question_type' => 'quiz',
+                        'chosen' => 'C',
+                        'correct' => 'C',
+                        'is_correct' => true,
+                        'explanation' => $this->question->explanation,
+                    ],
                 ],
-                $essayQuestion->id => [
-                    'question_type' => 'essay',
-                    'essay_answer' => 'Mindfulness of breathing involves observing in-and-out breaths with clear comprehension.',
-                    'is_correct' => false,
-                    'score' => null,
+                'essay' => [
+                    $essayQuestion->id => [
+                        'question_type' => 'essay',
+                        'essay_answer' => 'Mindfulness of breathing involves observing in-and-out breaths with clear comprehension.',
+                        'is_correct' => false,
+                        'score' => null,
+                    ],
                 ],
             ],
         ]);
@@ -487,6 +492,17 @@ class BuddhistCoursesTest extends TestCase
                 'essays_pending' => 1,
             ],
         ]);
+
+        // Verify quiz question is returned first, essay question later
+        $returnedQuestions = $response->json('questions');
+        $this->assertEquals('quiz', $returnedQuestions[0]['question_type']);
+        $this->assertEquals('essay', $returnedQuestions[1]['question_type']);
+
+        // Verify StudentExamAttempt links with course_id and has structured answers_summary
+        $attemptRecord = StudentExamAttempt::where('user_id', $this->student->id)->first();
+        $this->assertEquals($this->course->id, $attemptRecord->course_id);
+        $this->assertArrayHasKey('quiz', $attemptRecord->answers_summary);
+        $this->assertArrayHasKey('essay', $attemptRecord->answers_summary);
     }
 
     public function test_teacher_can_grade_student_essay_question_and_recalculate_score(): void
@@ -507,24 +523,29 @@ class BuddhistCoursesTest extends TestCase
         StudentExamAttempt::create([
             'user_id' => $this->student->id,
             'class_id' => $this->class->id,
+            'course_id' => $this->class->course_id,
             'attempt_type' => 'exam',
             'total_questions' => 2,
             'correct_count' => 1,
             'incorrect_count' => 1,
             'score' => 50.0,
             'answers_summary' => [
-                $this->question->id => [
-                    'question_type' => 'quiz',
-                    'chosen' => 'C',
-                    'correct' => 'C',
-                    'is_correct' => true,
-                    'explanation' => $this->question->explanation,
+                'quiz' => [
+                    $this->question->id => [
+                        'question_type' => 'quiz',
+                        'chosen' => 'C',
+                        'correct' => 'C',
+                        'is_correct' => true,
+                        'explanation' => $this->question->explanation,
+                    ],
                 ],
-                $essayQuestion->id => [
-                    'question_type' => 'essay',
-                    'essay_answer' => 'Mindfulness of breathing calm bodily formations.',
-                    'is_correct' => false,
-                    'score' => null,
+                'essay' => [
+                    $essayQuestion->id => [
+                        'question_type' => 'essay',
+                        'essay_answer' => 'Mindfulness of breathing calm bodily formations.',
+                        'is_correct' => false,
+                        'score' => null,
+                    ],
                 ],
             ],
         ]);
@@ -548,7 +569,7 @@ class BuddhistCoursesTest extends TestCase
         $attempt = StudentExamAttempt::where('user_id', $this->student->id)->where('class_id', $this->class->id)->first();
         $this->assertEquals(95.0, (float) $attempt->score);
         $this->assertEquals(2, $attempt->correct_count);
-        $this->assertEquals(90.0, (float) $attempt->answers_summary[$essayQuestion->id]['score']);
+        $this->assertEquals(90.0, (float) $attempt->answers_summary['essay'][$essayQuestion->id]['score']);
 
         // Verify class_user final_grade updated
         $this->assertDatabaseHas('class_user', [

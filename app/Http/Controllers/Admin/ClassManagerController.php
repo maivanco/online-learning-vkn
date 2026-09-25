@@ -144,7 +144,7 @@ class ClassManagerController extends Controller
                     'total_questions' => $examAttempt->total_questions,
                     'correct_count' => $examAttempt->correct_count,
                     'incorrect_count' => $examAttempt->incorrect_count,
-                    'is_completed' => !empty($examAttempt->answers_summary),
+                    'is_completed' => $examAttempt->total_questions > 0 && $examAttempt->answered_count >= $examAttempt->total_questions,
                 ] : null,
             ];
         });
@@ -280,18 +280,24 @@ class ClassManagerController extends Controller
             ->orderBy('id')
             ->get();
 
+        // Partition questions so quizzes are displayed first, then essays later
+        $quizQuestions = $questions->filter(fn($q) => $q->isQuiz())->values();
+        $essayQuestions = $questions->filter(fn($q) => $q->isEssay())->values();
+        $orderedQuestions = $quizQuestions->concat($essayQuestions);
+
         $examAttempt = StudentExamAttempt::where('user_id', $userId)
             ->where('class_id', $id)
             ->where('attempt_type', 'exam')
             ->latest()
             ->first();
 
-        $answersSummary = $examAttempt?->answers_summary ?? [];
+        $normSummary = $examAttempt?->getNormalizedSummary() ?? ['quiz' => [], 'essay' => []];
         $totalQuestions = $questions->count();
-        $answeredCount = count($answersSummary);
+        $answeredCount = $examAttempt ? $examAttempt->answered_count : 0;
 
-        $questionsPayload = $questions->map(function ($q) use ($answersSummary) {
-            $answerRecord = $answersSummary[$q->id] ?? null;
+        $questionsPayload = $orderedQuestions->map(function ($q) use ($normSummary) {
+            $typeKey = $q->isEssay() ? 'essay' : 'quiz';
+            $answerRecord = $normSummary[$typeKey][$q->id] ?? null;
             $hasAnswered = ($answerRecord !== null);
 
             $score = null;
@@ -326,15 +332,12 @@ class ClassManagerController extends Controller
             ];
         });
 
-        $quizQuestions = $questions->filter(fn($q) => $q->isQuiz());
-        $essayQuestions = $questions->filter(fn($q) => $q->isEssay());
-
-        $quizzesCorrect = $quizQuestions->filter(function ($q) use ($answersSummary) {
-            return isset($answersSummary[$q->id]) && !empty($answersSummary[$q->id]['is_correct']);
+        $quizzesCorrect = $quizQuestions->filter(function ($q) use ($normSummary) {
+            return isset($normSummary['quiz'][$q->id]) && !empty($normSummary['quiz'][$q->id]['is_correct']);
         })->count();
 
-        $essaysGraded = $essayQuestions->filter(function ($q) use ($answersSummary) {
-            return isset($answersSummary[$q->id]) && (isset($answersSummary[$q->id]['score']) || isset($answersSummary[$q->id]['teacher_score']));
+        $essaysGraded = $essayQuestions->filter(function ($q) use ($normSummary) {
+            return isset($normSummary['essay'][$q->id]) && (isset($normSummary['essay'][$q->id]['score']) || isset($normSummary['essay'][$q->id]['teacher_score']));
         })->count();
 
         return response()->json([
@@ -395,20 +398,25 @@ class ClassManagerController extends Controller
         $examAttempt = StudentExamAttempt::firstOrCreate(
             ['user_id' => $userId, 'class_id' => $id, 'attempt_type' => 'exam'],
             [
+                'course_id' => $class->course_id,
                 'total_questions' => $totalQuestionsCount,
                 'correct_count' => 0,
                 'incorrect_count' => 0,
                 'review_needed_count' => 0,
                 'score' => 0,
-                'answers_summary' => [],
+                'answers_summary' => ['quiz' => [], 'essay' => []],
             ]
         );
 
-        $summary = $examAttempt->answers_summary ?? [];
-        $existing = $summary[$question->id] ?? [];
+        if (! $examAttempt->course_id) {
+            $examAttempt->course_id = $class->course_id;
+        }
+
+        $summary = $examAttempt->getNormalizedSummary();
+        $existing = $summary['essay'][$question->id] ?? [];
         $scoreVal = round((float) $validated['score'], 1);
 
-        $summary[$question->id] = array_merge($existing, [
+        $summary['essay'][$question->id] = array_merge($existing, [
             'question_type' => Question::TYPE_ESSAY,
             'essay_answer' => $existing['essay_answer'] ?? '',
             'score' => $scoreVal,
@@ -426,9 +434,9 @@ class ClassManagerController extends Controller
         $incorrectCount = 0;
 
         foreach ($allQuestions as $q) {
-            $ans = $summary[$q->id] ?? null;
             if ($q->isEssay()) {
-                if (isset($ans['score']) || isset($ans['teacher_score'])) {
+                $ans = $summary['essay'][$q->id] ?? null;
+                if ($ans && (isset($ans['score']) || isset($ans['teacher_score']))) {
                     $qScore = (float) ($ans['score'] ?? $ans['teacher_score']);
                     $totalScoreSum += $qScore;
                     if ($qScore >= 50.0) {
@@ -440,7 +448,8 @@ class ClassManagerController extends Controller
                     $incorrectCount++;
                 }
             } else {
-                if (isset($ans['is_correct']) && $ans['is_correct']) {
+                $ans = $summary['quiz'][$q->id] ?? null;
+                if ($ans && isset($ans['is_correct']) && $ans['is_correct']) {
                     $totalScoreSum += 100;
                     $correctCount++;
                 } else {
@@ -451,6 +460,7 @@ class ClassManagerController extends Controller
 
         $finalScore = $totalQuestionsCount > 0 ? round($totalScoreSum / $totalQuestionsCount, 1) : 0;
 
+        $examAttempt->course_id = $class->course_id;
         $examAttempt->total_questions = $totalQuestionsCount;
         $examAttempt->correct_count = $correctCount;
         $examAttempt->incorrect_count = $incorrectCount;
