@@ -62,6 +62,15 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+// Locale Switcher Route
+Route::post('/locale', function (\Illuminate\Http\Request $request) {
+    $validated = $request->validate([
+        'locale' => ['required', 'string', 'in:en,vi'],
+    ]);
+    session()->put('locale', $validated['locale']);
+    return back();
+})->name('locale.update');
+
 // Role-based Dashboard Entry Point
 Route::get('/dashboard', function () {
     $user = auth()->user();
