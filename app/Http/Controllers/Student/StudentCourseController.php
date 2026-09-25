@@ -7,6 +7,7 @@ use App\Models\CourseClass;
 use App\Models\Lesson;
 use App\Models\MaterialFeedback;
 use App\Models\Question;
+use App\Models\Setting;
 use App\Models\StudentExamAttempt;
 use App\Models\StudentProgress;
 use Illuminate\Http\JsonResponse;
@@ -106,6 +107,7 @@ class StudentCourseController extends Controller
         return Inertia::render('Student/Dashboard', [
             'enrolledClasses' => $classes,
             'upcomingClasses' => [],
+            'practiceTarget' => Setting::getPracticeTarget(),
             'user' => [
                 'name' => $user->name,
                 'username' => $user->username,
@@ -126,6 +128,12 @@ class StudentCourseController extends Controller
 
         // Auto-enroll student into this class if not already enrolled
         if (! $user->enrolledClasses()->where('classes.id', $classId)->exists()) {
+            $maxClasses = Setting::getMaxClassesPerStudent();
+            $enrolledCount = $user->enrolledClasses()->wherePivot('status', '!=', 'dropped')->count();
+            if ($maxClasses > 0 && $enrolledCount >= $maxClasses) {
+                return redirect()->route('student.dashboard')->with('error', __('settings.error_student_max_classes', ['max' => $maxClasses]));
+            }
+
             $user->enrolledClasses()->attach($classId, [
                 'enrolled_at' => now(),
                 'status' => 'enrolled',
@@ -212,6 +220,7 @@ class StudentCourseController extends Controller
                 'video_completed' => (bool) $progress->video_completed,
                 'video_completed_at' => $progress->video_completed_at?->format('Y-m-d H:i'),
                 'practice_count' => (int) $progress->practice_count,
+                'practice_target' => Setting::getPracticeTarget(),
                 'practice_completed' => (bool) $progress->practice_completed,
                 'practice_completed_at' => $progress->practice_completed_at?->format('Y-m-d H:i'),
                 'is_completed' => (bool) $progress->is_completed,
@@ -321,10 +330,11 @@ class StudentCourseController extends Controller
             return back()->with('error', 'You must watch the lecture video before doing practice reviews.');
         }
 
-        $newCount = min(10, $progress->practice_count + 1);
+        $targetCount = Setting::getPracticeTarget();
+        $newCount = min($targetCount, $progress->practice_count + 1);
         $progress->practice_count = $newCount;
 
-        if ($newCount >= 10) {
+        if ($newCount >= $targetCount) {
             $progress->practice_completed = true;
             $progress->practice_completed_at = now();
             $progress->is_completed = true;
@@ -333,9 +343,9 @@ class StudentCourseController extends Controller
 
         $progress->save();
 
-        $msg = $newCount >= 10
-            ? 'Congratulations! You have completed 10 review sessions and successfully finished this lesson!'
-            : "Review session completed ({$newCount}/10). Keep practicing to reach 10 sessions!";
+        $msg = $newCount >= $targetCount
+            ? __('student.practice_completed_toast', ['target' => $targetCount])
+            : __('student.practice_round_toast', ['count' => $newCount, 'target' => $targetCount]);
 
         return back()->with('success', $msg);
     }
@@ -351,6 +361,12 @@ class StudentCourseController extends Controller
 
         // Auto-enroll student into this class if not already enrolled
         if (! $user->enrolledClasses()->where('classes.id', $classId)->exists()) {
+            $maxClasses = Setting::getMaxClassesPerStudent();
+            $enrolledCount = $user->enrolledClasses()->wherePivot('status', '!=', 'dropped')->count();
+            if ($maxClasses > 0 && $enrolledCount >= $maxClasses) {
+                return redirect()->route('student.dashboard')->with('error', __('settings.error_student_max_classes', ['max' => $maxClasses]));
+            }
+
             $user->enrolledClasses()->attach($classId, [
                 'enrolled_at' => now(),
                 'status' => 'enrolled',

@@ -8,6 +8,7 @@ use App\Models\CourseClass;
 use App\Models\Lesson;
 use App\Models\MaterialFeedback;
 use App\Models\Question;
+use App\Models\Setting;
 use App\Models\StudentExamAttempt;
 use App\Models\StudentProgress;
 use App\Models\User;
@@ -149,10 +150,16 @@ class ClassManagerController extends Controller
             ];
         });
 
+        $practiceTarget = Setting::getPracticeTarget();
+        $maxClasses = Setting::getMaxClassesPerStudent();
+
         // Available students that can be added to this class
         $enrolledIds = $class->students->pluck('id')->toArray();
         $availableStudents = User::where('role', 'student')
             ->whereNotIn('id', $enrolledIds)
+            ->withCount(['enrolledClasses' => function ($q) {
+                $q->wherePivot('status', '!=', 'dropped');
+            }])
             ->select('id', 'name', 'username', 'email')
             ->get();
 
@@ -162,6 +169,8 @@ class ClassManagerController extends Controller
                 'name' => $class->name,
                 'description' => $class->description,
                 'is_locked' => $class->is_locked,
+                'practice_target' => $practiceTarget,
+                'max_classes_per_student' => $maxClasses,
                 'user' => $class->user ? [
                     'id' => $class->user->id,
                     'name' => $class->user->name,
@@ -242,6 +251,24 @@ class ClassManagerController extends Controller
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
         ]);
+
+        $maxClasses = Setting::getMaxClassesPerStudent();
+        if ($maxClasses > 0) {
+            $student = User::findOrFail($validated['user_id']);
+            $alreadyInThisClass = $class->students()->where('users.id', $student->id)->exists();
+            if (! $alreadyInThisClass) {
+                $activeCount = $student->enrolledClasses()
+                    ->wherePivot('status', '!=', 'dropped')
+                    ->count();
+
+                if ($activeCount >= $maxClasses) {
+                    return back()->with('error', __('settings.error_max_classes_reached', [
+                        'name' => $student->name,
+                        'max' => $maxClasses,
+                    ]));
+                }
+            }
+        }
 
         $class->students()->syncWithoutDetaching([
             $validated['user_id'] => [

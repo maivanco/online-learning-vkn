@@ -45,6 +45,7 @@ interface LessonPlayerProps extends PageProps {
         video_completed: boolean;
         video_completed_at: string | null;
         practice_count: number;
+        practice_target?: number;
         practice_completed: boolean;
         practice_completed_at: string | null;
         is_completed: boolean;
@@ -66,6 +67,7 @@ export default function LessonPlayer({
     flash,
 }: LessonPlayerProps) {
     const t = useTranslation();
+    const practiceTarget = progress.practice_target || 10;
 
     // Document and video lists
     const documents = (lesson.document_urls && lesson.document_urls.length > 0)
@@ -253,9 +255,9 @@ export default function LessonPlayer({
                             }`}
                         >
                             <span className="text-[10px] uppercase font-semibold">{t('student.step_3')}</span>
-                            <span className="text-xs sm:text-sm truncate w-full font-serif font-bold">{t('student.step_3_title')}</span>
+                            <span className="text-xs sm:text-sm truncate w-full font-serif font-bold">{t('student.step_3_title', { target: practiceTarget.toString() })}</span>
                             <span className="text-[10px] font-bold mt-0.5 text-amber-700">
-                                {progress.practice_completed ? t('student.step_3_done') : t('student.step_3_count', { count: progress.practice_count.toString() })}
+                                {progress.practice_completed ? t('student.step_3_done') : t('student.step_3_count', { count: progress.practice_count.toString(), target: practiceTarget.toString() })}
                             </span>
                         </button>
                     </div>
@@ -433,7 +435,7 @@ export default function LessonPlayer({
                                 disabled={videoForm.processing}
                                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs shadow-md transition"
                             >
-                                <span>{t('student.confirm_video_done')}</span>
+                                <span>{t('student.confirm_video_done', { target: practiceTarget.toString() })}</span>
                             </button>
                         </div>
                     </div>
@@ -448,25 +450,25 @@ export default function LessonPlayer({
                                     {t('student.step_3_header')}
                                 </span>
                                 <h2 className="font-serif font-bold text-2xl text-stone-900 mt-2">
-                                    {t('student.step_3_heading')}
+                                    {t('student.step_3_heading', { target: practiceTarget.toString() })}
                                 </h2>
                                 <p className="text-xs text-stone-500 mt-1">
-                                    {t('student.step_3_desc')}
+                                    {t('student.step_3_desc', { target: practiceTarget.toString() })}
                                 </p>
                             </div>
 
-                            {/* 10x Repetition Counter Tracker */}
+                            {/* Practice Repetition Counter Tracker */}
                             <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-300 rounded-2xl p-4 text-center sm:min-w-[200px]">
                                 <span className="text-[11px] font-semibold text-amber-900 uppercase">
                                     {t('student.completed_practice_sessions')}
                                 </span>
                                 <div className="text-3xl font-serif font-bold text-amber-800 mt-1">
-                                    {progress.practice_count} / 10
+                                    {progress.practice_count} / {practiceTarget}
                                 </div>
                                 <div className="w-full bg-amber-200 rounded-full h-1.5 mt-2">
                                     <div
                                         className="bg-amber-600 h-1.5 rounded-full transition-all"
-                                        style={{ width: `${Math.min(100, (progress.practice_count / 10) * 100)}%` }}
+                                        style={{ width: `${Math.min(100, (progress.practice_count / practiceTarget) * 100)}%` }}
                                     ></div>
                                 </div>
                             </div>
@@ -486,7 +488,7 @@ export default function LessonPlayer({
                                             {t('student.lesson_celebration_title')}
                                         </h4>
                                         <p className="text-emerald-800 text-[11px] mt-0.5">
-                                            {t('student.lesson_celebration_desc', { title: lesson.title })}
+                                            {t('student.lesson_celebration_desc', { title: lesson.title, target: practiceTarget.toString() })}
                                         </p>
                                     </div>
                                 </div>
@@ -622,7 +624,7 @@ export default function LessonPlayer({
                                 disabled={practiceAttemptForm.processing}
                                 className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs shadow-md transition"
                             >
-                                <span>{t('student.record_round', { current: Math.min(10, progress.practice_count + 1).toString() })}</span>
+                                <span>{t('student.record_round', { current: Math.min(practiceTarget, progress.practice_count + 1).toString(), target: practiceTarget.toString() })}</span>
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>

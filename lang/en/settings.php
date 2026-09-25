@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'page_title' => 'General Settings',
+    'page_subtitle' => 'Configure platform rules, homework practice repetitions, and student enrollment limits.',
+    'breadcrumb_settings' => 'General Settings',
+    'card_practice_title' => 'Homework & Practice Repetition Requirement',
+    'card_practice_desc' => 'Set the required number of review iterations a student must complete to finish each lesson (previously hard-coded to 10 times).',
+    'practice_repetition_target_label' => 'Number of Practice Repetitions',
+    'practice_repetition_target_help' => 'Standard is 10 times. When a student completes this number of review sessions, the lesson step 3 is completed and the lesson is officially finished.',
+    'practice_target_unit' => 'times',
+    'card_enrollment_title' => 'Student Class Participation Limit',
+    'card_enrollment_desc' => 'Configure the maximum number of classes a student is permitted to participate in concurrently.',
+    'max_classes_per_student_label' => 'Maximum Classes Per Student',
+    'max_classes_per_student_help' => 'Limits how many active classes each student can enroll in. Set to 0 to allow unlimited classes.',
+    'unlimited_hint' => 'Enter 0 for unlimited enrollment.',
+    'classes_unit' => 'classes',
+    'save_button' => 'Save Settings',
+    'saving' => 'Saving...',
+    'saved_successfully' => 'General settings updated successfully.',
+    'error_max_classes_reached' => 'Student :name has reached the maximum limit of :max enrolled classes.',
+    'error_student_max_classes' => 'You have reached the maximum allowed limit of :max enrolled classes.',
+    'info_box_title' => 'System Impact Overview',
+    'info_box_practice' => 'Changing the practice repetition target immediately updates the student lesson player counter and progress tracking across all classes.',
+    'info_box_enrollment' => 'The class participation limit applies when instructors or administrators enroll students and when students attempt to join new classes.',
+];

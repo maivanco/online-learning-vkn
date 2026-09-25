@@ -111,6 +111,8 @@ interface ClassShowProps extends PageProps {
             title: string;
             category: string;
         };
+        practice_target?: number;
+        max_classes_per_student?: number;
         lessons: Array<{
             id: number;
             title: string;
@@ -124,6 +126,7 @@ interface ClassShowProps extends PageProps {
         name: string;
         username: string;
         email: string;
+        enrolled_classes_count?: number;
     }>;
 }
 
@@ -715,7 +718,7 @@ export default function ClassShow({ auth, classItem, students: initialStudents, 
 
                                         <div className={`p-2 rounded border ${lp.practice_completed ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
                                             <div className="font-medium">3. {t('classes.step_practice')}</div>
-                                            <div className="text-[10px] font-bold">{lp.practice_count} / 10 {t('classes.times_unit')}</div>
+                                            <div className="text-[10px] font-bold">{lp.practice_count} / {classItem.practice_target ?? 10} {t('classes.times_unit')}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1305,11 +1308,14 @@ export default function ClassShow({ auth, classItem, students: initialStudents, 
                                         onChange={(e) => addStudentForm.setData('user_id', Number(e.target.value))}
                                         className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
                                     >
-                                        {availableStudents.map((s) => (
-                                            <option key={s.id} value={s.id}>
-                                                {s.name} &bull; Username: {s.username} ({s.email})
-                                            </option>
-                                        ))}
+                                        {availableStudents.map((s) => {
+                                            const isLimitReached = (classItem.max_classes_per_student ?? 0) > 0 && (s.enrolled_classes_count ?? 0) >= (classItem.max_classes_per_student ?? 0);
+                                            return (
+                                                <option key={s.id} value={s.id} disabled={isLimitReached} className={isLimitReached ? 'text-gray-400 bg-gray-50' : ''}>
+                                                    {s.name} &bull; Username: {s.username} ({s.email}){isLimitReached ? ` [Limit ${classItem.max_classes_per_student} classes reached]` : ''}
+                                                </option>
+                                            );
+                                        })}
                                     </select>
                                 </div>
 

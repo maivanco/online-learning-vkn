@@ -48,3 +48,23 @@ export function useTranslation() {
 
     return translate;
 }
+
+/**
+ * Hook to access raw translation data (objects, arrays, or primitives)
+ * Usage: const list = useTranslationData<Item[]>('user_guides.pillars', []);
+ */
+export function useTranslationData<T = any>(key: string, defaultValue?: T): T {
+    const { translations = {} } = usePage<PageProps>().props;
+    const keys = key.split('.');
+    let value: any = translations;
+
+    for (const k of keys) {
+        if (value && typeof value === 'object' && k in value) {
+            value = value[k];
+        } else {
+            return defaultValue as T;
+        }
+    }
+
+    return (value !== undefined ? value : defaultValue) as T;
+}

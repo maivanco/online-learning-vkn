@@ -6,6 +6,8 @@ return [
     'courses_lessons' => 'Khoá học & bài học',
     'question_bank' => 'Ngân hàng đề thi',
     'users_roles' => 'Người dùng & Phân quyền',
+    'user_guides' => 'Hướng dẫn sử dụng',
+    'general_settings' => 'Cài đặt chung',
     'security_password' => 'Bảo mật & Mật khẩu',
     'monastery_name' => 'Tu viện Viên Không Ni',
     'monastery_address' => 'Ấp 4, xã Châu Pha, Tp. Hồ Chí Minh',

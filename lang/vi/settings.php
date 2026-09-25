@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'page_title' => 'Cài Đặt Chung',
+    'page_subtitle' => 'Cấu hình quy định hệ thống, số lần ôn luyện bài học và giới hạn tham gia lớp học của học viên.',
+    'breadcrumb_settings' => 'Cài Đặt Chung',
+    'card_practice_title' => 'Quy Định Số Lần Ôn Luyện Bài Tập',
+    'card_practice_desc' => 'Thiết lập số lần ôn luyện lặp lại mà học viên bắt buộc phải hoàn thành để kết thúc mỗi bài học (trước đây được thiết lập cố định 10 lần).',
+    'practice_repetition_target_label' => 'Số Lần Ôn Luyện Cần Hoàn Thành',
+    'practice_repetition_target_help' => 'Tiêu chuẩn mặc định là 10 lần. Khi học viên hoàn tất đủ số lượt này, bước 3 được ghi nhận đạt và bài học sẽ hoàn thành.',
+    'practice_target_unit' => 'lần',
+    'card_enrollment_title' => 'Giới Hạn Lớp Học Tham Gia Của Học Viên',
+    'card_enrollment_desc' => 'Cấu hình số lượng lớp học tối đa mà một học viên có thể đồng thời ghi danh tham gia.',
+    'max_classes_per_student_label' => 'Số Lớp Tối Đa Cho Mỗi Học Viên',
+    'max_classes_per_student_help' => 'Giới hạn số lớp học đang hoạt động mà học viên được phép ghi danh. Nhập 0 để cho phép không giới hạn.',
+    'unlimited_hint' => 'Nhập 0 nếu không giới hạn số lớp.',
+    'classes_unit' => 'lớp',
+    'save_button' => 'Lưu Cài Đặt',
+    'saving' => 'Đang lưu...',
+    'saved_successfully' => 'Đã cập nhật cài đặt chung thành công.',
+    'error_max_classes_reached' => 'Học viên :name đã đạt giới hạn tối đa :max lớp học được tham gia.',
+    'error_student_max_classes' => 'Bạn đã đạt giới hạn tối đa tham gia :max lớp học.',
+    'info_box_title' => 'Tác Động Hệ Thống',
+    'info_box_practice' => 'Thay đổi số lần ôn luyện sẽ ngay lập tức cập nhật bộ đếm trong giao diện học của học viên và thanh tiến độ bài học toàn hệ thống.',
+    'info_box_enrollment' => 'Giới hạn số lớp tham gia sẽ được kiểm tra khi quản trị viên/giáo thọ ghi danh học viên và khi học viên tự động vào lớp mới.',
+];

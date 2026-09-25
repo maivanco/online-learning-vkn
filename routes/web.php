@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\ClassManagerController;
 use App\Http\Controllers\Admin\MaterialController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\QuestionBankController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\UserGuideController;
 use App\Http\Controllers\Admin\UserManagerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Student\StudentCourseController;
@@ -120,6 +122,15 @@ Route::middleware(['auth', 'role:admin,teacher'])->prefix('admin')->name('admin.
     Route::get('/students', fn () => redirect()->route('admin.users.index', ['role' => 'student']))->name('students.index');
     Route::post('/students', [UserManagerController::class, 'store'])->name('students.store');
     Route::put('/students/{id}/password', [UserManagerController::class, 'updatePassword'])->name('students.password');
+
+    // Project Documentation & User Guides
+    Route::get('/user-guides', [UserGuideController::class, 'index'])->name('user-guides.index');
+
+    // General Settings (Administrator Only)
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+        Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
+    });
 });
 
 // Profile Management (for all authenticated users)
