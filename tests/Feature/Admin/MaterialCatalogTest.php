@@ -454,4 +454,32 @@ class MaterialCatalogTest extends TestCase
         $this->assertEquals('https://example.com/updated_doc1.pdf', $lesson->reading_file_url);
         $this->assertEquals('https://www.youtube.com/watch?v=updated_vid1', $lesson->video_url);
     }
+
+    public function test_admin_can_set_and_update_exam_duration_minutes_for_course_catalog(): void
+    {
+        // 1. Create catalog with 45 minutes exam duration
+        $response = $this->actingAs($this->admin)->post(route('admin.materials.catalogs.store'), [
+            'title' => 'Abhidhamma Advanced Exam Course',
+            'description' => '<p>Timed examination course.</p>',
+            'exam_duration_minutes' => 45,
+        ]);
+
+        $response->assertRedirect();
+        $course = Course::where('slug', 'abhidhamma-advanced-exam-course')->first();
+        $this->assertNotNull($course);
+        $this->assertEquals(45, $course->exam_duration_minutes);
+
+        // 2. Update catalog with 90 minutes exam duration
+        $updateResponse = $this->actingAs($this->admin)->put(route('admin.materials.catalogs.update', $course->id), [
+            'title' => 'Abhidhamma Advanced Exam Course',
+            'slug' => 'abhidhamma-advanced-exam-course',
+            'description' => '<p>Updated description.</p>',
+            'exam_duration_minutes' => 90,
+        ]);
+
+        $updateResponse->assertRedirect();
+        $course->refresh();
+        $this->assertEquals(90, $course->exam_duration_minutes);
+    }
 }
+

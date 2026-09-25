@@ -569,6 +569,60 @@ class BuddhistCoursesTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    public function test_class_final_exam_with_duration_calculates_remaining_seconds_and_blocks_expired_attempt(): void
+    {
+        $this->actingAs($this->student);
+
+        // Set course exam duration to 30 minutes
+        $this->course->update(['exam_duration_minutes' => 30]);
+
+        // Complete lesson progression to unlock exam
+        StudentProgress::create([
+            'user_id' => $this->student->id,
+            'lesson_id' => $this->lesson->id,
+            'class_id' => $this->class->id,
+            'reading_completed' => true,
+            'video_completed' => true,
+            'practice_completed' => true,
+            'is_completed' => true,
+        ]);
+
+        // 1. Visit exam page: attempt should be auto-created and remainingSeconds calculated
+        $response = $this->get(route('student.class.exam', $this->class->id));
+        $response->assertOk();
+        $response->assertInertia(fn ($page) =>
+            $page->component('Student/ClassExam')
+                ->where('examDurationMinutes', 30)
+                ->where('isTimeExpired', false)
+                ->where('remainingSeconds', fn ($sec) => $sec > 1750 && $sec <= 1800)
+        );
+
+        // 2. Fast-forward attempt created_at to 35 minutes ago (expired)
+        $attempt = StudentExamAttempt::where('user_id', $this->student->id)
+            ->where('class_id', $this->class->id)
+            ->where('attempt_type', 'exam')
+            ->first();
+        $attempt->created_at = now()->subMinutes(35);
+        $attempt->save();
+
+        // 3. Visiting exam page now should show isTimeExpired true and 0 remainingSeconds
+        $expiredResponse = $this->get(route('student.class.exam', $this->class->id));
+        $expiredResponse->assertOk();
+        $expiredResponse->assertInertia(fn ($page) =>
+            $page->component('Student/ClassExam')
+                ->where('isTimeExpired', true)
+                ->where('remainingSeconds', 0)
+        );
+
+        // 4. Submitting an answer on expired exam should be rejected with 403
+        $submitResponse = $this->postJson(route('student.class.exam.question-submit', $this->class->id), [
+            'question_id' => $this->question->id,
+            'chosen_option' => 'C',
+        ]);
+        $submitResponse->assertStatus(403);
+        $submitResponse->assertJson(['time_expired' => true]);
+    }
 }
 
 

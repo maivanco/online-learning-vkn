@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import axios from 'axios';
 import { PageProps } from '@/types';
@@ -28,18 +28,23 @@ interface ClassExamProps extends PageProps {
             id: number;
             title: string;
             category: string;
+            exam_duration_minutes?: number | null;
         };
     };
     questions: ExamQuestion[];
     totalQuestions: number;
     answeredCount: number;
     isCompleted: boolean;
+    examDurationMinutes?: number | null;
+    remainingSeconds?: number | null;
+    isTimeExpired?: boolean;
     examAttempt?: {
         id: number;
         score: number;
         correct_count: number;
         incorrect_count: number;
         total_questions: number;
+        created_at?: string;
     } | null;
     finalGrade?: number | null;
 }
@@ -51,6 +56,9 @@ export default function ClassExam({
     totalQuestions,
     answeredCount: initialAnsweredCount,
     isCompleted: initialIsCompleted,
+    examDurationMinutes,
+    remainingSeconds,
+    isTimeExpired: initialIsTimeExpired,
     examAttempt,
     finalGrade,
     flash,
@@ -63,10 +71,46 @@ export default function ClassExam({
     const [submittingQuestionId, setSubmittingQuestionId] = useState<number | null>(null);
     const [answeredCount, setAnsweredCount] = useState<number>(initialAnsweredCount);
     const [isCompleted, setIsCompleted] = useState<boolean>(initialIsCompleted);
+    const [timeLeft, setTimeLeft] = useState<number | null>(remainingSeconds ?? null);
+    const [isExpired, setIsExpired] = useState<boolean>(initialIsTimeExpired ?? false);
     const [currentScore, setCurrentScore] = useState<number>(examAttempt?.score ?? finalGrade ?? 0);
     const [correctCount, setCorrectCount] = useState<number>(examAttempt?.correct_count ?? 0);
     const [incorrectCount, setIncorrectCount] = useState<number>(examAttempt?.incorrect_count ?? 0);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+    // Live countdown timer effect
+    useEffect(() => {
+        if (timeLeft === null || isCompleted || isExpired) return;
+
+        if (timeLeft <= 0) {
+            setIsExpired(true);
+            return;
+        }
+
+        const timer = setInterval(() => {
+            setTimeLeft((prev) => {
+                if (prev === null || prev <= 1) {
+                    clearInterval(timer);
+                    setIsExpired(true);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [timeLeft, isCompleted, isExpired]);
+
+    const formatTime = (seconds: number): string => {
+        if (seconds <= 0) return '00:00';
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        if (h > 0) {
+            return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
 
     const quizQuestions = questions.filter((q) => (q.question_type ?? 'quiz') === 'quiz');
     const essayQuestions = questions.filter((q) => q.question_type === 'essay');
@@ -214,6 +258,40 @@ export default function ClassExam({
                     </div>
 
                     <div className="flex items-center gap-3 text-xs">
+                        {examDurationMinutes ? (
+                            !isCompleted && (
+                                <div
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono font-bold border transition shadow-sm ${
+                                        isExpired
+                                            ? 'bg-red-950/90 text-red-200 border-red-500/70'
+                                            : timeLeft !== null && timeLeft < 300
+                                            ? 'bg-amber-950/90 text-amber-200 border-amber-500/70 animate-pulse'
+                                            : 'bg-stone-800 text-amber-300 border-stone-700'
+                                    }`}
+                                    title={t('student.exam_time_remaining')}
+                                >
+                                    <svg className={`w-3.5 h-3.5 ${timeLeft !== null && timeLeft < 300 ? 'text-amber-400' : 'text-amber-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>
+                                        {isExpired
+                                            ? `00:00 (${t('student.exam_time_expired')})`
+                                            : timeLeft !== null
+                                            ? formatTime(timeLeft)
+                                            : '--:--'}
+                                    </span>
+                                </div>
+                            )
+                        ) : (
+                            !isCompleted && (
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono text-stone-300 bg-stone-800 border border-stone-700">
+                                    <svg className="w-3.5 h-3.5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>{t('student.exam_untimed_info')}</span>
+                                </div>
+                            )
+                        )}
                         <span className="font-mono text-stone-300 hidden md:inline">
                             {t('student.student_label', { name: auth.user.name, username: auth.user.username ? `(${auth.user.username})` : '' })}
                         </span>
@@ -255,6 +333,11 @@ export default function ClassExam({
                             </span>
                             <span className="text-xs text-stone-300 font-medium">
                                 {classItem.course.title} &bull; <span className="uppercase">{classItem.course.category}</span>
+                                {examDurationMinutes ? (
+                                    <> &bull; <span>{t('student.exam_duration_info', { duration: examDurationMinutes.toString() })}</span></>
+                                ) : (
+                                    <> &bull; <span>{t('student.exam_untimed_info')}</span></>
+                                )}
                             </span>
                         </div>
                         <h1 className="text-2xl sm:text-3xl font-serif font-bold text-amber-100 tracking-tight">
@@ -265,6 +348,21 @@ export default function ClassExam({
                         </p>
                     </div>
                 </div>
+
+                {/* Time Expired Notice */}
+                {isExpired && !isCompleted && (
+                    <div className="bg-red-50 border-2 border-red-300 rounded-3xl p-5 sm:p-6 flex items-start gap-4 text-xs text-red-900 shadow-sm">
+                        <div className="w-10 h-10 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div className="space-y-1">
+                            <h4 className="font-bold text-sm text-red-950">{t('student.exam_time_expired')}</h4>
+                            <p className="text-xs text-red-800 leading-relaxed">{t('student.exam_time_expired_desc')}</p>
+                        </div>
+                    </div>
+                )}
 
                 {/* Graduation Celebration Banner when Exam is Completed */}
                 {isCompleted && (
@@ -315,22 +413,86 @@ export default function ClassExam({
                     </div>
                 )}
 
-                {/* Progress Tracker Card */}
-                <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-sm space-y-3">
-                    <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-stone-700">
-                            {t('student.class_exam_status_progress', {
-                                answered: answeredCount.toString(),
-                                total: totalQuestions.toString(),
-                            })}
-                        </span>
-                        <span className="font-bold text-amber-800">{progressPercentage}%</span>
-                    </div>
-                    <div className="w-full bg-stone-100 rounded-full h-2.5 overflow-hidden border border-stone-200">
-                        <div
-                            className="bg-amber-600 h-2.5 rounded-full transition-all duration-300"
-                            style={{ width: `${progressPercentage}%` }}
-                        ></div>
+                {/* Progress & Live Countdown Card */}
+                <div className="bg-white rounded-3xl border border-stone-200 p-5 sm:p-6 shadow-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-center">
+                        {/* Left: Progress Bar */}
+                        <div className="space-y-2.5 md:border-r md:border-stone-200 md:pr-6">
+                            <div className="flex items-center justify-between text-xs">
+                                <span className="font-semibold text-stone-700">
+                                    {t('student.class_exam_status_progress', {
+                                        answered: answeredCount.toString(),
+                                        total: totalQuestions.toString(),
+                                    })}
+                                </span>
+                                <span className="font-bold text-amber-800 text-sm">{progressPercentage}%</span>
+                            </div>
+                            <div className="w-full bg-stone-100 rounded-full h-3 overflow-hidden border border-stone-200">
+                                <div
+                                    className="bg-gradient-to-r from-amber-600 to-amber-500 h-3 rounded-full transition-all duration-300"
+                                    style={{ width: `${progressPercentage}%` }}
+                                ></div>
+                            </div>
+                        </div>
+
+                        {/* Right: Live Countdown Timer */}
+                        <div className="flex items-center justify-start md:justify-end">
+                            {examDurationMinutes ? (
+                                <div className={`flex items-center gap-3.5 px-5 py-3 rounded-2xl border w-full md:w-auto transition ${
+                                    isExpired
+                                        ? 'bg-red-50 border-red-200 text-red-900'
+                                        : timeLeft !== null && timeLeft < 300
+                                        ? 'bg-amber-50 border-amber-300 text-amber-900 animate-pulse'
+                                        : 'bg-stone-50 border-stone-200 text-stone-800'
+                                }`}>
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                                        isExpired
+                                            ? 'bg-red-100 text-red-600'
+                                            : timeLeft !== null && timeLeft < 300
+                                            ? 'bg-amber-100 text-amber-600'
+                                            : 'bg-amber-100/70 text-amber-800'
+                                    }`}>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
+                                            {t('student.exam_time_remaining')}
+                                        </div>
+                                        <div className={`text-2xl sm:text-3xl font-mono font-bold tracking-tight ${
+                                            isExpired
+                                                ? 'text-red-700'
+                                                : timeLeft !== null && timeLeft < 300
+                                                ? 'text-amber-700'
+                                                : 'text-stone-900'
+                                        }`}>
+                                            {isExpired
+                                                ? '00:00'
+                                                : timeLeft !== null
+                                                ? formatTime(timeLeft)
+                                                : '--:--'}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-3.5 px-5 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-stone-700 w-full md:w-auto">
+                                    <div className="w-10 h-10 rounded-xl bg-stone-200 text-stone-600 flex items-center justify-center shrink-0">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
+                                            {t('student.exam_time_remaining')}
+                                        </div>
+                                        <div className="text-sm font-semibold text-stone-800">
+                                            {t('student.exam_untimed_info')}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -442,7 +604,7 @@ export default function ClassExam({
 
                                                 <button
                                                     type="button"
-                                                    disabled={!currentChosen || isSubmitting}
+                                                    disabled={!currentChosen || isSubmitting || isExpired}
                                                     onClick={() => handleSubmitQuizQuestion(q.id)}
                                                     className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs disabled:opacity-40 transition shadow-sm"
                                                 >
@@ -550,7 +712,7 @@ export default function ClassExam({
 
                                                     <button
                                                         type="button"
-                                                        disabled={!essayDraft.trim() || isSubmitting}
+                                                        disabled={!essayDraft.trim() || isSubmitting || isExpired}
                                                         onClick={() => handleSubmitEssayQuestion(q.id)}
                                                         className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-medium text-xs disabled:opacity-40 transition shadow-sm"
                                                     >

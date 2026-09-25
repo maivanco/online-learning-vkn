@@ -382,16 +382,43 @@ class StudentCourseController extends Controller
         $questions = Question::where('course_id', $class->course_id)->orderBy('id')->get();
         $totalQuestions = $questions->count();
 
-        // Retrieve existing exam attempt if any
+        // Retrieve existing exam attempt or initialize one if exam is timed
+        $examDurationMinutes = $class->course?->exam_duration_minutes;
         $examAttempt = StudentExamAttempt::where('user_id', $user->id)
             ->where('class_id', $classId)
             ->where('attempt_type', 'exam')
             ->latest()
             ->first();
 
+        // If timed exam and attempt hasn't started yet, initialize attempt to record start timestamp
+        if (! $examAttempt && $examDurationMinutes && $examDurationMinutes > 0 && $totalQuestions > 0) {
+            $examAttempt = StudentExamAttempt::create([
+                'user_id' => $user->id,
+                'class_id' => $classId,
+                'attempt_type' => 'exam',
+                'total_questions' => $totalQuestions,
+                'correct_count' => 0,
+                'incorrect_count' => 0,
+                'review_needed_count' => 0,
+                'score' => 0,
+                'answers_summary' => [],
+            ]);
+        }
+
         $answersSummary = $examAttempt?->answers_summary ?? [];
         $answeredCount = count($answersSummary);
         $isCompleted = ($totalQuestions > 0 && $answeredCount >= $totalQuestions);
+
+        $remainingSeconds = null;
+        $isTimeExpired = false;
+        if ($examDurationMinutes && $examDurationMinutes > 0 && $examAttempt) {
+            $elapsedSeconds = (int) $examAttempt->created_at->diffInSeconds(now());
+            $totalSeconds = $examDurationMinutes * 60;
+            $remainingSeconds = max(0, $totalSeconds - $elapsedSeconds);
+            if ($remainingSeconds === 0 && ! $isCompleted) {
+                $isTimeExpired = true;
+            }
+        }
 
         // Questions payload with answered states locked
         $questionsPayload = $questions->map(function ($q) use ($answersSummary, $isCompleted) {
@@ -431,18 +458,23 @@ class StudentCourseController extends Controller
                     'id' => $class->course->id,
                     'title' => $class->course->title,
                     'category' => $class->course->category,
+                    'exam_duration_minutes' => $examDurationMinutes,
                 ],
             ],
             'questions' => $questionsPayload,
             'totalQuestions' => $totalQuestions,
             'answeredCount' => $answeredCount,
             'isCompleted' => $isCompleted,
+            'examDurationMinutes' => $examDurationMinutes,
+            'remainingSeconds' => $remainingSeconds,
+            'isTimeExpired' => $isTimeExpired,
             'examAttempt' => $examAttempt ? [
                 'id' => $examAttempt->id,
                 'score' => $examAttempt->score,
                 'correct_count' => $examAttempt->correct_count,
                 'incorrect_count' => $examAttempt->incorrect_count,
                 'total_questions' => $examAttempt->total_questions,
+                'created_at' => $examAttempt->created_at?->toISOString(),
             ] : null,
             'finalGrade' => $studentPivot?->final_grade ?? $examAttempt?->score,
         ]);
@@ -488,6 +520,25 @@ class StudentCourseController extends Controller
                 'question_id' => 'required|exists:questions,id',
                 'chosen_option' => 'required|in:A,B,C,D',
             ]);
+        }
+
+        // Check if exam duration has expired (with 30 seconds network buffer)
+        $examDurationMinutes = $class->course?->exam_duration_minutes;
+        if ($examDurationMinutes && $examDurationMinutes > 0) {
+            $existingAttempt = StudentExamAttempt::where('user_id', $user->id)
+                ->where('class_id', $classId)
+                ->where('attempt_type', 'exam')
+                ->latest()
+                ->first();
+            if ($existingAttempt) {
+                $elapsedSeconds = (int) $existingAttempt->created_at->diffInSeconds(now());
+                if ($elapsedSeconds > ($examDurationMinutes * 60 + 30)) {
+                    return response()->json([
+                        'error' => 'The exam time limit has expired. No further submissions are allowed.',
+                        'time_expired' => true,
+                    ], 403);
+                }
+            }
         }
 
         // Get or create active exam attempt
@@ -594,6 +645,22 @@ class StudentCourseController extends Controller
 
         if ($totalLessons === 0 || $completedLessonsCount < $totalLessons) {
             return back()->with('error', 'You must complete all lessons before taking the final exam.');
+        }
+
+        // Check if exam duration has expired (with 30 seconds network buffer)
+        $examDurationMinutes = $class->course?->exam_duration_minutes;
+        if ($examDurationMinutes && $examDurationMinutes > 0) {
+            $existingAttempt = StudentExamAttempt::where('user_id', $user->id)
+                ->where('class_id', $classId)
+                ->where('attempt_type', 'exam')
+                ->latest()
+                ->first();
+            if ($existingAttempt) {
+                $elapsedSeconds = (int) $existingAttempt->created_at->diffInSeconds(now());
+                if ($elapsedSeconds > ($examDurationMinutes * 60 + 30)) {
+                    return back()->with('error', 'The exam time limit has expired. No further submissions are allowed.');
+                }
+            }
         }
 
         $submittedAnswers = $request->input('answers', []); // [question_id => chosen_option or essay_answer]

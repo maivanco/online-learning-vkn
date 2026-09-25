@@ -23,6 +23,7 @@ interface Course {
     } | null;
     lessons_count: number;
     order: number;
+    exam_duration_minutes?: number | null;
 }
 
 function slugify(text: string): string {
@@ -80,6 +81,7 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
         slug: '',
         description: '',
         parent_id: '',
+        exam_duration_minutes: 60 as number | '',
     });
 
     const editCatalogForm = useForm({
@@ -87,6 +89,7 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
         slug: '',
         description: '',
         parent_id: '',
+        exam_duration_minutes: 60 as number | '',
     });
 
     const handleCreateCatalog = (e: React.FormEvent) => {
@@ -108,6 +111,7 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
             slug: catalog.slug,
             description: catalog.description || '',
             parent_id: catalog.parent_id ? String(catalog.parent_id) : '',
+            exam_duration_minutes: catalog.exam_duration_minutes !== null && catalog.exam_duration_minutes !== undefined ? catalog.exam_duration_minutes : '',
         });
     };
 
@@ -290,7 +294,13 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                                         <span className="truncate max-w-[140px]">{c.user.name}</span>
                                                     </div>
                                                 )}
-                                                <div className="flex items-center justify-end text-[11px] text-gray-500 mt-1.5">
+                                                <div className="flex items-center justify-between text-[11px] text-gray-500 mt-1.5">
+                                                    <span className="text-[10px] text-stone-400 flex items-center gap-1">
+                                                        <svg className="w-2.5 h-2.5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        {c.exam_duration_minutes ? `${c.exam_duration_minutes}m` : '∞'}
+                                                    </span>
                                                     <span className="text-[10px]">{t('materials.topics_count', { count: c.lessons_count.toString() })}</span>
                                                 </div>
                                             </Link>
@@ -349,6 +359,21 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                                         </svg>
                                                         <span>{activeCourse.user.name}</span>
+                                                    </span>
+                                                )}
+                                                {activeCourse?.exam_duration_minutes ? (
+                                                    <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                                        <svg className="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        <span>{t('materials.exam_duration_badge', { duration: activeCourse.exam_duration_minutes.toString() })}</span>
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[10px] font-semibold bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full border border-stone-200 flex items-center gap-1">
+                                                        <svg className="w-3 h-3 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        <span>{t('materials.exam_duration_untimed')}</span>
                                                     </span>
                                                 )}
                                             </div>
@@ -668,6 +693,25 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
 
                             <div>
                                 <label className="block font-medium text-gray-700 mb-1">
+                                    {t('materials.exam_duration_minutes_label')}
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="1440"
+                                    value={createCatalogForm.data.exam_duration_minutes}
+                                    onChange={(e) => createCatalogForm.setData('exam_duration_minutes', e.target.value === '' ? '' : parseInt(e.target.value, 10))}
+                                    placeholder={t('materials.exam_duration_minutes_placeholder')}
+                                    className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
+                                />
+                                {createCatalogForm.errors.exam_duration_minutes && (
+                                    <p className="text-red-600 text-[11px] mt-1">{createCatalogForm.errors.exam_duration_minutes}</p>
+                                )}
+                                <p className="text-gray-400 text-[10px] mt-0.5">{t('materials.exam_duration_minutes_help')}</p>
+                            </div>
+
+                            <div>
+                                <label className="block font-medium text-gray-700 mb-1">
                                     {t('materials.description_label')}
                                 </label>
                                 <RichTextEditor
@@ -785,6 +829,25 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                 <p className="text-gray-400 text-[10px] mt-0.5">
                                     {t('materials.parent_catalog_help')}
                                 </p>
+                            </div>
+
+                            <div>
+                                <label className="block font-medium text-gray-700 mb-1">
+                                    {t('materials.exam_duration_minutes_label')}
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="1440"
+                                    value={editCatalogForm.data.exam_duration_minutes}
+                                    onChange={(e) => editCatalogForm.setData('exam_duration_minutes', e.target.value === '' ? '' : parseInt(e.target.value, 10))}
+                                    placeholder={t('materials.exam_duration_minutes_placeholder')}
+                                    className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
+                                />
+                                {editCatalogForm.errors.exam_duration_minutes && (
+                                    <p className="text-red-600 text-[11px] mt-1">{editCatalogForm.errors.exam_duration_minutes}</p>
+                                )}
+                                <p className="text-gray-400 text-[10px] mt-0.5">{t('materials.exam_duration_minutes_help')}</p>
                             </div>
 
                             <div>

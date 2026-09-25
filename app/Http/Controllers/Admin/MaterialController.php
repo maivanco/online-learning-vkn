@@ -44,6 +44,7 @@ class MaterialController extends Controller
                 ] : null,
                 'lessons_count' => $c->lessons_count,
                 'order' => $c->order,
+                'exam_duration_minutes' => $c->exam_duration_minutes,
             ]);
 
         $activeCourse = $selectedCourseId ? Course::with(['parent', 'user'])->find($selectedCourseId) : Course::with(['parent', 'user'])->orderBy('order')->first();
@@ -252,6 +253,7 @@ class MaterialController extends Controller
             'slug' => 'nullable|string|max:255|unique:courses,slug',
             'description' => 'nullable|string',
             'parent_id' => 'nullable|exists:courses,id',
+            'exam_duration_minutes' => 'nullable|integer|min:1|max:1440',
         ]);
 
         if (isset($validated['description']) && trim(strip_tags($validated['description'])) === '') {
@@ -288,6 +290,7 @@ class MaterialController extends Controller
             'slug' => 'required|string|max:255|unique:courses,slug,' . $id,
             'description' => 'nullable|string',
             'parent_id' => 'nullable|exists:courses,id',
+            'exam_duration_minutes' => 'nullable|integer|min:1|max:1440',
         ]);
 
         if (isset($validated['description']) && trim(strip_tags($validated['description'])) === '') {

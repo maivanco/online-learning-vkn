@@ -112,6 +112,11 @@ return [
     'your_essay_answer' => 'Bài làm đã nộp của bạn:',
     'essay_sample_guide' => 'Gợi ý đáp án / Dàn ý hướng dẫn chấm:',
     'essay_empty_warning' => 'Vui lòng nhập nội dung câu trả lời tự luận trước khi nộp.',
+    'exam_time_remaining' => 'Thời gian còn lại',
+    'exam_time_expired' => 'Đã hết giờ làm bài!',
+    'exam_time_expired_desc' => 'Thời gian làm bài thi đã kết thúc. Các câu trả lời đã nộp được ghi nhận và khóa lại.',
+    'exam_duration_info' => 'Thời gian làm bài: :duration phút',
+    'exam_untimed_info' => 'Không giới hạn thời gian',
 
     // Feedback
     'feedback_modal_title' => 'Góp Ý & Báo Lỗi Chỉnh Sửa Tài Liệu',

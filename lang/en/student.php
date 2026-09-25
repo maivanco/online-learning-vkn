@@ -112,6 +112,11 @@ return [
     'your_essay_answer' => 'Your Submitted Answer:',
     'essay_sample_guide' => 'Sample Answer / Evaluation Guide:',
     'essay_empty_warning' => 'Please enter your essay answer before submitting.',
+    'exam_time_remaining' => 'Time Remaining',
+    'exam_time_expired' => "Time's Up!",
+    'exam_time_expired_desc' => 'The time limit for this exam has expired. Your submitted answers have been locked.',
+    'exam_duration_info' => 'Time Limit: :duration mins',
+    'exam_untimed_info' => 'Untimed Exam',
 
     // Feedback
     'feedback_modal_title' => 'Feedback & Report Material Correction',

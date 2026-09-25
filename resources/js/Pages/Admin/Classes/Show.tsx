@@ -689,8 +689,8 @@ export default function ClassShow({ auth, classItem, students: initialStudents, 
                                         </span>
                                     </div>
 
-                                    {/* 4 Pipeline Milestones */}
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pt-1">
+                                    {/* 3 Pipeline Milestones */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] pt-1">
                                         <div className={`p-2 rounded border ${lp.reading_completed ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-gray-100 border-gray-200 text-gray-500'}`}>
                                             <div className="font-medium">1. {t('classes.step_reading')}</div>
                                             <div className="text-[10px]">{lp.reading_completed ? t('classes.step_done') : t('classes.step_pending')}</div>
@@ -705,30 +705,6 @@ export default function ClassShow({ auth, classItem, students: initialStudents, 
                                             <div className="font-medium">3. {t('classes.step_practice')}</div>
                                             <div className="text-[10px] font-bold">{lp.practice_count} / 10 {t('classes.times_unit')}</div>
                                         </div>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const st = selectedStudentForModal;
-                                                setSelectedStudentForModal(null);
-                                                openExamModal(st);
-                                            }}
-                                            className={`p-2 rounded border text-left transition hover:ring-2 hover:ring-amber-500/50 cursor-pointer ${
-                                                lp.exam_completed
-                                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                                                    : 'bg-stone-100 border-stone-200 text-stone-600'
-                                            }`}
-                                        >
-                                            <div className="font-medium flex items-center justify-between">
-                                                <span>4. {t('classes.step_exam')}</span>
-                                                <svg className="w-3 h-3 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                                </svg>
-                                            </div>
-                                            <div className="text-[10px]">
-                                                {lp.exam_score ? `${lp.exam_score}%` : (lp.exam_completed ? t('classes.badge_completed') : t('classes.step_pending'))}
-                                            </div>
-                                        </button>
                                     </div>
                                 </div>
                             ))}

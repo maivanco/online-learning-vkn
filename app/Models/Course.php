@@ -19,8 +19,14 @@ class Course extends Model
         'category', // dhamma, vinaya, abhidhamma, pali, general
         'target_audience', // all, monastics, lay
         'description',
+        'exam_duration_minutes',
         'thumbnail',
         'order',
+    ];
+
+    protected $casts = [
+        'exam_duration_minutes' => 'integer',
+        'order' => 'integer',
     ];
 
     /**
