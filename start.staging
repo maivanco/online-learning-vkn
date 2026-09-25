@@ -53,17 +53,20 @@ docker compose -f "$COMPOSE_FILE" exec -T -u root laravel.app bash -c "
 # 4. Build Frontend Assets
 if command -v npm >/dev/null 2>&1; then
   echo "Installing frontend dependencies on host..."
-  npm install
+  npm ci || npm install --no-save
 
   echo "Building frontend assets for staging on host..."
   npm run build
 else
   echo "npm not found on host. Installing dependencies and building frontend assets inside laravel.app container..."
-  docker compose -f "$COMPOSE_FILE" exec -T laravel.app npm install
+  docker compose -f "$COMPOSE_FILE" exec -T laravel.app bash -c "npm ci || npm install --no-save"
 
   echo "Building frontend assets for staging inside laravel.app container..."
   docker compose -f "$COMPOSE_FILE" exec -T laravel.app npm run build
 fi
+
+# Ensure package-lock.json is not left modified so git pull is never blocked
+git checkout -- package-lock.json 2>/dev/null || true
 
 # 5. Run Database Migrations & Optimize in container
 echo "Running database migrations..."
