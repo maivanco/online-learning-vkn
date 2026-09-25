@@ -53,8 +53,8 @@ return [
     'student_progress_detail' => 'Chi Tiết Tiến Độ',
     'step_reading' => 'Tự Đọc',
     'step_video' => 'Xem Video',
-    'step_practice' => 'Ôn Luyện (10x)',
-    'step_exam' => 'Bài Kiểm Tra',
+    'step_practice' => 'Ôn Luyện',
+    'step_exam_result' => 'Kết quả bài kiểm tra',
     'times_unit' => 'Lần',
     'add_student_modal_title' => 'Thêm Học Viên Vào Lớp (:name)',
     // Additional granular labels

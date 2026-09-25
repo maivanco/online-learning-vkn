@@ -53,8 +53,8 @@ return [
     'student_progress_detail' => 'Progress Details',
     'step_reading' => 'Self-Reading',
     'step_video' => 'Watch Video',
-    'step_practice' => 'Practice (10x)',
-    'step_exam' => 'Exam Test',
+    'step_practice' => 'Practice',
+    'step_exam_result' => 'Exam Result',
     'times_unit' => 'Times',
     'add_student_modal_title' => 'Add Student to Class (:name)',
     // Additional granular labels
