@@ -26,10 +26,12 @@ class UserManagerController extends Controller
         $role = (string) $request->query('role', 'all');
         $search = $request->query('search');
 
-        $usersQuery = User::with(['enrolledClasses.course'])
+        $usersQuery = User::with(['enrolledClasses.course', 'studentProfile'])
             ->withCount('enrolledClasses');
 
-        if ($role !== 'all' && in_array($role, ['admin', 'teacher', 'student'], true)) {
+        if ($role === 'pending') {
+            $usersQuery->where('status', 'pending');
+        } elseif ($role !== 'all' && in_array($role, ['admin', 'teacher', 'student'], true)) {
             $usersQuery->where('role', $role);
         }
 
@@ -57,6 +59,22 @@ class UserManagerController extends Controller
                 'name' => $c->name,
                 'status' => $c->pivot->status,
             ]),
+            'student_profile' => $user->studentProfile ? [
+                'student_type' => $user->studentProfile->student_type,
+                'gender' => $user->studentProfile->gender,
+                'date_of_birth' => $user->studentProfile->date_of_birth?->format('Y-m-d'),
+                'refuge_in_triple_gem' => $user->studentProfile->refuge_in_triple_gem,
+                'dharma_name' => $user->studentProfile->dharma_name,
+                'ordination_status' => $user->studentProfile->ordination_status,
+                'ordination_date' => $user->studentProfile->ordination_date?->format('Y-m-d'),
+                'ordination_place' => $user->studentProfile->ordination_place,
+                'preceptor_teacher' => $user->studentProfile->preceptor_teacher,
+                'current_residence' => $user->studentProfile->current_residence,
+                'study_purposes' => $user->studentProfile->study_purposes,
+                'other_study_purpose' => $user->studentProfile->other_study_purpose,
+                'buddhist_study_level' => $user->studentProfile->buddhist_study_level,
+                'previous_buddhist_programs' => $user->studentProfile->previous_buddhist_programs,
+            ] : null,
         ]);
 
         $counts = [
@@ -64,6 +82,7 @@ class UserManagerController extends Controller
             'admin' => User::where('role', 'admin')->count(),
             'teacher' => User::where('role', 'teacher')->count(),
             'student' => User::where('role', 'student')->count(),
+            'pending' => User::where('status', 'pending')->count(),
         ];
 
         $availableClasses = CourseClass::orderBy('name')->get(['id', 'name']);
@@ -180,5 +199,16 @@ class UserManagerController extends Controller
         $user->delete();
 
         return back()->with('success', "User {$name} deleted successfully.");
+    }
+
+    /**
+     * Approve and activate a student account.
+     */
+    public function approve(int $id): RedirectResponse
+    {
+        $user = User::findOrFail($id);
+        $user->update(['status' => 'active']);
+
+        return back()->with('success', __('users.user_approved_success', ['name' => $user->name]));
     }
 }

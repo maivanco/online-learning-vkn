@@ -69,6 +69,28 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if ($user && $user->status === 'pending') {
+            Auth::logout();
+            $this->session()->invalidate();
+            $this->session()->regenerateToken();
+
+            throw ValidationException::withMessages([
+                'login' => __('auth.account_pending_approval'),
+            ]);
+        }
+
+        if ($user && $user->status === 'inactive') {
+            Auth::logout();
+            $this->session()->invalidate();
+            $this->session()->regenerateToken();
+
+            throw ValidationException::withMessages([
+                'login' => __('auth.account_inactive'),
+            ]);
+        }
     }
 
     /**

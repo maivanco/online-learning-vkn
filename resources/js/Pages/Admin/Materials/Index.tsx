@@ -343,69 +343,69 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                             <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
                                 <div className="border-b pb-4 mb-4">
                                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                                        <div>
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <h3 className="font-serif font-bold text-base text-gray-900">
-                                                    {activeCourse?.title ?? t('materials.no_course_selected')}
-                                                </h3>
-                                                {activeCourse?.parent && (
-                                                    <span className="text-[10px] font-semibold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
-                                                        {t('materials.parent_label', { title: activeCourse.parent.title })}
-                                                    </span>
-                                                )}
-                                                {activeCourse?.user && (
-                                                    <span className="text-[10px] font-semibold bg-stone-100 text-stone-700 px-2 py-0.5 rounded-full flex items-center gap-1 border border-stone-200">
-                                                        <svg className="w-3 h-3 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                        </svg>
-                                                        <span>{activeCourse.user.name}</span>
-                                                    </span>
-                                                )}
-                                                {activeCourse?.exam_duration_minutes ? (
-                                                    <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                                                        <svg className="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                        </svg>
-                                                        <span>{t('materials.exam_duration_badge', { duration: activeCourse.exam_duration_minutes.toString() })}</span>
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-[10px] font-semibold bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full border border-stone-200 flex items-center gap-1">
-                                                        <svg className="w-3 h-3 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                        </svg>
-                                                        <span>{t('materials.exam_duration_untimed')}</span>
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {activeCourse && (
-                                                <p className="text-xs text-gray-500 mt-1">
-                                                    {t('materials.course_meta', {
-                                                        slug: activeCourse.slug,
-                                                        count: lessons.length.toString(),
-                                                    })}
-                                                </p>
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <h3 className="font-serif font-bold text-base text-gray-900">
+                                                {activeCourse?.title ?? t('materials.no_course_selected')}
+                                            </h3>
+                                            {activeCourse?.parent && (
+                                                <span className="text-[10px] font-semibold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
+                                                    {t('materials.parent_label', { title: activeCourse.parent.title })}
+                                                </span>
                                             )}
-                                            {activeCourse?.description && (
-                                                <div
-                                                    className="text-xs text-stone-700 mt-1.5 bg-stone-50/80 p-3 rounded-lg border border-stone-200/80 prose prose-xs max-w-none"
-                                                    dangerouslySetInnerHTML={{ __html: activeCourse.description }}
-                                                />
+                                            {activeCourse?.user && (
+                                                <span className="text-[10px] font-semibold bg-stone-100 text-stone-700 px-2 py-0.5 rounded-full flex items-center gap-1 border border-stone-200">
+                                                    <svg className="w-3 h-3 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                    </svg>
+                                                    <span>{activeCourse.user.name}</span>
+                                                </span>
+                                            )}
+                                            {activeCourse?.exam_duration_minutes ? (
+                                                <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                                    <svg className="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <span>{t('materials.exam_duration_badge', { duration: activeCourse.exam_duration_minutes.toString() })}</span>
+                                                </span>
+                                            ) : (
+                                                <span className="text-[10px] font-semibold bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full border border-stone-200 flex items-center gap-1">
+                                                    <svg className="w-3 h-3 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <span>{t('materials.exam_duration_untimed')}</span>
+                                                </span>
                                             )}
                                         </div>
+                                        {activeCourse && (
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                {t('materials.course_meta', {
+                                                    slug: activeCourse.slug,
+                                                    count: lessons.length.toString(),
+                                                })}
+                                            </p>
+                                        )}
+                                        
 
                                         {activeCourse && (
-                                            <button
-                                                type="button"
-                                                onClick={() => openEditCatalogModal(activeCourse)}
-                                                className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-300 rounded-lg hover:bg-amber-100/80 transition shadow-2xs"
-                                            >
-                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                                {t('materials.edit_catalog')}
-                                            </button>
-                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => openEditCatalogModal(activeCourse)}
+                                            className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-300 rounded-lg hover:bg-amber-100/80 transition shadow-2xs"
+                                        >
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                            {t('materials.edit_catalog')}
+                                        </button>
+                                    )}
+
                                     </div>
+                                    {activeCourse?.description && (
+                                        <div
+                                            className="my-8 text-stone-700 bg-stone-50/80 p-3 rounded-lg border border-stone-200/80 prose prose-xs max-w-none"
+                                            dangerouslySetInnerHTML={{ __html: activeCourse.description }}
+                                        />
+                                    )}
                                 </div>
 
                                 {lessons.length === 0 ? (
@@ -424,7 +424,7 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                                                             </span>
                                                             <h4 className="font-semibold text-gray-900 text-sm">{lesson.title}</h4>
                                                         </div>
-                                                        <p className="text-xs text-gray-600 mt-1">{lesson.summary}</p>
+                                                        <p className="text-xs leading-[1.5] text-gray-600 my-4">{lesson.summary}</p>
                                                     </div>
 
                                                     <div className="flex items-center gap-1.5 flex-shrink-0">

@@ -48,7 +48,7 @@ class StoreUserRequest extends FormRequest
             'role' => ['required', 'string', 'in:admin,teacher,student'],
             'phone' => ['nullable', 'string', 'max:20'],
             'username' => ['nullable', 'string', 'max:50', 'unique:users,username'],
-            'status' => ['nullable', 'string', 'in:active,inactive'],
+            'status' => ['nullable', 'string', 'in:active,inactive,pending'],
             'initial_class_id' => ['nullable', 'exists:classes,id'],
         ];
     }

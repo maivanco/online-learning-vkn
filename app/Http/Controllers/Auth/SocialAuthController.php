@@ -87,6 +87,14 @@ class SocialAuthController extends Controller
             ]);
         }
 
+        if ($user->status === 'pending') {
+            return redirect()->route('login')->with('status', __('auth.account_pending_approval'));
+        }
+
+        if ($user->status === 'inactive') {
+            return redirect()->route('login')->with('status', __('auth.account_inactive'));
+        }
+
         Auth::login($user, true);
 
         $request->session()->regenerate();

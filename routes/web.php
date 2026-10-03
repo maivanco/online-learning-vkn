@@ -125,6 +125,7 @@ Route::middleware(['auth', 'role:admin,teacher'])->prefix('admin')->name('admin.
     Route::post('/users', [UserManagerController::class, 'store'])->name('users.store');
     Route::put('/users/{id}', [UserManagerController::class, 'update'])->name('users.update');
     Route::put('/users/{id}/password', [UserManagerController::class, 'updatePassword'])->name('users.password');
+    Route::patch('/users/{id}/approve', [UserManagerController::class, 'approve'])->name('users.approve');
     Route::delete('/users/{id}', [UserManagerController::class, 'destroy'])->name('users.destroy');
 
     // Backward-compatible student routes

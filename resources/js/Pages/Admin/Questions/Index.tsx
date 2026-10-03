@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { useTranslation } from '@/utils/useTranslation';
+import RichTextEditor from '@/Components/RichTextEditor';
 
 interface QuestionItem {
     id: number;
@@ -306,9 +307,16 @@ export default function QuestionBankIndex({
                                                 </span>
                                             </div>
 
-                                            <h4 className="font-medium text-gray-900 text-sm pt-1 whitespace-pre-line leading-relaxed">
-                                                {q.question_text}
-                                            </h4>
+                                            {/<[a-z][\s\S]*>/i.test(q.question_text) ? (
+                                                <div
+                                                    className="font-medium text-gray-900 text-sm pt-1 leading-relaxed prose prose-stone prose-sm max-w-none [&>p]:mb-1 [&>p:last-child]:mb-0"
+                                                    dangerouslySetInnerHTML={{ __html: q.question_text }}
+                                                />
+                                            ) : (
+                                                <h4 className="font-medium text-gray-900 text-sm pt-1 whitespace-pre-line leading-relaxed">
+                                                    {q.question_text}
+                                                </h4>
+                                            )}
                                         </div>
 
                                         <div className="flex items-center gap-2 shrink-0">
@@ -371,7 +379,7 @@ export default function QuestionBankIndex({
             {/* Create Question Modal */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
+                    <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                         <div className="flex items-center justify-between border-b pb-3">
                             <h3 className="font-serif font-bold text-base text-gray-900">
                                 {t('questions.add_modal_title')}
@@ -445,14 +453,15 @@ export default function QuestionBankIndex({
 
                             {/* Question Text */}
                             <div>
-                                <label className="block font-medium text-gray-700 mb-1">{t('questions.question_text')}</label>
-                                <textarea
-                                    rows={questionForm.data.question_type === 'essay' ? 4 : 3}
+                                <label className="block font-medium text-gray-700 mb-1">
+                                    {t('questions.question_text')} <span className="text-red-500">*</span>
+                                </label>
+                                <RichTextEditor
                                     value={questionForm.data.question_text}
-                                    onChange={(e) => questionForm.setData('question_text', e.target.value)}
-                                    className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
+                                    onChange={(html) => questionForm.setData('question_text', html)}
                                     placeholder={t('questions.enter_question_placeholder')}
-                                    required
+                                    minHeight="140px"
+                                    error={questionForm.errors.question_text}
                                 />
                             </div>
 
@@ -601,7 +610,7 @@ export default function QuestionBankIndex({
             {/* Edit Question Modal */}
             {selectedQuestionForEdit && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
+                    <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                         <div className="flex items-center justify-between border-b pb-3">
                             <div className="flex items-center gap-2">
                                 <h3 className="font-serif font-bold text-base text-gray-900">
@@ -678,13 +687,15 @@ export default function QuestionBankIndex({
 
                             {/* Question Text */}
                             <div>
-                                <label className="block font-medium text-gray-700 mb-1">{t('questions.question_text')}</label>
-                                <textarea
-                                    rows={editForm.data.question_type === 'essay' ? 4 : 3}
+                                <label className="block font-medium text-gray-700 mb-1">
+                                    {t('questions.question_text')} <span className="text-red-500">*</span>
+                                </label>
+                                <RichTextEditor
                                     value={editForm.data.question_text}
-                                    onChange={(e) => editForm.setData('question_text', e.target.value)}
-                                    className="w-full rounded-lg border-gray-300 text-xs focus:ring-amber-500 focus:border-amber-500"
-                                    required
+                                    onChange={(html) => editForm.setData('question_text', html)}
+                                    placeholder={t('questions.enter_question_placeholder')}
+                                    minHeight="140px"
+                                    error={editForm.errors.question_text}
                                 />
                             </div>
 

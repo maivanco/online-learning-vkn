@@ -11,9 +11,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Skip dummy data completely in production
+        if (app()->isProduction()) {
+            $this->command?->info('Production environment detected: Skipping dummy data import.');
+            return;
+        }
+
         $this->call([
-            UserSeeder::class,
-            BuddhistCurriculumSeeder::class,
+            DemoUserSeeder::class,
         ]);
     }
 }

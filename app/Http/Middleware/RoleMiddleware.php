@@ -21,6 +21,22 @@ class RoleMiddleware
             return redirect()->route('login');
         }
 
+        if ($user->status === 'pending') {
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->with('error', __('auth.account_pending_approval'));
+        }
+
+        if ($user->status === 'inactive') {
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->with('error', __('auth.account_inactive'));
+        }
+
         if (! empty($roles) && ! in_array($user->role, $roles)) {
             if ($request->expectsJson()) {
                 abort(403, 'Unauthorized access.');

@@ -48,7 +48,7 @@ class UpdateUserRequest extends FormRequest
             'role' => ['required', 'string', 'in:admin,teacher,student'],
             'phone' => ['nullable', 'string', 'max:20'],
             'username' => ['nullable', 'string', 'max:50', 'unique:users,username,' . $userId],
-            'status' => ['required', 'string', 'in:active,inactive'],
+            'status' => ['required', 'string', 'in:active,inactive,pending'],
         ];
     }
 }

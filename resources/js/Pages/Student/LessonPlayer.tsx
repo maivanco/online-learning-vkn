@@ -540,7 +540,10 @@ export default function LessonPlayer({
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="font-medium text-stone-900 text-sm">
                                                 <span className="font-bold text-amber-900 mr-2">{t('student.question_prefix', { number: (idx + 1).toString() })}</span>
-                                                {q.question_text}
+                                                <div
+                                                    className="font-medium text-gray-900 text-sm pt-1 leading-relaxed prose prose-stone prose-sm max-w-none [&>p]:mb-1 [&>p:last-child]:mb-0"
+                                                    dangerouslySetInnerHTML={{ __html: q.question_text }}
+                                                />
                                             </div>
 
                                             {result && (

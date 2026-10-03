@@ -19,6 +19,22 @@ export interface UserItem {
         name: string;
         status: string;
     }>;
+    student_profile?: {
+        student_type: 'layperson' | 'monastic';
+        gender: string;
+        date_of_birth: string | null;
+        refuge_in_triple_gem: boolean;
+        dharma_name: string | null;
+        ordination_status: string | null;
+        ordination_date: string | null;
+        ordination_place: string | null;
+        preceptor_teacher: string | null;
+        current_residence: string | null;
+        study_purposes: string[];
+        other_study_purpose: string | null;
+        buddhist_study_level: string;
+        previous_buddhist_programs: string | null;
+    } | null;
 }
 
 interface UsersProps extends PageProps {
@@ -45,6 +61,7 @@ interface UsersProps extends PageProps {
         admin: number;
         teacher: number;
         student: number;
+        pending: number;
     };
     filters: {
         role: string;
@@ -58,7 +75,21 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
     const [editingUser, setEditingUser] = useState<UserItem | null>(null);
     const [selectedUserForPassword, setSelectedUserForPassword] = useState<UserItem | null>(null);
     const [userToDelete, setUserToDelete] = useState<UserItem | null>(null);
+    const [userToApprove, setUserToApprove] = useState<UserItem | null>(null);
+    const [selectedUserForProfile, setSelectedUserForProfile] = useState<UserItem | null>(null);
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
+
+    const handleApprove = (user: UserItem) => {
+        router.patch(route('admin.users.approve', user.id), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setUserToApprove(null);
+                if (selectedUserForProfile?.id === user.id) {
+                    setSelectedUserForProfile(null);
+                }
+            },
+        });
+    };
 
     // Form for creating a new user
     const createForm = useForm({
@@ -181,6 +212,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
 
     const tabs = [
         { key: 'all', label: t('users.tab_all'), count: counts.all },
+        { key: 'pending', label: t('users.tab_pending'), count: counts.pending },
         { key: 'admin', label: t('users.tab_admin'), count: counts.admin },
         { key: 'teacher', label: t('users.tab_teacher'), count: counts.teacher },
         { key: 'student', label: t('users.tab_student'), count: counts.student },
@@ -378,13 +410,45 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                                                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                                                         user.status === 'active'
                                                             ? 'bg-emerald-100 text-emerald-800'
+                                                            : user.status === 'pending'
+                                                            ? 'bg-amber-100 text-amber-900 border border-amber-300 ring-1 ring-amber-200'
                                                             : 'bg-rose-100 text-rose-800'
                                                     }`}>
-                                                        {user.status === 'active' ? t('users.status_active') : t('users.status_suspended')}
+                                                        {user.status === 'active'
+                                                            ? t('users.status_active')
+                                                            : user.status === 'pending'
+                                                            ? `⏳ ${t('users.status_pending')}`
+                                                            : t('users.status_suspended')}
                                                     </span>
                                                 </td>
 
                                                 <td className="px-6 py-4 text-right whitespace-nowrap space-x-1">
+                                                    {user.status === 'pending' && (
+                                                        <button
+                                                            onClick={() => setUserToApprove(user)}
+                                                            className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-800 hover:text-emerald-950 border border-emerald-300 rounded-lg px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 transition shadow-sm"
+                                                            title={t('users.approve')}
+                                                        >
+                                                            <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                            {t('users.approve')}
+                                                        </button>
+                                                    )}
+
+                                                    {user.student_profile && (
+                                                        <button
+                                                            onClick={() => setSelectedUserForProfile(user)}
+                                                            className="inline-flex items-center gap-1 text-xs font-medium text-amber-800 hover:text-amber-950 border border-amber-300 rounded-lg px-2 py-1 bg-amber-50 hover:bg-amber-100 transition shadow-sm"
+                                                            title={t('users.view_profile')}
+                                                        >
+                                                            <svg className="w-3.5 h-3.5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                            </svg>
+                                                            <span className="hidden xl:inline">{t('users.view_profile')}</span>
+                                                        </button>
+                                                    )}
+
                                                     <button
                                                         onClick={() => openEditModal(user)}
                                                         className="inline-flex items-center gap-1 text-xs font-medium text-stone-700 hover:text-stone-900 border border-stone-300 rounded-lg px-2.5 py-1 bg-stone-50 hover:bg-stone-100 transition"
@@ -657,6 +721,7 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                                         required
                                     >
                                         <option value="active">{t('users.status_option_active')}</option>
+                                        <option value="pending">{t('users.status_option_pending')}</option>
                                         <option value="inactive">{t('users.status_option_inactive')}</option>
                                     </select>
                                 </div>
@@ -809,6 +874,197 @@ export default function UsersIndex({ auth, users, availableClasses, counts, filt
                             >
                                 {t('users.confirm_delete_btn')}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Quick Approve User Confirmation Modal */}
+            {userToApprove && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-xs">
+                        <div className="flex items-center gap-3 text-emerald-600">
+                            <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center">
+                                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <h3 className="font-serif font-bold text-base text-gray-900">
+                                {t('users.approve_confirm_title')}
+                            </h3>
+                        </div>
+
+                        <p className="text-gray-600">
+                            {t('users.approve_confirm_desc', { name: userToApprove.name })}
+                        </p>
+
+                        <div className="flex justify-end gap-2 pt-3 border-t">
+                            <button
+                                type="button"
+                                onClick={() => setUserToApprove(null)}
+                                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
+                            >
+                                {t('users.cancel')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleApprove(userToApprove)}
+                                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow"
+                            >
+                                {t('users.approve')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Student Registration Profile Review Modal */}
+            {selectedUserForProfile && selectedUserForProfile.student_profile && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-5 text-xs max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-start justify-between border-b pb-3">
+                            <div>
+                                <h3 className="font-serif font-bold text-lg text-gray-900 flex items-center gap-2">
+                                    <span>📜</span>
+                                    {t('users.student_profile_title')}
+                                </h3>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                    {selectedUserForProfile.name} ({selectedUserForProfile.email})
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setSelectedUserForProfile(null)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Personal Information Summary */}
+                        <div className="p-4 rounded-xl bg-stone-50 border border-stone-200 space-y-3">
+                            <h4 className="font-semibold text-stone-900 uppercase text-[11px] tracking-wider text-amber-800">
+                                {t('auth.step_1_title')}
+                            </h4>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <span className="text-gray-500 block text-[10px]">{t('auth.full_name')}</span>
+                                    <span className="font-medium text-gray-900">{selectedUserForProfile.name}</span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500 block text-[10px]">{t('auth.dharma_name')}</span>
+                                    <span className="font-medium text-gray-900">{selectedUserForProfile.student_profile.dharma_name || '—'}</span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500 block text-[10px]">{t('auth.date_of_birth')}</span>
+                                    <span className="font-medium text-gray-900">{selectedUserForProfile.student_profile.date_of_birth || '—'}</span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500 block text-[10px]">{t('auth.gender')}</span>
+                                    <span className="font-medium text-gray-900 uppercase">{selectedUserForProfile.student_profile.gender}</span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500 block text-[10px]">{t('auth.phone')}</span>
+                                    <span className="font-medium text-gray-900">{selectedUserForProfile.phone || '—'}</span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500 block text-[10px]">{t('auth.refuge_in_triple_gem')}</span>
+                                    <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${selectedUserForProfile.student_profile.refuge_in_triple_gem ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-600'}`}>
+                                        {selectedUserForProfile.student_profile.refuge_in_triple_gem ? t('auth.refuge_yes') : t('auth.refuge_no')}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Monastic Details if monastic */}
+                        <div className="p-4 rounded-xl bg-amber-50/50 border border-amber-200/80 space-y-3">
+                            <h4 className="font-semibold text-stone-900 uppercase text-[11px] tracking-wider text-amber-800 flex items-center justify-between">
+                                <span>{t('auth.student_type')}: <strong className="text-amber-900">{selectedUserForProfile.student_profile.student_type === 'monastic' ? t('auth.student_type_monastic') : t('auth.student_type_layperson')}</strong></span>
+                            </h4>
+
+                            {selectedUserForProfile.student_profile.student_type === 'monastic' && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-amber-200/60">
+                                    <div>
+                                        <span className="text-gray-500 block text-[10px]">{t('auth.ordination_status')}</span>
+                                        <span className="font-medium text-gray-900">{t(`auth.${selectedUserForProfile.student_profile.ordination_status}`) || selectedUserForProfile.student_profile.ordination_status}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-500 block text-[10px]">{t('auth.ordination_date')}</span>
+                                        <span className="font-medium text-gray-900">{selectedUserForProfile.student_profile.ordination_date || '—'}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-500 block text-[10px]">{t('auth.ordination_place')}</span>
+                                        <span className="font-medium text-gray-900">{selectedUserForProfile.student_profile.ordination_place || '—'}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-500 block text-[10px]">{t('auth.preceptor_teacher')}</span>
+                                        <span className="font-medium text-gray-900">{selectedUserForProfile.student_profile.preceptor_teacher || '—'}</span>
+                                    </div>
+                                    <div className="sm:col-span-2">
+                                        <span className="text-gray-500 block text-[10px]">{t('auth.current_residence')}</span>
+                                        <span className="font-medium text-gray-900">{selectedUserForProfile.student_profile.current_residence || '—'}</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Academic Background */}
+                        <div className="p-4 rounded-xl bg-stone-50 border border-stone-200 space-y-3">
+                            <h4 className="font-semibold text-stone-900 uppercase text-[11px] tracking-wider text-amber-800">
+                                {t('auth.step_2_title')}
+                            </h4>
+
+                            <div>
+                                <span className="text-gray-500 block text-[10px] mb-1">{t('auth.study_purposes')}</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {selectedUserForProfile.student_profile.study_purposes?.map((p) => (
+                                        <span key={p} className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px] font-medium border border-amber-200">
+                                            {t(`auth.purpose_${p}`) || p}
+                                        </span>
+                                    ))}
+                                </div>
+                                {selectedUserForProfile.student_profile.other_study_purpose && (
+                                    <p className="mt-1.5 p-2 rounded bg-white border border-stone-200 text-stone-700 italic text-[11px]">
+                                        &ldquo;{selectedUserForProfile.student_profile.other_study_purpose}&rdquo;
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-stone-200">
+                                <div>
+                                    <span className="text-gray-500 block text-[10px]">{t('auth.buddhist_study_level')}</span>
+                                    <span className="font-medium text-gray-900">{t(`auth.level_${selectedUserForProfile.student_profile.buddhist_study_level}`) || selectedUserForProfile.student_profile.buddhist_study_level}</span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500 block text-[10px]">{t('auth.previous_buddhist_programs')}</span>
+                                    <span className="font-medium text-gray-900">{selectedUserForProfile.student_profile.previous_buddhist_programs || '—'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer Actions */}
+                        <div className="flex justify-between items-center pt-3 border-t">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedUserForProfile(null)}
+                                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
+                            >
+                                {t('users.cancel')}
+                            </button>
+
+                            {selectedUserForProfile.status === 'pending' && (
+                                <button
+                                    type="button"
+                                    onClick={() => handleApprove(selectedUserForProfile)}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow"
+                                >
+                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    {t('users.approve_account')}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
