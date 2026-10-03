@@ -10,9 +10,11 @@ use App\Models\Question;
 use App\Models\Setting;
 use App\Models\StudentExamAttempt;
 use App\Models\StudentProgress;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -786,5 +788,87 @@ class StudentCourseController extends Controller
         }
 
         return back()->with('success', "Exam submission saved. Answered: {$answeredCount}/{$totalQuestions}. Score: {$score}%.");
+    }
+
+    /**
+     * Display student graduation certificate for a completed class.
+     */
+    public function showCertificate(Request $request, int $classId): Response|RedirectResponse
+    {
+        $user = $request->user();
+        $class = CourseClass::with(['course.lessons', 'user', 'students'])->findOrFail($classId);
+
+        // Allow teachers and administrators to inspect a student's certificate via student_id query parameter
+        $targetUser = $user;
+        if (in_array($user->role, ['admin', 'teacher']) && $request->has('student_id')) {
+            $targetUser = User::findOrFail($request->integer('student_id'));
+        }
+
+        // Check graduation eligibility
+        $studentPivot = $class->students->firstWhere('id', $targetUser->id)?->pivot;
+        $examAttempt = StudentExamAttempt::where('user_id', $targetUser->id)
+            ->where('class_id', $classId)
+            ->where('attempt_type', 'exam')
+            ->latest()
+            ->first();
+
+        $isGraduated = ($studentPivot?->status === 'completed' || ($examAttempt && $examAttempt->total_questions > 0 && $examAttempt->answered_count >= $examAttempt->total_questions));
+
+        if (! $isGraduated) {
+            return redirect()->route('student.dashboard')->with('error', __('student.certificate_not_eligible'));
+        }
+
+        $finalGrade = (float) ($studentPivot?->final_grade ?? $examAttempt?->score ?? 100);
+
+        // Completion date
+        $completedAt = $studentPivot?->completed_at
+            ? Carbon::parse($studentPivot->completed_at)
+            : ($examAttempt?->updated_at ?? now());
+
+        // Deterministic certificate identification code
+        $hash = strtoupper(substr(hash('sha256', "VKN_{$targetUser->id}_{$class->id}_{$completedAt->timestamp}"), 0, 6));
+        $certificateCode = sprintf('VKN-%s-%03d-%04d-%s', $completedAt->format('Y'), $class->id, $targetUser->id, $hash);
+
+        // Classification
+        $classification = match (true) {
+            $finalGrade >= 90 => 'distinction',
+            $finalGrade >= 80 => 'merit',
+            $finalGrade >= 65 => 'credit',
+            $finalGrade >= 50 => 'pass',
+            default => 'completed',
+        };
+
+        return Inertia::render('Student/Certificate', [
+            'classItem' => [
+                'id' => $class->id,
+                'name' => $class->name,
+                'course' => [
+                    'id' => $class->course?->id,
+                    'title' => $class->course?->title ?? '',
+                    'category' => $class->course?->category ?? '',
+                    'duration_months' => $class->course?->duration_months ?? 3,
+                    'total_lessons' => $class->course?->lessons?->count() ?? 0,
+                ],
+                'instructor' => $class->user ? [
+                    'id' => $class->user->id,
+                    'name' => $class->user->name,
+                ] : null,
+            ],
+            'student' => [
+                'id' => $targetUser->id,
+                'name' => $targetUser->name,
+                'username' => $targetUser->username,
+                'student_code' => sprintf('VK-%04d', $targetUser->id),
+            ],
+            'certificate' => [
+                'certificate_code' => $certificateCode,
+                'final_grade' => $finalGrade,
+                'classification' => $classification,
+                'completed_at_iso' => $completedAt->toIso8601String(),
+                'completed_at_formatted' => $completedAt->format('d/m/Y'),
+                'completed_at_en' => $completedAt->format('F d, Y'),
+                'completed_at_vi' => sprintf('%02d/%02d/%d', $completedAt->day, $completedAt->month, $completedAt->year),
+            ],
+        ]);
     }
 }

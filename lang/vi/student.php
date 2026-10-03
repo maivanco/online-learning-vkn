@@ -127,4 +127,9 @@ return [
     'cancel' => 'Hủy',
     'send_feedback' => 'Gửi Góp Ý',
     'instructor' => 'Giáo thọ / Giảng viên',
+
+    // Certificate
+    'view_certificate' => 'Chứng Chỉ Tốt Nghiệp',
+    'certificate_btn' => 'Xem Chứng Nhận',
+    'certificate_not_eligible' => 'Bạn chưa hoàn thành khóa học này. Hãy hoàn thành tất cả bài học và bài thi tốt nghiệp để nhận chứng nhận.',
 ];

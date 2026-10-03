@@ -172,9 +172,25 @@ export default function StudentDashboard({ auth, enrolledClasses, user, flash }:
                                                 )}
                                             </div>
 
-                                            <span className="text-[11px] text-stone-400">
-                                                {cls.is_locked ? t('student.class_locked') : t('student.class_open')}
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                {cls.is_graduated && (
+                                                    <a
+                                                        href={route('student.class.certificate', cls.id)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold text-xs shadow-sm transition transform hover:-translate-y-0.5"
+                                                    >
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                                                        </svg>
+                                                        {t('student.certificate_btn')}
+                                                    </a>
+                                                )}
+                                                <span className="text-[11px] text-stone-400">
+                                                    {cls.is_locked ? t('student.class_locked') : t('student.class_open')}
+                                                </span>
+                                            </div>
                                         </div>
 
                                         <div>
@@ -253,16 +269,30 @@ export default function StudentDashboard({ auth, enrolledClasses, user, flash }:
                                                     </Link>
                                                 </div>
                                             ) : cls.is_graduated ? (
-                                                <div className="flex items-center justify-between gap-2 pt-1">
+                                                <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
                                                     <span className="text-[11px] text-emerald-800">
                                                         {t('student.class_exam_completed_desc', { course: cls.course_title })}
                                                     </span>
-                                                    <Link
-                                                        href={route('student.class.exam', cls.id)}
-                                                        className="px-3 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-[11px] shadow-sm transition shrink-0"
-                                                    >
-                                                        {t('student.view_exam_results')}
-                                                    </Link>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <Link
+                                                            href={route('student.class.exam', cls.id)}
+                                                            className="px-3 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-medium text-[11px] border border-emerald-300 transition"
+                                                        >
+                                                            {t('student.view_exam_results')}
+                                                        </Link>
+                                                        <a
+                                                            href={route('student.class.certificate', cls.id)}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="px-3 py-1 rounded-lg bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold text-[11px] shadow-sm transition flex items-center gap-1.5"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                                                            </svg>
+                                                            {t('student.certificate_btn')}
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 <p className="text-[11px] text-stone-500">

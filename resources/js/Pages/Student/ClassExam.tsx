@@ -402,13 +402,25 @@ export default function ClassExam({
                             </div>
                         </div>
 
-                        <div className="pt-2">
+                        <div className="pt-2 flex items-center justify-center gap-3 flex-wrap">
                             <Link
                                 href={route('student.dashboard')}
-                                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs shadow transition"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-medium text-xs border border-stone-200 shadow-sm transition"
                             >
                                 {t('student.back_to_dashboard')}
                             </Link>
+                            <a
+                                href={route('student.class.certificate', classItem.id)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-stone-950 font-bold text-xs shadow-lg shadow-amber-900/20 transition transform hover:-translate-y-0.5"
+                            >
+                                <svg className="w-4 h-4 text-stone-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                                </svg>
+                                {t('student.certificate_btn')}
+                            </a>
                         </div>
                     </div>
                 )}
@@ -532,11 +544,20 @@ export default function ClassExam({
                                     >
                                         {/* Question Header */}
                                         <div className="flex items-start justify-between gap-4">
-                                            <div className="font-serif font-bold text-stone-900 text-base leading-snug">
-                                                <span className="text-amber-800 mr-2">
+                                            <div>
+                                                <span className="font-serif font-bold text-amber-800 mr-2 text-base">
                                                     {t('student.question_prefix', { number: (idx + 1).toString() })}
                                                 </span>
-                                                {q.question_text}
+                                                {/<[a-z][\s\S]*>/i.test(q.question_text) ? (
+                                                    <div
+                                                        className="mt-1 font-serif font-medium text-stone-900 text-base leading-relaxed prose prose-stone max-w-none [&>p]:mb-1 [&>p:last-child]:mb-0"
+                                                        dangerouslySetInnerHTML={{ __html: q.question_text }}
+                                                    />
+                                                ) : (
+                                                    <span className="font-serif font-bold text-stone-900 text-base leading-snug whitespace-pre-line">
+                                                        {q.question_text}
+                                                    </span>
+                                                )}
                                             </div>
 
                                             {isAnswered && (
@@ -678,11 +699,20 @@ export default function ClassExam({
                                     >
                                         {/* Question Header */}
                                         <div className="flex items-start justify-between gap-4">
-                                            <div className="font-serif font-bold text-stone-900 text-base leading-snug">
-                                                <span className="text-teal-800 mr-2">
+                                            <div>
+                                                <span className="font-serif font-bold text-teal-800 mr-2 text-base">
                                                     {t('student.question_prefix', { number: (idx + 1).toString() })}
                                                 </span>
-                                                {q.question_text}
+                                                {/<[a-z][\s\S]*>/i.test(q.question_text) ? (
+                                                    <div
+                                                        className="mt-1 font-serif font-medium text-stone-900 text-base leading-relaxed prose prose-stone max-w-none [&>p]:mb-1 [&>p:last-child]:mb-0"
+                                                        dangerouslySetInnerHTML={{ __html: q.question_text }}
+                                                    />
+                                                ) : (
+                                                    <span className="font-serif font-bold text-stone-900 text-base leading-snug whitespace-pre-line">
+                                                        {q.question_text}
+                                                    </span>
+                                                )}
                                             </div>
 
                                             <span

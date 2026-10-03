@@ -173,6 +173,9 @@ Route::middleware(['auth'])->prefix('student')->name('student.')->group(function
     Route::get('/classes/{classId}/exam', [StudentCourseController::class, 'showClassExam'])->name('class.exam');
     Route::post('/classes/{classId}/exam/question-submit', [StudentCourseController::class, 'submitClassExamQuestion'])->name('class.exam.question-submit');
     Route::post('/classes/{classId}/exam-submit', [StudentCourseController::class, 'submitClassExam'])->name('class.exam.submit');
+
+    // Class Certificate (Graduated Students)
+    Route::get('/classes/{classId}/certificate', [StudentCourseController::class, 'showCertificate'])->name('class.certificate');
 });
 
 require __DIR__ . '/auth.php';

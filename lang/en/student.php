@@ -127,4 +127,9 @@ return [
     'cancel' => 'Cancel',
     'send_feedback' => 'Submit Feedback',
     'instructor' => 'Instructor',
+
+    // Certificate
+    'view_certificate' => 'Certificate',
+    'certificate_btn' => 'View Certificate',
+    'certificate_not_eligible' => 'You have not graduated from this class yet. Complete all lessons and final exam to earn your certificate.',
 ];

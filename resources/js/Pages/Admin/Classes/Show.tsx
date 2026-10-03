@@ -1035,9 +1035,16 @@ export default function ClassShow({ auth, classItem, students: initialStudents, 
                                                         </div>
 
                                                         {/* Question Text */}
-                                                        <div className="font-medium text-stone-900 text-xs leading-relaxed whitespace-pre-wrap">
-                                                            {q.question_text}
-                                                        </div>
+                                                        {/<[a-z][\s\S]*>/i.test(q.question_text) ? (
+                                                            <div
+                                                                className="font-medium text-stone-900 text-xs leading-relaxed prose prose-stone prose-xs max-w-none [&>p]:mb-1 [&>p:last-child]:mb-0"
+                                                                dangerouslySetInnerHTML={{ __html: q.question_text }}
+                                                            />
+                                                        ) : (
+                                                            <div className="font-medium text-stone-900 text-xs leading-relaxed whitespace-pre-wrap">
+                                                                {q.question_text}
+                                                            </div>
+                                                        )}
 
                                                         {/* Quiz Question: Options Display */}
                                                         {!isEssay ? (
