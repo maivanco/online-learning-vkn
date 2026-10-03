@@ -5,6 +5,8 @@ return [
     'materials_videos' => 'Tài liệu & Video',
     'courses_lessons' => 'Khoá học & bài học',
     'question_bank' => 'Ngân hàng đề thi',
+    'questions_list' => 'Danh sách câu hỏi',
+    'questions_import' => 'Nhập câu hỏi (.xlsx)',
     'users_roles' => 'Người dùng & Phân quyền',
     'user_guides' => 'Hướng dẫn sử dụng',
     'general_settings' => 'Cài đặt chung',

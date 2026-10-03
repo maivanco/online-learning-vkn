@@ -116,6 +116,9 @@ Route::middleware(['auth', 'role:admin,teacher'])->prefix('admin')->name('admin.
 
     // Question Bank Management
     Route::get('/questions', [QuestionBankController::class, 'index'])->name('questions.index');
+    Route::get('/questions/import', [QuestionBankController::class, 'importView'])->name('questions.import-view');
+    Route::post('/questions/import', [QuestionBankController::class, 'import'])->name('questions.import');
+    Route::get('/questions/template', [QuestionBankController::class, 'downloadTemplate'])->name('questions.template');
     Route::post('/questions', [QuestionBankController::class, 'store'])->name('questions.store');
     Route::put('/questions/{id}', [QuestionBankController::class, 'update'])->name('questions.update');
     Route::delete('/questions/{id}', [QuestionBankController::class, 'destroy'])->name('questions.destroy');

@@ -257,4 +257,191 @@ class QuestionBankTest extends TestCase
 
         $response->assertSessionHasErrors(['option_a', 'option_b', 'option_c', 'option_d', 'correct_option']);
     }
+
+    public function test_admin_and_teacher_can_view_import_questions_page(): void
+    {
+        $this->actingAs($this->admin);
+
+        $response = $this->get(route('admin.questions.import-view'));
+        $response->assertStatus(200);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Questions/Import')
+            ->has('courses')
+            ->has('selectedCourseId')
+        );
+
+        $this->actingAs($this->teacher);
+        $teacherResponse = $this->get(route('admin.questions.import-view'));
+        $teacherResponse->assertStatus(200);
+    }
+
+    public function test_admin_and_teacher_can_download_question_import_template_excel(): void
+    {
+        $this->actingAs($this->admin);
+
+        $response = $this->get(route('admin.questions.template'));
+
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $this->assertStringContainsString('question_import_template.xlsx', (string) $response->headers->get('content-disposition'));
+
+        // Teacher can also download
+        $this->actingAs($this->teacher);
+        $teacherResponse = $this->get(route('admin.questions.template'));
+        $teacherResponse->assertStatus(200);
+    }
+
+    public function test_student_cannot_download_question_import_template(): void
+    {
+        $this->actingAs($this->student);
+
+        $response = $this->get(route('admin.questions.template'));
+        $response->assertRedirect(route('student.dashboard'));
+    }
+
+    public function test_admin_can_import_quiz_and_essay_questions_from_excel_into_lesson(): void
+    {
+        $this->actingAs($this->admin);
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Questions');
+
+        // Headers (without lesson_id)
+        $sheet->fromArray([
+            'question_type', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option', 'explanation', 'type'
+        ], null, 'A1');
+
+        // Row 2: Quiz Question
+        $sheet->fromArray([
+            'quiz', 'What is the First Noble Truth?', 'Suffering', 'Origin', 'Cessation', 'Path', 'A', 'Dukkha Sacca', 'both'
+        ], null, 'A2');
+
+        // Row 3: Essay Question
+        $sheet->fromArray([
+            'essay', 'Explain the significance of the Four Noble Truths.', '', '', '', '', '', 'Rubric: Understand suffering, origin, cessation, path.', 'exam'
+        ], null, 'A3');
+
+        $tempPath = tempnam(sys_get_temp_dir(), 'test_import_') . '.xlsx';
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save($tempPath);
+
+        $uploadedFile = new \Illuminate\Http\UploadedFile(
+            $tempPath,
+            'questions.xlsx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            null,
+            true
+        );
+
+        $response = $this->post(route('admin.questions.import'), [
+            'course_id' => $this->course->id,
+            'lesson_id' => $this->lesson1->id,
+            'file' => $uploadedFile,
+        ]);
+
+        $response->assertRedirect(route('admin.questions.index', [
+            'course_id' => $this->course->id,
+            'lesson_id' => $this->lesson1->id,
+        ]));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('questions', [
+            'course_id' => $this->course->id,
+            'lesson_id' => $this->lesson1->id,
+            'question_type' => 'quiz',
+            'question_text' => 'What is the First Noble Truth?',
+            'correct_option' => 'A',
+            'type' => 'both',
+        ]);
+
+        $this->assertDatabaseHas('questions', [
+            'course_id' => $this->course->id,
+            'lesson_id' => $this->lesson1->id,
+            'question_type' => 'essay',
+            'question_text' => 'Explain the significance of the Four Noble Truths.',
+            'type' => 'exam',
+        ]);
+
+        if (file_exists($tempPath)) {
+            unlink($tempPath);
+        }
+    }
+
+    public function test_import_validation_requires_mandatory_lesson_id(): void
+    {
+        $this->actingAs($this->admin);
+
+        $tempPath = tempnam(sys_get_temp_dir(), 'test_import_') . '.xlsx';
+        file_put_contents($tempPath, 'dummy');
+
+        $uploadedFile = new \Illuminate\Http\UploadedFile(
+            $tempPath,
+            'questions.xlsx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            null,
+            true
+        );
+
+        $response = $this->post(route('admin.questions.import'), [
+            'course_id' => $this->course->id,
+            // 'lesson_id' is missing
+            'file' => $uploadedFile,
+        ]);
+
+        $response->assertSessionHasErrors(['lesson_id']);
+
+        if (file_exists($tempPath)) {
+            unlink($tempPath);
+        }
+    }
+
+    public function test_import_validation_fails_for_invalid_quiz_options(): void
+    {
+        $this->actingAs($this->admin);
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Questions');
+
+        $sheet->fromArray([
+            'question_type', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option', 'explanation', 'type'
+        ], null, 'A1');
+
+        // Row 2: Quiz with missing Option C and invalid correct option 'Z'
+        $sheet->fromArray([
+            'quiz', 'Incomplete quiz question', 'A text', 'B text', '', 'D text', 'Z', 'Explanation', 'both'
+        ], null, 'A2');
+
+        $tempPath = tempnam(sys_get_temp_dir(), 'test_import_invalid_') . '.xlsx';
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save($tempPath);
+
+        $uploadedFile = new \Illuminate\Http\UploadedFile(
+            $tempPath,
+            'questions.xlsx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            null,
+            true
+        );
+
+        $response = $this->post(route('admin.questions.import'), [
+            'course_id' => $this->course->id,
+            'lesson_id' => $this->lesson1->id,
+            'file' => $uploadedFile,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
+        $response->assertSessionHas('import_errors');
+
+        $this->assertDatabaseMissing('questions', [
+            'question_text' => 'Incomplete quiz question',
+        ]);
+
+        if (file_exists($tempPath)) {
+            unlink($tempPath);
+        }
+    }
 }
+

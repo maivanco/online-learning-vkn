@@ -17,6 +17,7 @@ export type PageProps<T extends Record<string, unknown> = Record<string, unknown
     flash?: {
         success?: string;
         error?: string;
+        import_errors?: string[];
     };
     translations?: Record<string, any>;
 };

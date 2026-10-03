@@ -31,7 +31,7 @@ interface CourseItem {
     }>;
 }
 
-interface QuestionProps extends PageProps {
+type QuestionProps = PageProps<{
     questions: QuestionItem[];
     courses: CourseItem[];
     selectedCourseId: number;
@@ -42,7 +42,7 @@ interface QuestionProps extends PageProps {
         quiz: number;
         essay: number;
     };
-}
+}>;
 
 export default function QuestionBankIndex({
     auth,
@@ -153,6 +153,29 @@ export default function QuestionBankIndex({
                     </div>
                 )}
 
+                {flash?.error && (
+                    <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm flex items-center gap-2 shadow-sm">
+                        <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                        {flash.error}
+                    </div>
+                )}
+
+                {flash?.import_errors && flash.import_errors.length > 0 && (
+                    <div className="bg-red-50 border border-red-200 text-red-900 px-4 py-3.5 rounded-xl text-xs shadow-sm space-y-2">
+                        <div className="flex items-center gap-2 font-bold text-red-800">
+                            <svg className="w-4 h-4 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <span>{t('questions.import_errors_title')} ({flash.import_errors.length})</span>
+                        </div>
+                        <ul className="list-disc list-inside space-y-1 text-red-700 max-h-48 overflow-y-auto pr-2">
+                            {flash.import_errors.map((err, idx) => (
+                                <li key={idx} className="font-mono">{err}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
                 {/* Header Section */}
                 <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
@@ -164,7 +187,7 @@ export default function QuestionBankIndex({
                         </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2.5">
                         <select
                             value={selectedCourseId}
                             onChange={(e) => {
@@ -178,6 +201,31 @@ export default function QuestionBankIndex({
                                 </option>
                             ))}
                         </select>
+
+                        <a
+                            href={route('admin.questions.template')}
+                            download
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 font-medium text-xs shadow-sm transition"
+                            title={t('questions.download_template')}
+                        >
+                            <svg className="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span>{t('questions.download_template')}</span>
+                        </a>
+
+                        <Link
+                            href={route('admin.questions.import-view', {
+                                course_id: selectedCourseId,
+                                lesson_id: selectedLessonId || undefined,
+                            })}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-medium text-xs shadow-sm transition"
+                        >
+                            <svg className="w-4 h-4 text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            <span>{t('questions.import_questions')}</span>
+                        </Link>
 
                         <button
                             onClick={() => {

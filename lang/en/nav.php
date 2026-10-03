@@ -4,6 +4,8 @@ return [
     'classes_progress' => 'Classes & Progress',
     'courses_lessons' => 'Courses & Lessons',
     'question_bank' => 'Question Bank',
+    'questions_list' => 'Question List',
+    'questions_import' => 'Import Questions',
     'users_roles' => 'Users & Roles',
     'user_guides' => 'User Guides',
     'general_settings' => 'General Settings',

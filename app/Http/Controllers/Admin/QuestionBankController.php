@@ -1,18 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ImportQuestionsRequest;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Question;
+use App\Services\QuestionImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class QuestionBankController extends Controller
 {
+    public function __construct(
+        private readonly QuestionImportService $importService,
+    ) {}
+
     /**
      * Display question bank per course and lesson.
      */
@@ -76,6 +86,66 @@ class QuestionBankController extends Controller
             'selectedQuestionType' => $selectedQuestionType,
             'counts' => $counts,
         ]);
+    }
+
+    /**
+     * Display dedicated Question Import page.
+     */
+    public function importView(Request $request): Response
+    {
+        $courses = Course::with('lessons')->get();
+        $selectedCourseId = (int) ($request->query('course_id') ?? $courses->first()?->id);
+        $selectedLessonId = $request->query('lesson_id') ? (int) $request->query('lesson_id') : null;
+
+        return Inertia::render('Admin/Questions/Import', [
+            'courses' => $courses,
+            'selectedCourseId' => $selectedCourseId,
+            'selectedLessonId' => $selectedLessonId,
+        ]);
+    }
+
+    /**
+     * Download sample Excel template for question import.
+     */
+    public function downloadTemplate(): StreamedResponse
+    {
+        $spreadsheet = $this->importService->generateTemplate();
+
+        $response = new StreamedResponse(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        });
+
+        $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $response->headers->set('Content-Disposition', 'attachment;filename="question_import_template.xlsx"');
+        $response->headers->set('Cache-Control', 'max-age=0');
+
+        return $response;
+    }
+
+    /**
+     * Import questions from uploaded Excel spreadsheet into a selected lesson.
+     */
+    public function import(ImportQuestionsRequest $request): RedirectResponse
+    {
+        $courseId = (int) $request->validated('course_id');
+        $lessonId = (int) $request->validated('lesson_id');
+        $file = $request->file('file');
+
+        $result = $this->importService->import($file, $courseId, $lessonId);
+
+        if (!$result['success']) {
+            return back()
+                ->with('error', __('questions.import_failed_msg', ['count' => count($result['errors'])]))
+                ->with('import_errors', $result['errors']);
+        }
+
+        return redirect()
+            ->route('admin.questions.index', [
+                'course_id' => $courseId,
+                'lesson_id' => $lessonId,
+            ])
+            ->with('success', __('questions.import_success', ['count' => $result['imported_count']]));
     }
 
     /**
