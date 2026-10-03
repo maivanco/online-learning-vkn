@@ -50,7 +50,11 @@ docker compose -f "$COMPOSE_FILE" exec -T -u root laravel.app bash -c "
   chmod -R 777 storage bootstrap/cache
 "
 
-# 4. Build Frontend Assets
+# 4. Install Backend Dependencies (Composer)
+echo "Installing backend dependencies (composer install)..."
+docker compose -f "$COMPOSE_FILE" exec -T laravel.app composer install --no-interaction --prefer-dist --optimize-autoloader
+
+# 5. Build Frontend Assets
 if command -v npm >/dev/null 2>&1; then
   echo "Installing frontend dependencies on host..."
   npm ci || npm install --no-save
@@ -68,7 +72,7 @@ fi
 # Ensure package-lock.json is not left modified so git pull is never blocked
 git checkout -- package-lock.json 2>/dev/null || true
 
-# 5. Run Database Migrations & Optimize in container
+# 6. Run Database Migrations & Optimize in container
 echo "Clearing cached config to ensure latest database configuration is loaded..."
 docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan config:clear
 
