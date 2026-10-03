@@ -69,11 +69,13 @@ fi
 git checkout -- package-lock.json 2>/dev/null || true
 
 # 5. Run Database Migrations & Optimize in container
-echo "Running database migrations..."
+echo "Clearing cached config to ensure latest database configuration is loaded..."
+docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan config:clear
+
+echo "Running database migrations (safe incremental migrate, preserves existing data)..."
 docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan migrate --force
 
-echo "Clearing and caching configuration..."
-docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan config:clear
+echo "Clearing and caching routes & views..."
 docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan route:clear
 docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan view:clear
 echo "Caching Blade views..."
