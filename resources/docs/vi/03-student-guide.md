@@ -1,22 +1,38 @@
 # 03. Cẩm nang Học tập Dành cho Học viên
 
-Cẩm nang này hướng dẫn tường tận lộ trình học 5 bước giúp Quý Phật tử và Học viên dễ dàng thao tác trên cổng học tập trực tuyến.
+Cẩm nang này hướng dẫn tường tận lộ trình học 5 bước, cách đăng ký hồ sơ Phật tử (kèm Pháp danh), phương pháp làm bài thi kết thúc có đồng hồ đếm ngược và cách xem/tải Chứng chỉ tốt nghiệp điện tử của Tu viện Viên Không Ni.
 
 ---
 
-## 1. Đăng nhập & Truy cập Lớp học
+## 1. Đăng ký Tài khoản & Hồ sơ Phật tử
 
-1. Mở trang chủ cổng học tập và nhấn **Đăng nhập**.
-2. Nhập **Tên đăng nhập** (Username) hoặc **Email** và Mật khẩu do ban quản trị cấp.
-3. Sau khi đăng nhập thành công, bạn sẽ được đưa đến **Bảng điều khiển Học viên (Student Dashboard)**.
-4. Tại đây, bạn sẽ thấy danh sách các lớp học mà mình đã được ghi danh tham gia kèm thanh phần trăm (%) tiến độ học tập.
-5. Nhấn vào lớp học để bắt đầu lộ trình học tập.
+### Đăng ký Tài khoản Mới
+1. Truy cập cổng học tập và nhấn nút **"Đăng ký"** ở góc phải màn hình.
+2. Điền đầy đủ thông tin:
+   - **Họ và tên**: Họ tên thật theo giấy tờ tùy thân.
+   - **Pháp danh (`dhamma_name`)**: Nhập Pháp danh quy y của quý Phật tử (ví dụ: *Tâm An, Diệu Thiện, Nhuận Pháp*). Pháp danh này sẽ được in trang nghiêm trên Chứng chỉ tốt nghiệp. Nếu chưa có Pháp danh, quý vị có thể để trống.
+   - **Tên đăng nhập (Username)** & **Email**: Dùng để đăng nhập hệ thống.
+   - **Số điện thoại, Giới tính, Ngày sinh & Địa chỉ**: Giúp tu viện liên lạc và gửi quà tặng/chứng chỉ giấy khi cần thiết.
+   - **Mật khẩu**: Tối thiểu 8 ký tự an toàn.
+3. Ngoài ra, học viên có thể lựa chọn đăng nhập nhanh bằng tài khoản **Google**.
 
 ---
 
-## 2. Lộ trình Học tập 5 Bước Tuần tự
+## 2. Bảng điều khiển Học viên (Student Dashboard)
 
-Để đạt được kết quả học tập tốt nhất, hệ thống yêu cầu học viên hoàn thành tuần tự 5 bước sau đây:
+Sau khi đăng nhập thành công:
+- Màn hình sẽ chuyển đến **Bảng điều khiển Học viên**.
+- Quý Phật tử sẽ thấy toàn bộ các lớp học mà mình đã được ghi danh tham gia:
+  - Tên khoá học & Giảng viên phụ trách.
+  - Thanh tiến độ học tập hiển thị phần trăm (%) hoàn thành.
+  - Nút **"Vào học"**: Tiếp tục học các bài học đang dang dở.
+  - Nút **"Xem Chứng chỉ"**: Xuất hiện khi quý vị đã hoàn thành 100% bài học và thi tốt nghiệp đạt điểm yêu cầu.
+
+---
+
+## 3. Lộ trình Học tập 5 Bước Tuần tự
+
+Để tiếp thu giáo lý sâu sắc và bền vững, hệ thống áp dụng cơ chế mở khoá tuần tự 5 bước:
 
 ```
 [Bước 1: Đọc bài] ──> [Bước 2: Xem video] ──> [Bước 3: Luyện tập] ──> [Bước 4: Thi kết thúc] ──> [Bước 5: Khắc phục câu sai]
@@ -24,13 +40,13 @@ Cẩm nang này hướng dẫn tường tận lộ trình học 5 bước giúp 
 
 ### Bước 1: Tự học Bài đọc (Reading)
 - Mở bài học và chọn tab **"Bài đọc"**.
-- Đọc kỹ phần trích đoạn kinh văn, lời giải nghĩa và các điểm trọng tâm do Giảng viên biên soạn.
+- Đọc kỹ phần trích đoạn kinh văn, lời giải nghĩa từ ngữ Pāḷi và những điểm cốt lõi do Giảng viên biên soạn.
 - Khi đọc xong và nắm chắc nội dung, hãy nhấn nút màu vàng: **"Hoàn thành bài đọc"**.
 - *Kết quả*: Hệ thống ghi nhận và mở khoá tiếp **Bước 2: Video bài giảng**.
 
 ### Bước 2: Xem Video Giảng pháp (Video Lecture)
 - Nhấn chuyển sang tab **"Video"**.
-- Lắng nghe chư Tôn đức giảng giải chi tiết về bài học. Học viên nên chuẩn bị tập vở để ghi chép lại những lời dạy tâm đắc.
+- Lắng nghe chư Tôn đức giảng giải chi tiết về kinh điển. Học viên nên chuẩn bị tập vở để ghi chép lại những lời dạy tâm đắc.
 - Khi xem xong trọn vẹn video, nhấn nút **"Hoàn thành video"**.
 - *Kết quả*: Hệ thống mở khoá tiếp **Bước 3: Bài tập luyện tập**.
 
@@ -44,31 +60,48 @@ Cẩm nang này hướng dẫn tường tận lộ trình học 5 bước giúp 
 - *Kết quả*: Bài học sẽ nhận được một **dấu tích xanh hoàn thành** trên bảng danh mục bài học!
 
 ### Bước 4: Làm Bài thi Kết thúc Lớp học (Class Final Exam)
-- **Điều kiện mở bài thi**: Học viên bắt buộc phải hoàn thành trọn vẹn cả 3 bước (Đọc, Video, Luyện tập) của **TẤT CẢ các bài học** có trong lớp.
-- Khi đã đủ điều kiện, nút **"Làm bài thi kết thúc"** trên bảng điều khiển sẽ sáng màu vàng.
-- Nhấn vào để bắt đầu làm bài thi:
-  - **Thời gian làm bài**: Màn hình có đồng hồ đếm ngược (ví dụ 45 phút). Hãy chú ý thời gian!
+- **Điều kiện mở bài thi**: Học viên bắt buộc phải hoàn thành trọn vẹn cả 3 bước (Đọc bài, Xem video, Làm bài tập) của **TẤT CẢ các bài học** có trong lớp (đạt tiến độ 100%).
+- Khi đã đủ điều kiện, nút **"Làm bài thi kết thúc"** trên bảng điều khiển sẽ sáng màu vàng:
+  - **Thời gian làm bài có giới hạn**: Màn hình hiển thị đồng hồ đếm ngược (ví dụ: 45 phút) đồng bộ với máy chủ.
   - **Các câu Trắc nghiệm**: Tích chọn đáp án cẩn thận.
   - **Các câu Tự luận** (nếu có): Soạn thảo câu trả lời chia sẻ hiểu biết hoặc cảm nhận sâu sắc của bạn.
-  - Nhấn nút **"Nộp bài thi"** trước khi đồng hồ đếm ngược hết giờ.
-- *Kết quả*: Điểm trắc nghiệm được chấm ngay lập tức; câu tự luận được chuyển cho Giáo thọ chấm điểm và nhận xét.
+  - **Cơ chế tự động nộp bài khi hết giờ**: Nếu đồng hồ đếm ngược về `00:00:00` mà bạn chưa kịp bấm nộp, hệ thống sẽ **tự động nộp toàn bộ các câu trả lời bạn đã chọn lên máy chủ**, đảm bảo bạn không bị mất bài làm do sơ suất thời gian.
+  - Nhấn nút **"Nộp bài thi"** khi hoàn tất bài làm.
+- *Kết quả*: Điểm trắc nghiệm được chấm ngay lập tức; câu tự luận được chuyển cho Giáo thọ chấm điểm và viết lời nhận xét.
 
 ### Bước 5: Ôn tập & Khắc phục Câu làm sai (Mistake Mastery)
-- Sau khi hoàn thành bài thi hoặc bài luyện tập, nếu có câu hỏi nào làm sai, hệ thống sẽ tự động lưu vào **Sổ tay câu sai cá nhân** của bạn.
-- Bạn có thể vào mục **"Xem câu làm sai"** bất cứ lúc nào để đọc lại lời giảng giải và làm lại câu hỏi đó cho đến khi chọn đúng hoàn toàn.
-- *Ý nghĩa*: Giúp học viên củng cố chánh kiến bền vững, xoá bỏ hoàn toàn những điểm hiểu chưa đúng.
+- Bất kỳ câu hỏi nào bạn chọn sai trong bài luyện tập hoặc đề thi sẽ được tự động lưu trữ trong **Sổ tay câu sai cá nhân** của bạn.
+- Bạn có thể mở mục câu sai bất kỳ lúc nào để đọc lại lời giảng giải của Giáo thọ và làm lại câu hỏi đó cho đến khi chọn đúng hoàn toàn.
+- *Ý nghĩa*: Giúp học viên củng cố chánh kiến bền vững, xoá bỏ hoàn toàn những điểm hiểu lầm hoặc hiểu chưa trọn vẹn về Phật pháp.
 
 ---
 
-## 3. Gửi Câu hỏi & Thắc mắc cho Giảng viên
+## 4. Gửi Câu hỏi & Thắc mắc cho Giảng viên
 
-- Nếu trong quá trình đọc bài hay xem video có chỗ nào chưa hiểu, ở cuối mỗi bài học có khung **"Gửi câu hỏi / Phản hồi cho Giảng viên"**.
-- Hãy nhập thắc mắc của bạn và nhấn **Gửi**.
+- Nếu trong quá trình học tập có điều chưa thấu đáo, ở cuối mỗi bài học có khung **"Gửi câu hỏi / Phản hồi cho Giảng viên"**.
+- Nhập thắc mắc của bạn và nhấn **Gửi**.
 - Khi Giảng viên hồi đáp, câu trả lời sẽ xuất hiện ngay trong bài học để bạn xem lại.
 
 ---
 
-## 4. Xem Kết quả & Chứng chỉ Tốt nghiệp
+## 5. Xem, Tải & Xác thực Chứng chỉ Phật học
 
-- Sau khi Giảng viên chấm điểm xong phần tự luận, bạn sẽ thấy điểm tổng kết cuối cùng hiển thị trên Bảng điều khiển.
-- Trạng thái lớp học của bạn sẽ chuyển thành **"Đã hoàn thành / Tốt nghiệp"**.
+Khi Giảng viên hoàn tất chấm điểm và điểm tổng kết đạt từ 50% trở lên (tương đương thang điểm 5.0/10), bạn chính thức được công nhận tốt nghiệp!
+
+### Mở Xem Chứng chỉ
+- Tại Bảng điều khiển Học viên hoặc tại màn hình hoàn thành bài thi, nhấn nút **"Xem Chứng chỉ"** (View Certificate).
+- Màn hình sẽ hiển thị Chứng chỉ tốt nghiệp Phật học trang nghiêm của Tu viện Viên Không Ni với đầy đủ:
+  - **Họ tên Phật tử** và **Pháp danh** (`dhamma_name`).
+  - **Tên khoá học** và **Lớp học** vừa tốt nghiệp.
+  - **Ngày hoàn thành khoá học**.
+  - **Điểm tổng kết** và **Xếp loại Tốt nghiệp**:
+    - **Xuất sắc**: Điểm tổng kết từ 9.0 trở lên.
+    - **Giỏi**: Điểm tổng kết từ 8.0 đến dưới 9.0.
+    - **Khá**: Điểm tổng kết từ 7.0 đến dưới 8.0.
+    - **Đạt**: Điểm tổng kết từ 5.0 đến dưới 7.0.
+  - **Mã Chứng chỉ duy nhất**: Ví dụ `VKN-CERT-A1B2C3`.
+  - **Mã QR Xác thực Công khai**: Bất kỳ ai cũng có thể dùng điện thoại quét mã QR này để truy cập trang xác thực chính thức trên website của Tu viện, kiểm chứng tính xác thực của chứng chỉ mà không sợ bị làm giả.
+
+### In hoặc Lưu File PDF
+- Ở góc trên của trang chứng chỉ, nhấn nút **"In / Lưu PDF"**.
+- Trình duyệt sẽ mở khung in tối ưu sẵn theo khổ giấy nằm ngang (A4 Landscape) để quý Phật tử có thể in ra đóng khung lưu niệm hoặc lưu thành file PDF trên máy tính.

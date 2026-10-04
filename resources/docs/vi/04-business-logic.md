@@ -1,12 +1,12 @@
 # 04. Quy tắc Nghiệp vụ & Cơ chế Vận hành Hệ thống
 
-Tài liệu này giải thích rõ ràng và minh bạch các cơ chế tự động, quy tắc nghiệp vụ và công thức tính điểm được cài đặt trong hệ thống.
+Tài liệu này giải thích chi tiết, minh bạch các thuật toán, cơ chế tự động, quy tắc xác thực và công thức tính điểm được cài đặt trong hệ thống Cổng Học Phật Pháp Trực Tuyến - Tu viện Viên Không Ni.
 
 ---
 
 ## 1. Cơ chế Khoá mở Tuần tự (Sequential Progression)
 
-Hệ thống được thiết kế theo nguyên tắc **không học nhảy cóc** nhằm đảm bảo Phật tử tiếp thu giáo lý một cách trọn vẹn:
+Hệ thống được thiết kế theo nguyên tắc **không học nhảy cóc**, giúp Phật tử tiếp thu giáo lý một cách trọn vẹn:
 
 ```
 [Bài đọc (Chưa xong)]  ──>  [Video (Bị khoá)]
@@ -19,67 +19,119 @@ Hệ thống được thiết kế theo nguyên tắc **không học nhảy cóc
 ```
 
 ### Quy tắc hoàn thành một Bài học:
-- Một bài học chỉ được xem là **Hoàn thành (Completed)** khi học viên đã hoàn thành đủ cả 3 điều kiện:
-  1. `reading_completed = true` (Đã xác nhận đọc bài)
-  2. `video_completed = true` (Đã xác nhận xem video)
-  3. `practice_completed = true` (Đã hoàn thành các câu trắc nghiệm luyện tập)
+Một bài học chỉ được xem là **Hoàn thành (Completed)** khi học viên đã đạt đủ cả 3 điều kiện:
+1. `reading_completed = true`: Học viên đã nhấn nút xác nhận đã đọc xong bài đọc.
+2. `video_completed = true`: Học viên đã nhấn nút xác nhận đã xem xong video bài giảng.
+3. `practice_completed = true`: Học viên đã nộp bài tập trắc nghiệm luyện tập của bài đó.
 
 ---
 
-## 2. Điều kiện Mở khoá Bài thi Kết thúc Lớp học
+## 2. Giới hạn Sĩ số Lớp học (`max_students`) & Kiểm tra Ghi danh
 
-- Nút **"Làm bài thi kết thúc" (Class Final Exam)** ở trạng thái vô hiệu hoá (màu xám) cho đến khi:
-  $$\text{Số bài học đã hoàn thành} == \text{Tổng số bài học trong lớp}$$
-- Khi tỉ lệ hoàn thành đạt **100%**, trạng thái của học viên chuyển thành `ready_for_exam` (Sẵn sàng thi) và nút thi sẽ sáng lên cho phép học viên bắt đầu.
-- **Lưu ý**: Nếu còn dù chỉ 1 bài học chưa hoàn thành 1 trong 3 bước, học viên sẽ không thể vào thi.
+Để đảm bảo chất lượng hướng dẫn và khả năng chấm bài tự luận của Giáo thọ, mỗi lớp học có một chỉ số giới hạn sĩ số:
+- **Kiểm tra khi ghi danh**:
+  $$\text{Số lượng học viên hiện tại} < \text{max\_students}$$
+- Nếu lớp học đã đạt đủ sĩ số quy định, hệ thống sẽ **từ chối thêm học viên mới** và thông báo cảnh báo đến Giảng viên.
+- **Ngăn chặn ghi danh trùng lặp**: Một học viên không thể được ghi danh 2 lần vào cùng một lớp học.
 
 ---
 
-## 3. Cơ chế Khoá Lớp học (Class Lock)
+## 3. Cơ chế Khoá Lớp học (`is_locked`)
 
 Giảng viên hoặc Quản trị viên có thể bật tính năng **Khoá lớp học** (`is_locked = true`):
 
-| Thao tác | Khi lớp ĐANG MỞ | Khi lớp BỊ KHOÁ |
+| Thao tác | Khi lớp ĐANG MỞ (`is_locked = false`) | Khi lớp BỊ KHOÁ (`is_locked = true`) |
 | :--- | :---: | :---: |
-| Xem lại bài đọc, video đã học | Có | Có |
-| Xác nhận hoàn thành bài đọc mới | Có | **Bị chặn** |
-| Nộp bài tập luyện tập mới | Có | **Bị chặn** |
-| Gửi câu hỏi thắc mắc mới | Có | **Bị chặn** |
-| Bắt đầu bài thi kết thúc | Có | **Bị chặn** |
+| Xem lại bài đọc, video đã học | Cho phép | Cho phép |
+| Xác nhận hoàn thành bài đọc mới | Cho phép | **Bị chặn (Blocked)** |
+| Xác nhận hoàn thành video mới | Cho phép | **Bị chặn (Blocked)** |
+| Nộp bài tập luyện tập mới | Cho phép | **Bị chặn (Blocked)** |
+| Gửi câu hỏi thắc mắc mới | Cho phép | **Bị chặn (Blocked)** |
+| Bắt đầu bài thi kết thúc lớp | Cho phép | **Bị chặn (Blocked)** |
+| Xem lại kết quả thi & Chứng chỉ | Cho phép | Cho phép |
 
-> **Mục đích**: Bảo toàn dữ liệu lớp học sau khi bế giảng hoặc trong thời gian Giảng viên đang tổng kết điểm số.
+> **Ý nghĩa**: Giúp bảo toàn dữ liệu học tập khi kỳ học kết thúc hoặc trong thời gian Giảng viên đang tiến hành chấm thi và xếp loại.
 
 ---
 
-## 4. Quy tắc Tính Điểm & Chấm thi
+## 4. Điều kiện Mở khoá & Cơ chế Bài thi Kết thúc Lớp học
+
+### Điều kiện Mở khoá Bài thi
+Nút **"Làm bài thi kết thúc" (Class Final Exam)** ở trạng thái vô hiệu hoá (màu xám) cho đến khi:
+$$\text{Số bài học đã hoàn thành} == \text{Tổng số bài học trong lớp} \quad (100\%)$$
+Khi đạt 100%, trạng thái của học viên chuyển thành `ready_for_exam` (Sẵn sàng thi) và học viên được phép nhấn nút bắt đầu làm bài.
+
+### Thời lượng Thi & Đồng hồ Đếm ngược
+- Mỗi bài thi có thời lượng quy định tính bằng phút (`duration_minutes`, ví dụ: 30, 45, 60 phút).
+- Khi học viên bấm bắt đầu thi, đồng hồ đếm ngược được kích hoạt và đồng bộ theo thời gian chuẩn của máy chủ (`started_at`).
+
+### Cơ chế Tự động Nộp bài Bảo vệ Học viên
+- Nếu đồng hồ đếm ngược về `00:00:00` mà học viên chưa bấm nút nộp bài, hệ thống sẽ **tự động gửi toàn bộ các phương án trắc nghiệm và câu trả lời tự luận hiện có lên máy chủ**.
+- Giúp bảo vệ quyền lợi của học viên, không làm mất kết quả bài thi do sự cố quên giờ hoặc gián đoạn mạng.
+
+---
+
+## 5. Quy tắc Tính Điểm & Xếp loại Tốt nghiệp
 
 Bài thi kết thúc lớp học được chấm điểm theo cơ chế kết hợp giữa Tự động và Thủ công:
 
 ### Phần Trắc nghiệm (Multiple Choice)
 - Được hệ thống máy tính chấm điểm **tức thời** ngay khi học viên nộp bài.
-- Công thức: 
-  $$\text{Điểm trắc nghiệm} = \left(\frac{\text{Số câu đúng}}{\text{Tổng số câu trắc nghiệm}}\right) \times \text{Hệ số trắc nghiệm}$$
+- Điểm được tính theo trọng số điểm số cấu hình của từng câu hỏi trong đề thi.
 
 ### Phần Tự luận (Essay Questions)
-- Khi học viên nộp bài, các câu tự luận được chuyển vào danh sách chờ chấm của Giảng viên.
-- Giảng viên chấm điểm theo thang điểm 10 kèm nhận xét chi tiết.
+- Chuyển vào danh sách chờ chấm của Giảng viên (`exam-result`).
+- Giảng viên chấm điểm theo thang điểm 10 kèm nhận xét giáo lý chi tiết.
 
-### Điểm Tổng kết (Final Grade)
-- Khi Giảng viên lưu điểm tự luận, hệ thống tự động tính:
-  $$\text{Điểm tổng kết} = \text{Điểm trắc nghiệm} + \text{Điểm tự luận}$$
-- Điểm tổng kết được cập nhật vào hồ sơ học viên (`final_grade`), đồng thời trạng thái chuyển thành `completed` (Đã tốt nghiệp).
+### Điểm Tổng kết & Điều kiện Tốt nghiệp
+$$\text{Điểm tổng kết} = \text{Điểm trắc nghiệm} + \text{Điểm tự luận}$$
+- **Ngưỡng đạt tốt nghiệp**: Học viên phải đạt **từ 50% tổng điểm trở lên** (tương đương $\ge 5.0$ trên thang điểm 10).
+- Sau khi được lưu điểm, trạng thái của học viên chuyển thành `completed` (Đã tốt nghiệp).
+
+### Bảng Phân loại Xếp loại Tốt nghiệp
+| Điểm Tổng kết (Thang 10) | Xếp loại (Tiếng Việt) | Distinction (English) |
+| :---: | :---: | :---: |
+| $\ge 9.0$ | **Xuất sắc** | High Distinction |
+| $8.0 \le \text{Điểm} < 9.0$ | **Giỏi** | Distinction |
+| $7.0 \le \text{Điểm} < 8.0$ | **Khá** | Credit |
+| $5.0 \le \text{Điểm} < 7.0$ | **Đạt** | Pass |
+| $< 5.0$ | Chưa đạt | Fail |
 
 ---
 
-## 5. Đồng hồ Đếm ngược & Cơ chế Tự động Nộp bài
+## 6. Quy tắc Nhập Dữ liệu Câu hỏi từ File Excel
 
-- Khi học viên nhấn "Bắt đầu làm bài thi", đồng hồ đếm ngược được kích hoạt.
-- Thời gian làm bài chạy theo đồng hồ chuẩn của máy chủ để đảm bảo tính công bằng.
-- **Cơ chế bảo vệ dữ liệu**: Nếu đồng hồ đếm ngược về `00:00:00` mà học viên chưa bấm nộp bài, hệ thống sẽ **tự động nộp toàn bộ các đáp án đã chọn lên máy chủ** để ghi nhận điểm số, tránh trường hợp học viên bị mất bài làm do hết giờ.
+Tính năng nhập file Excel áp dụng các quy chuẩn xác thực nghiêm ngặt để bảo đảm tính toàn vẹn của dữ liệu:
+
+1. **Định dạng file hỗ trợ**: `.xlsx`, `.xls`, `.csv`.
+2. **Các trường bắt buộc**:
+   - `course_code`: Phải khớp với mã hoặc tên khoá học đã tồn tại.
+   - `type`: Chỉ chấp nhận `multiple_choice` hoặc `essay`.
+   - `title`: Chuỗi nội dung câu hỏi (không được để trống).
+   - `level`: Chỉ chấp nhận `easy`, `medium`, hoặc `hard`.
+   - `points`: Số điểm (mặc định là 1 nếu để trống).
+3. **Đối với câu hỏi trắc nghiệm (`multiple_choice`)**:
+   - Bắt buộc phải có đủ `option_a`, `option_b`, `option_c`, `option_d`.
+   - `correct_option`: Bắt buộc là một trong 4 ký tự: `A`, `B`, `C`, `D`.
+4. **Cơ chế cách ly lỗi (Row-by-Row Isolation)**:
+   - Các dòng hợp lệ được phân loại để đưa vào cơ sở dữ liệu.
+   - Các dòng sai cú pháp được liệt kê chi tiết (số dòng, tên lỗi) trong màn hình Preview để Giảng viên kiểm tra và sửa đổi.
 
 ---
 
-## 6. Sổ tay Khắc phục Câu sai (`StudentIncorrectQuestion`)
+## 7. Động cơ Cấp & Xác thực Chứng chỉ Phật học
 
-- Bất cứ khi nào học viên chọn sai một câu hỏi trong bài luyện tập hoặc đề thi, câu hỏi đó sẽ được tự động lưu vào bảng lưu trữ câu sai của học viên.
-- Khi học viên vào mục ôn tập và làm lại chính xác câu hỏi đó, trạng thái câu hỏi sẽ được ghi nhận đã hoàn thành (Mastered).
+- **Tạo Chứng chỉ Tự động**: Ngay khi học viên đạt trạng thái `completed`, hệ thống tự sinh bản ghi chứng chỉ tốt nghiệp liên kết với tài khoản học viên và lớp học.
+- **Mã Chứng chỉ Độc nhất**: Sinh mã định danh duy nhất (ví dụ: `VKN-CERT-A1B2C3`).
+- **Liên kết Xác thực Công khai (`/certificate/verify/{code}`)**:
+  - Mã QR in trên chứng chỉ trỏ trực tiếp đến tuyến đường xác thực này.
+  - Người kiểm tra không cần đăng nhập vẫn có thể xác thực ngay tính nguyên bản của chứng chỉ: Họ tên học viên, Pháp danh, Khoá học, Ngày cấp, Điểm số và Xếp loại.
+- **Tích hợp Pháp danh**: Tự động lấy Pháp danh từ `StudentProfile` để in ấn chứng chỉ trang nghiêm.
+
+---
+
+## 8. Vòng đời Sổ tay Câu hỏi Sai (`StudentIncorrectQuestion`)
+
+1. Khi học viên chọn sai một câu hỏi trong bài luyện tập hoặc đề thi, hệ thống tự động ghi nhận câu hỏi đó vào bảng câu sai của học viên.
+2. Câu hỏi này sẽ duy trì trong sổ tay cá nhân cho đến khi học viên vào làm lại câu hỏi đó và chọn đúng đáp án chính xác.
+3. Khi trả lời đúng, trạng thái được đánh dấu là `is_mastered = true`, thể hiện học viên đã khắc phục hoàn toàn điểm nhầm lẫn giáo lý.
