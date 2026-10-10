@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClassComment;
 use App\Models\Course;
 use App\Models\CourseClass;
 use App\Models\Lesson;
@@ -163,6 +164,20 @@ class ClassManagerController extends Controller
             ->select('id', 'name', 'username', 'email')
             ->get();
 
+        // 2-level threaded comments for class discussion
+        $comments = ClassComment::with([
+            'user:id,name,username,role',
+            'replyToUser:id,name,username',
+            'replies' => fn($q) => $q->with([
+                'user:id,name,username,role',
+                'replyToUser:id,name,username',
+            ])->orderBy('created_at', 'asc'),
+        ])
+        ->where('class_id', $class->id)
+        ->whereNull('parent_id')
+        ->latest('created_at')
+        ->get();
+
         return Inertia::render('Admin/Classes/Show', [
             'classItem' => [
                 'id' => $class->id,
@@ -190,6 +205,7 @@ class ClassManagerController extends Controller
             ],
             'students' => $studentsProgress,
             'availableStudents' => $availableStudents,
+            'comments' => $comments,
         ]);
     }
 

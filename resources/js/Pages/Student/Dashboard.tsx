@@ -187,6 +187,15 @@ export default function StudentDashboard({ auth, enrolledClasses, user, flash }:
                                                         {t('student.certificate_btn')}
                                                     </a>
                                                 )}
+
+                                                <Link
+                                                    href={route('student.classes.show', cls.id)}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold text-xs border border-amber-200 transition"
+                                                >
+                                                    <span>💬</span>
+                                                    <span>{t('student.view_class_detail')}</span>
+                                                </Link>
+
                                                 <span className="text-[11px] text-stone-400">
                                                     {cls.is_locked ? t('student.class_locked') : t('student.class_open')}
                                                 </span>
@@ -194,9 +203,11 @@ export default function StudentDashboard({ auth, enrolledClasses, user, flash }:
                                         </div>
 
                                         <div>
-                                            <h3 className="font-serif font-bold text-lg text-stone-900">
-                                                {cls.name}
-                                            </h3>
+                                            <Link href={route('student.classes.show', cls.id)} className="hover:text-amber-800 transition inline-block">
+                                                <h3 className="font-serif font-bold text-lg text-stone-900 hover:text-amber-800 transition">
+                                                    {cls.name}
+                                                </h3>
+                                            </Link>
                                             <p className="text-xs text-amber-900/80 font-medium mt-0.5">
                                                 {cls.course_title} &bull; <span className="uppercase text-[10px]">{cls.category}</span>
                                             </p>

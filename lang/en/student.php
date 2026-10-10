@@ -132,4 +132,11 @@ return [
     'view_certificate' => 'Certificate',
     'certificate_btn' => 'View Certificate',
     'certificate_not_eligible' => 'You have not graduated from this class yet. Complete all lessons and final exam to earn your certificate.',
+
+    // Class Detail
+    'view_class_detail' => 'Class Detail & Discussion',
+    'back_to_dashboard' => 'Back to Dashboard',
+    'class_syllabus' => 'Class Syllabus',
+    'class_overview' => 'Class Overview',
 ];
+

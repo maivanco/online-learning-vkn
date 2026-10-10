@@ -17,18 +17,22 @@ export interface RichTextEditorProps {
     id?: string;
     disabled?: boolean;
     className?: string;
+    variant?: 'default' | 'comment';
 }
 
 export default function RichTextEditor({
     value,
     onChange,
     placeholder = 'Enter content...',
-    minHeight = '140px',
+    minHeight,
     error,
     id,
     disabled = false,
     className = '',
+    variant = 'default',
 }: RichTextEditorProps) {
+    const isCommentMode = variant === 'comment';
+    const effectiveMinHeight = minHeight || (isCommentMode ? '80px' : '140px');
     const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
     const [isUploadingDirect, setIsUploadingDirect] = useState(false);
 
@@ -87,10 +91,11 @@ export default function RichTextEditor({
         editorProps: {
             attributes: {
                 class: `prose prose-stone prose-sm max-w-none focus:outline-none p-3.5 text-stone-800 leading-relaxed`,
-                style: `min-height: ${minHeight};`,
+                style: `min-height: ${effectiveMinHeight};`,
                 ...(id ? { id } : {}),
             },
             handlePaste: (view, event) => {
+                if (isCommentMode) return false;
                 const items = event.clipboardData?.items;
                 if (!items) return false;
                 for (let i = 0; i < items.length; i++) {
@@ -106,6 +111,7 @@ export default function RichTextEditor({
                 return false;
             },
             handleDrop: (view, event, slice, moved) => {
+                if (isCommentMode) return false;
                 if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
                     const file = event.dataTransfer.files[0];
                     if (file.type.startsWith('image/')) {
@@ -228,33 +234,37 @@ export default function RichTextEditor({
                     <span className="line-through font-semibold text-[11px]">S</span>
                 </button>
 
-                <div className="w-[1px] h-4 bg-stone-300 mx-1" />
+                {!isCommentMode && (
+                    <>
+                        <div className="w-[1px] h-4 bg-stone-300 mx-1" />
 
-                {/* Headings */}
-                <button
-                    type="button"
-                    title="Paragraph / Normal Text"
-                    onClick={() => editor.chain().focus().setParagraph().run()}
-                    className={buttonClass(editor.isActive('paragraph') && !editor.isActive('heading'))}
-                >
-                    <span className="text-[11px] font-medium">P</span>
-                </button>
-                <button
-                    type="button"
-                    title="Heading 2"
-                    onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                    className={buttonClass(editor.isActive('heading', { level: 2 }))}
-                >
-                    <span className="text-[11px] font-bold">H2</span>
-                </button>
-                <button
-                    type="button"
-                    title="Heading 3"
-                    onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                    className={buttonClass(editor.isActive('heading', { level: 3 }))}
-                >
-                    <span className="text-[11px] font-bold">H3</span>
-                </button>
+                        {/* Headings */}
+                        <button
+                            type="button"
+                            title="Paragraph / Normal Text"
+                            onClick={() => editor.chain().focus().setParagraph().run()}
+                            className={buttonClass(editor.isActive('paragraph') && !editor.isActive('heading'))}
+                        >
+                            <span className="text-[11px] font-medium">P</span>
+                        </button>
+                        <button
+                            type="button"
+                            title="Heading 2"
+                            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                            className={buttonClass(editor.isActive('heading', { level: 2 }))}
+                        >
+                            <span className="text-[11px] font-bold">H2</span>
+                        </button>
+                        <button
+                            type="button"
+                            title="Heading 3"
+                            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                            className={buttonClass(editor.isActive('heading', { level: 3 }))}
+                        >
+                            <span className="text-[11px] font-bold">H3</span>
+                        </button>
+                    </>
+                )}
 
                 <div className="w-[1px] h-4 bg-stone-300 mx-1" />
 
@@ -289,49 +299,54 @@ export default function RichTextEditor({
                         <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
                     </svg>
                 </button>
-                <button
-                    type="button"
-                    title="Code Block"
-                    onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-                    className={buttonClass(editor.isActive('codeBlock'))}
-                >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                    </svg>
-                </button>
 
-                <div className="w-[1px] h-4 bg-stone-300 mx-1" />
+                {!isCommentMode && (
+                    <>
+                        <button
+                            type="button"
+                            title="Code Block"
+                            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                            className={buttonClass(editor.isActive('codeBlock'))}
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                            </svg>
+                        </button>
 
-                {/* Link */}
-                <button
-                    type="button"
-                    title="Insert Link"
-                    onClick={setLink}
-                    className={buttonClass(editor.isActive('link'))}
-                >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
-                </button>
+                        <div className="w-[1px] h-4 bg-stone-300 mx-1" />
 
-                {/* Media Library Trigger */}
-                <button
-                    type="button"
-                    title="Insert Media / Image / Document"
-                    onClick={() => setIsMediaModalOpen(true)}
-                    className="px-2 py-1 text-xs font-semibold rounded transition flex items-center justify-center gap-1.5 h-[26px] bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/80 shadow-2xs"
-                >
-                    <svg className="w-3.5 h-3.5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span>Media</span>
-                </button>
+                        {/* Link */}
+                        <button
+                            type="button"
+                            title="Insert Link"
+                            onClick={setLink}
+                            className={buttonClass(editor.isActive('link'))}
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                            </svg>
+                        </button>
 
-                {isUploadingDirect && (
-                    <div className="flex items-center space-x-1 text-[11px] text-amber-700 font-medium px-2 py-0.5 bg-amber-50 rounded">
-                        <div className="w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
-                        <span>Uploading...</span>
-                    </div>
+                        {/* Media Library Trigger */}
+                        <button
+                            type="button"
+                            title="Insert Media / Image / Document"
+                            onClick={() => setIsMediaModalOpen(true)}
+                            className="px-2 py-1 text-xs font-semibold rounded transition flex items-center justify-center gap-1.5 h-[26px] bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/80 shadow-2xs"
+                        >
+                            <svg className="w-3.5 h-3.5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span>Media</span>
+                        </button>
+
+                        {isUploadingDirect && (
+                            <div className="flex items-center space-x-1 text-[11px] text-amber-700 font-medium px-2 py-0.5 bg-amber-50 rounded">
+                                <div className="w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                                <span>Uploading...</span>
+                            </div>
+                        )}
+                    </>
                 )}
 
                 <div className="w-[1px] h-4 bg-stone-300 mx-1" />
@@ -378,11 +393,13 @@ export default function RichTextEditor({
             )}
 
             {/* Reusable Media Library Modal */}
-            <MediaLibraryModal
-                isOpen={isMediaModalOpen}
-                onClose={() => setIsMediaModalOpen(false)}
-                onSelect={handleSelectMedia}
-            />
+            {!isCommentMode && (
+                <MediaLibraryModal
+                    isOpen={isMediaModalOpen}
+                    onClose={() => setIsMediaModalOpen(false)}
+                    onSelect={handleSelectMedia}
+                />
+            )}
         </div>
     );
 }

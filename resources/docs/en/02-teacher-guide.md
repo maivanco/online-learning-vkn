@@ -128,3 +128,23 @@ When a student submits their final examination:
 
 - **Responding to Student Inquiries**: Go to **"Courses & Lessons"** $\rightarrow$ switch to the **"Student Feedback"** tab. Read doctrinal questions submitted from lesson players and write compassionate responses.
 - **Dharma Name & Password Support**: In **"Users & Roles"**, instructors can look up students by legal name or Buddhist Dharma Name, verify contact details, and use the **"Change Password"** tool to assist learners who forget their credentials.
+
+---
+
+## 7. Class Discussions, Q&A Moderation & Student Interaction
+
+The platform provides a dedicated 2-level discussion board within each Class Detail page (`/admin/classes/{id}`) under the **"Discussions & Q&A"** tab:
+
+### Participating in Discussions
+- Instructors and Administrators can initiate discussion topics or reply to student questions across any cohort.
+- All comments support basic text formatting via the built-in rich text editor: bold, italic, underline, strikethrough, bulleted/numbered lists, and canonical blockquotes.
+
+### 2-Level Discussion Structure
+- **Level 1 (Root Questions)**: Students or teachers ask questions or open discussion topics.
+- **Level 2 (Thread Replies)**: Direct replies under each root thread. When a user replies to an existing reply, the system automatically flattens it under the root thread while tagging `@Username` so the conversation context remains crystal clear without endless indentation.
+
+### Moderation & Editing Privileges
+- **Editing**: Authors can edit their own comments and replies at any time.
+- **Moderation Deletion**: Instructors and Administrators hold full moderation authority to delete any inappropriate or off-topic comments or replies. When a root question is removed, all nested replies underneath are safely removed.
+- **Security**: Insecure HTML markup (scripts, iframes, styles, click events) is automatically stripped upon submission to guarantee a safe learning environment.
+

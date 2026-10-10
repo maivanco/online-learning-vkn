@@ -133,3 +133,36 @@ Spreadsheet bulk import enforces data sanitization rules:
 1. Incorrect answers from either lesson practice quizzes or final exams are saved into `StudentIncorrectQuestion`.
 2. Missed questions persist in the student's review queue until the student re-attempts the question and selects the correct answer.
 3. Upon selecting the correct answer, the record is flagged as `is_mastered = true`, validating that the practitioner has rectified the misunderstanding.
+
+---
+
+## 9. Class Comments & Discussion Rules (`ClassComment`)
+
+The platform implements a bounded 2-level discussion thread system to maintain clean, readable conversations:
+
+### 1. 2-Level Strict Hierarchy & Thread Flattening
+- **Level 1 (Root Comments)**: Have `parent_id = null`. Represents a main inquiry or topic starter.
+- **Level 2 (Thread Replies)**: Have `parent_id = root_comment_id`.
+- **Flattening Rule**: If a user replies to an existing level-2 reply:
+  - The system resolves the parent link:
+    $$\text{parent\_id} = \text{targetComment.parent\_id} \quad (\text{the root comment ID})$$
+  - The system records the targeted user:
+    $$\text{reply\_to\_user\_id} = \text{targetComment.user\_id}$$
+  - The comment is displayed under the root comment thread with an `@Username` mention badge, ensuring the tree never indents deeper than 2 levels.
+
+### 2. Authorization & Permission Matrix
+| Role / User | Post Root Comment | Post Reply | Edit Comment | Delete Comment |
+| :--- | :---: | :---: | :---: | :---: |
+| Enrolled Student | Allowed | Allowed | Own comments only | Own comments only |
+| Non-Enrolled Student | **Blocked** | **Blocked** | **Blocked** | **Blocked** |
+| Assigned Instructor | Allowed | Allowed | Own comments only | **Any comment** (moderation) |
+| Administrator | Allowed | Allowed | Own comments only | **Any comment** (moderation) |
+
+### 3. Cascading Deletions
+- When a root comment is deleted, all nested level-2 replies are automatically cascaded and removed (`onDelete('cascade')`), preventing orphan records.
+
+### 4. Content Sanitization & XSS Defense
+- **Allowed HTML Tags**: `p`, `br`, `strong`, `b`, `em`, `i`, `u`, `s`, `strike`, `ul`, `ol`, `li`, `blockquote`.
+- **Stripped Markup**: `<script>`, `<iframe>`, `<object>`, `<embed>`, `<style>`, inline style attributes, and all inline DOM event handlers (`onclick`, `onerror`, `onload`, etc.) are stripped on save.
+- **Non-empty Check**: Comments containing only whitespace or empty tags (such as `<p></p>`) fail validation with an informative localized error.
+

@@ -59,4 +59,13 @@ class CourseClass extends Model
     {
         return $this->hasMany(StudentProgress::class, 'class_id');
     }
+
+    /**
+     * Comments and discussions in this class.
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(ClassComment::class, 'class_id');
+    }
 }
+

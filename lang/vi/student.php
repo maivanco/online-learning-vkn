@@ -132,4 +132,11 @@ return [
     'view_certificate' => 'Chứng Chỉ Tốt Nghiệp',
     'certificate_btn' => 'Xem Chứng Nhận',
     'certificate_not_eligible' => 'Bạn chưa hoàn thành khóa học này. Hãy hoàn thành tất cả bài học và bài thi tốt nghiệp để nhận chứng nhận.',
+
+    // Class Detail
+    'view_class_detail' => 'Chi Tiết & Thảo Luận',
+    'back_to_dashboard' => 'Quay lại Bảng điều khiển',
+    'class_syllabus' => 'Danh Sách Bài Học',
+    'class_overview' => 'Tổng Quan Lớp Học',
 ];
+

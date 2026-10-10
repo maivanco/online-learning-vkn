@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClassComment;
 use App\Models\CourseClass;
 use App\Models\Lesson;
 use App\Models\MaterialFeedback;
@@ -115,6 +116,130 @@ class StudentCourseController extends Controller
                 'username' => $user->username,
                 'email' => $user->email,
             ],
+        ]);
+    }
+
+    /**
+     * Dedicated Student Class Detail view with curriculum, syllabus, and 2-level discussion comments.
+     */
+    public function showClass(Request $request, int $classId): Response|RedirectResponse
+    {
+        $user = $request->user();
+
+        $class = CourseClass::with([
+            'course.lessons' => fn($q) => $q->orderBy('order'),
+            'user:id,name,username,email',
+        ])->findOrFail($classId);
+
+        // Auto-enroll student into this class if not already enrolled
+        if (! $user->enrolledClasses()->where('classes.id', $classId)->exists()) {
+            $maxClasses = Setting::getMaxClassesPerStudent();
+            $enrolledCount = $user->enrolledClasses()->wherePivot('status', '!=', 'dropped')->count();
+            if ($maxClasses > 0 && $enrolledCount >= $maxClasses) {
+                return redirect()->route('student.dashboard')->with('error', __('settings.error_student_max_classes', ['max' => $maxClasses]));
+            }
+
+            $user->enrolledClasses()->attach($classId, [
+                'enrolled_at' => now(),
+                'status' => 'enrolled',
+            ]);
+        }
+
+        $enrollment = $user->enrolledClasses()->where('classes.id', $classId)->first();
+        $isGraduated = $enrollment?->pivot?->status === 'graduated';
+        $finalGrade = $enrollment?->pivot?->final_grade;
+
+        $lessons = $class->course?->lessons ?? collect();
+        $progressRecords = StudentProgress::where('user_id', $user->id)
+            ->where('class_id', $class->id)
+            ->get()
+            ->keyBy('lesson_id');
+
+        $completedLessonsCount = 0;
+        $practiceTarget = Setting::getPracticeTarget();
+
+        $lessonsData = $lessons->map(function ($lesson) use ($progressRecords, $practiceTarget, &$completedLessonsCount) {
+            $prog = $progressRecords->get($lesson->id);
+            $readingCompleted = (bool) ($prog?->reading_completed ?? false);
+            $videoCompleted = (bool) ($prog?->video_completed ?? false);
+            $practiceCount = (int) ($prog?->practice_count ?? 0);
+            $practiceCompleted = $practiceCount >= $practiceTarget;
+            $isCompleted = $readingCompleted && $videoCompleted && $practiceCompleted;
+
+            if ($isCompleted) {
+                $completedLessonsCount++;
+            }
+
+            return [
+                'id' => $lesson->id,
+                'title' => $lesson->title,
+                'order' => $lesson->order,
+                'reading_completed' => $readingCompleted,
+                'video_completed' => $videoCompleted,
+                'practice_count' => $practiceCount,
+                'practice_completed' => $practiceCompleted,
+                'is_completed' => $isCompleted,
+            ];
+        });
+
+        $totalLessons = $lessons->count();
+        $progressPercentage = $totalLessons > 0 ? (int) round(($completedLessonsCount / $totalLessons) * 100) : 0;
+        $isAllLessonsCompleted = $totalLessons > 0 && $completedLessonsCount >= $totalLessons;
+
+        // Class exam attempt
+        $examAttempt = StudentExamAttempt::where('user_id', $user->id)
+            ->where('class_id', $class->id)
+            ->latest()
+            ->first();
+
+        // 2-level threaded comments
+        $comments = ClassComment::with([
+            'user:id,name,username,role',
+            'replyToUser:id,name,username',
+            'replies' => fn($q) => $q->with([
+                'user:id,name,username,role',
+                'replyToUser:id,name,username',
+            ])->orderBy('created_at', 'asc'),
+        ])
+        ->where('class_id', $classId)
+        ->whereNull('parent_id')
+        ->latest('created_at')
+        ->get();
+
+        return Inertia::render('Student/Classes/Show', [
+            'classItem' => [
+                'id' => $class->id,
+                'name' => $class->name,
+                'description' => $class->description,
+                'is_locked' => $class->is_locked,
+                'course' => [
+                    'id' => $class->course?->id,
+                    'title' => $class->course?->title,
+                    'category' => $class->course?->category,
+                ],
+                'instructor' => $class->user ? [
+                    'id' => $class->user->id,
+                    'name' => $class->user->name,
+                    'username' => $class->user->username,
+                ] : null,
+                'is_graduated' => $isGraduated,
+                'final_grade' => $finalGrade,
+                'progress_percentage' => $progressPercentage,
+                'completed_lessons' => $completedLessonsCount,
+                'total_lessons' => $totalLessons,
+                'is_all_lessons_completed' => $isAllLessonsCompleted,
+                'exam_attempt' => $examAttempt ? [
+                    'id' => $examAttempt->id,
+                    'score' => $examAttempt->score,
+                    'total_questions' => $examAttempt->total_questions,
+                    'correct_count' => $examAttempt->correct_count,
+                    'incorrect_count' => $examAttempt->incorrect_count,
+                    'is_completed' => $examAttempt->total_questions > 0 && $examAttempt->answered_count >= $examAttempt->total_questions,
+                ] : null,
+                'lessons' => $lessonsData,
+            ],
+            'comments' => $comments,
+            'practiceTarget' => $practiceTarget,
         ]);
     }
 

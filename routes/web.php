@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\QuestionBankController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserGuideController;
 use App\Http\Controllers\Admin\UserManagerController;
+use App\Http\Controllers\ClassCommentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Student\StudentCourseController;
 use App\Models\Course;
@@ -158,6 +159,7 @@ Route::middleware('auth')->group(function () {
 // ==========================================
 Route::middleware(['auth'])->prefix('student')->name('student.')->group(function () {
     Route::get('/dashboard', [StudentCourseController::class, 'dashboard'])->name('dashboard');
+    Route::get('/classes/{classId}', [StudentCourseController::class, 'showClass'])->name('classes.show');
     Route::get('/classes/{classId}/lessons/{lessonId}', [StudentCourseController::class, 'showLesson'])->name('lesson');
 
     // Sequential Step Actions
@@ -178,4 +180,14 @@ Route::middleware(['auth'])->prefix('student')->name('student.')->group(function
     Route::get('/classes/{classId}/certificate', [StudentCourseController::class, 'showCertificate'])->name('class.certificate');
 });
 
+// ==========================================
+// Class Comments & Q&A (Shared Authenticated)
+// ==========================================
+Route::middleware(['auth'])->prefix('classes/{classId}/comments')->name('classes.comments.')->group(function () {
+    Route::post('/', [ClassCommentController::class, 'store'])->name('store');
+    Route::put('/{commentId}', [ClassCommentController::class, 'update'])->name('update');
+    Route::delete('/{commentId}', [ClassCommentController::class, 'destroy'])->name('destroy');
+});
+
 require __DIR__ . '/auth.php';
+

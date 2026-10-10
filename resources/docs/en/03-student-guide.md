@@ -25,6 +25,7 @@ Upon logging in, you are greeted by your **Student Dashboard**:
 - A visual progress bar depicting your percentage (%) of completion.
 - Assigned Instructor details and cohort status.
 - **"Continue Learning"** button: Resumes current lessons in progress.
+- **"Class Detail & Discussion"** button: Opens the full class syllabus and interactive discussion board.
 - **"View Certificate"** button: Appears automatically once you have completed all lessons and passed the final exam with a qualifying grade.
 
 ---
@@ -75,15 +76,31 @@ To foster steady comprehension, the portal enforces a 5-step sequential learning
 
 ---
 
-## 4. Asking Questions to Your Instructor
+## 4. Class Discussions & Q&A (2-Level Comments)
 
-- If you encounter complex doctrinal concepts while studying, use the **"Ask Instructor"** form located at the foot of each lesson.
+In addition to private feedback at the end of lessons, students can actively engage in collaborative learning via the **Class Discussion & Q&A** section:
+
+### Navigating to Class Detail
+- On your **Student Dashboard**, click the **"Class Detail & Discussion"** button (or click the class title) on any enrolled class card.
+- The dedicated Class Detail page displays your overall progress, syllabus checklist, and the live discussion board.
+
+### How 2-Level Discussions Work
+- **Asking a Question (Level 1)**: Use the comment box at the top to ask a doctrinal question or share contemplation thoughts. Basic rich text formatting (bold, italic, underline, strikethrough, lists, quotes) is supported.
+- **Replying to Questions (Level 2)**: Click **"Reply"** on any thread to contribute answers or ask for further clarification.
+- **Replying to a Peer's Reply**: When you reply to someone who has already replied, your message stays neatly organized under the root question and displays a clear `@Name` badge showing whom you are replying to.
+- **Editing & Deleting**: You can edit or delete your own comments and replies at any time using the action buttons on your messages.
+
+---
+
+## 5. Asking Questions to Your Instructor (Lesson Feedback)
+
+- If you notice typos or encounter complex doctrinal concepts while studying, use the **"Ask Instructor"** form located at the foot of each lesson.
 - Enter your question and click **Submit**.
 - When your teacher replies, their answer appears directly inside the lesson view.
 
 ---
 
-## 5. Viewing, Printing & Verifying Buddhist Certificates
+## 6. Viewing, Printing & Verifying Buddhist Certificates
 
 Once your instructor grades your essay questions and your final grade reaches at least 50% (5.0/10), you officially graduate!
 

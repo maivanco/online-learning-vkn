@@ -135,3 +135,36 @@ Tính năng nhập file Excel áp dụng các quy chuẩn xác thực nghiêm ng
 1. Khi học viên chọn sai một câu hỏi trong bài luyện tập hoặc đề thi, hệ thống tự động ghi nhận câu hỏi đó vào bảng câu sai của học viên.
 2. Câu hỏi này sẽ duy trì trong sổ tay cá nhân cho đến khi học viên vào làm lại câu hỏi đó và chọn đúng đáp án chính xác.
 3. Khi trả lời đúng, trạng thái được đánh dấu là `is_mastered = true`, thể hiện học viên đã khắc phục hoàn toàn điểm nhầm lẫn giáo lý.
+
+---
+
+## 9. Quy tắc Thảo luận & Diễn đàn Lớp học (`ClassComment`)
+
+Hệ thống thiết kế luồng thảo luận phân cấp tối đa 2 tầng nhằm giữ giao diện luôn gọn gàng và dễ theo dõi:
+
+### 1. Cơ chế Cố định 2 Tầng & Gom Luồng Tự động (Thread Flattening)
+- **Tầng 1 (Bình luận / Câu hỏi gốc)**: Có `parent_id = null`. Đại diện cho một câu hỏi hoặc chủ đề thảo luận chính.
+- **Tầng 2 (Câu trả lời / Hồi đáp)**: Có `parent_id = root_comment_id`.
+- **Quy tắc Gom Luồng (Flattening)**: Khi người dùng trả lời một câu bình luận đã nằm ở Tầng 2:
+  - Hệ thống tự động xác định liên kết cha trực tiếp:
+    $$\text{parent\_id} = \text{targetComment.parent\_id} \quad (\text{ID của câu hỏi gốc Tầng 1})$$
+  - Hệ thống ghi nhận tài khoản được hồi đáp:
+    $$\text{reply\_to\_user\_id} = \text{targetComment.user\_id}$$
+  - Câu trả lời mới được hiển thị ngay trong danh sách trả lời của câu hỏi gốc kèm theo nhãn `@TênNgườiDùng`, đảm bảo độ sâu phân cấp không bao giờ vượt quá 2 tầng.
+
+### 2. Ma trận Phân quyền & Thao tác
+| Vai trò / Người dùng | Đăng câu hỏi gốc | Đăng câu trả lời | Chỉnh sửa | Xóa bình luận |
+| :--- | :---: | :---: | :---: | :---: |
+| Học viên đã ghi danh | Được phép | Được phép | Chỉ bài của mình | Chỉ bài của mình |
+| Học viên chưa ghi danh | **Bị chặn** | **Bị chặn** | **Bị chặn** | **Bị chặn** |
+| Giảng viên phụ trách | Được phép | Được phép | Chỉ bài của mình | **Mọi bình luận** (điều hành) |
+| Quản trị viên | Được phép | Được phép | Chỉ bài của mình | **Mọi bình luận** (điều hành) |
+
+### 3. Cơ chế Xóa Lan truyền (Cascading Delete)
+- Khi một câu hỏi gốc bị xóa, toàn bộ các câu trả lời con thuộc câu hỏi đó sẽ được tự động xóa theo (`onDelete('cascade')`), không để lại dữ liệu mồ côi.
+
+### 4. Lọc Thẻ & Phòng chống Mã độc (XSS Defense)
+- **Các thẻ HTML hợp lệ**: `p`, `br`, `strong`, `b`, `em`, `i`, `u`, `s`, `strike`, `ul`, `ol`, `li`, `blockquote`.
+- **Các thành phần bị loại bỏ**: `<script>`, `<iframe>`, `<object>`, `<embed>`, `<style>`, thuộc tính style tùy biến và tất cả các sự kiện DOM (`onclick`, `onerror`, `onload`,...).
+- **Kiểm tra rỗng**: Các nội dung chỉ gồm khoảng trắng hoặc thẻ rỗng (như `<p></p>`) bị từ chối với thông báo lỗi rõ ràng.
+

@@ -128,3 +128,23 @@ Khi học viên nộp bài thi kết thúc lớp học:
 
 - **Trả lời Thắc mắc của Học viên**: Vào **"Khoá học & bài học"** $\rightarrow$ chọn tab **"Phản hồi học viên"**. Giảng viên đọc thắc mắc của học viên gửi từ bài học, soạn thảo câu trả lời giải nghi và nhấn **"Gửi phản hồi"**.
 - **Hỗ trợ Tài khoản & Mật khẩu**: Vào mục **"Người dùng & Phân quyền"**, Giảng viên có thể tra cứu học viên theo Tên hoặc Pháp danh, xem thông tin số điện thoại liên lạc, và sử dụng nút **"Đổi mật khẩu"** để hỗ trợ nhanh khi học viên quên mật khẩu đăng nhập.
+
+---
+
+## 7. Thảo luận Lớp học, Hỏi đáp & Điều hành Diễn đàn (Class Discussions & Q&A)
+
+Hệ thống tích hợp diễn đàn thảo luận phân cấp 2 tầng chuyên biệt ngay trong trang chi tiết lớp học (`/admin/classes/{id}`) tại tab **"Thảo luận & Hỏi đáp"**:
+
+### Tham gia Trao đổi & Giải nghi
+- Giảng viên và Quản trị viên có thể đăng câu hỏi, chủ đề trao đổi hoặc phản hồi giải nghi cho học viên ở bất kỳ lớp học nào.
+- Khung nhập liệu hỗ trợ định dạng cơ bản: in đậm, in nghiêng, gạch chân, gạch ngang, danh sách và trích dẫn kinh văn trang nghiêm.
+
+### Cấu trúc Thảo luận 2 Tầng (2-Level Hierarchy)
+- **Tầng 1 (Chủ đề / Câu hỏi gốc)**: Học viên hoặc Giảng viên đặt câu hỏi hoặc mở chủ đề thảo luận.
+- **Tầng 2 (Câu trả lời / Hồi đáp)**: Các câu trả lời nằm ngay dưới chủ đề gốc. Khi người dùng trả lời một câu trả lời đã có, hệ thống tự động gắn kèm nhãn `@TênNgườiDùng` và gom gọn dưới chủ đề gốc, tránh việc phân cấp thụt lề vô tận gây rối mắt.
+
+### Quyền Điều hành & Chỉnh sửa
+- **Chỉnh sửa**: Tác giả có toàn quyền chỉnh sửa lại nội dung bình luận của mình khi cần bổ sung ý.
+- **Xóa & Điều phối**: Giảng viên và Quản trị viên có quyền xóa bất kỳ bình luận hoặc câu trả lời nào không phù hợp để giữ gìn môi trường tu học thanh tịnh. Khi xóa một câu hỏi gốc, toàn bộ câu trả lời con bên dưới cũng sẽ được thu hồi tự động.
+- **Bảo mật**: Hệ thống tự động lọc bỏ các mã độc, script hoặc thẻ HTML không an toàn khi lưu trữ.
+

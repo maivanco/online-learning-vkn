@@ -2,8 +2,9 @@ import { useState, useMemo } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import axios from 'axios';
-import { PageProps } from '@/types';
+import { PageProps, ClassCommentItem } from '@/types';
 import { useTranslation } from '@/utils/useTranslation';
+import ClassCommentsSection from '@/Components/Comments/ClassCommentsSection';
 
 interface LessonProgress {
     lesson_id: number;
@@ -128,10 +129,12 @@ interface ClassShowProps extends PageProps {
         email: string;
         enrolled_classes_count?: number;
     }>;
+    comments?: ClassCommentItem[];
 }
 
-export default function ClassShow({ auth, classItem, students: initialStudents, availableStudents, flash }: ClassShowProps) {
+export default function ClassShow({ auth, classItem, students: initialStudents, availableStudents, comments = [], flash }: ClassShowProps) {
     const t = useTranslation();
+    const [activeTab, setActiveTab] = useState<'roster' | 'comments'>('roster');
     const [studentsList, setStudentsList] = useState<StudentItem[]>(initialStudents);
     const [selectedStudentForModal, setSelectedStudentForModal] = useState<StudentItem | null>(null);
     const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
@@ -453,7 +456,47 @@ export default function ClassShow({ auth, classItem, students: initialStudents, 
                     </div>
                 </div>
 
-                {/* Student Roster & Individual Learning Progress Table */}
+                {/* Section Navigation Tabs: Student Progress Roster vs Discussion */}
+                <div className="flex items-center gap-2 border-b border-stone-200 pb-2">
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('roster')}
+                        className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
+                            activeTab === 'roster'
+                                ? 'bg-amber-700 text-white shadow-xs'
+                                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                        }`}
+                    >
+                        <span>👥</span>
+                        <span>{t('classes.student_progress_title')}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                            activeTab === 'roster' ? 'bg-amber-800 text-amber-100' : 'bg-stone-200 text-stone-700'
+                        }`}>
+                            {studentsList.length}
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('comments')}
+                        className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
+                            activeTab === 'comments'
+                                ? 'bg-amber-700 text-white shadow-xs'
+                                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                        }`}
+                    >
+                        <span>💬</span>
+                        <span>{t('comments.discussions_tab')}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                            activeTab === 'comments' ? 'bg-amber-800 text-amber-100' : 'bg-stone-200 text-stone-700'
+                        }`}>
+                            {comments.length}
+                        </span>
+                    </button>
+                </div>
+
+                {/* Tab 1: Student Roster & Individual Learning Progress Table */}
+                {activeTab === 'roster' && (
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
@@ -603,6 +646,17 @@ export default function ClassShow({ auth, classItem, students: initialStudents, 
                         </table>
                     </div>
                 </div>
+                )}
+
+                {/* Tab 2: Class Discussion & Q&A */}
+                {activeTab === 'comments' && (
+                    <ClassCommentsSection
+                        classId={classItem.id}
+                        comments={comments}
+                        currentUser={auth.user}
+                        isLocked={classItem.is_locked}
+                    />
+                )}
 
                 {/* Danger Zone: Delete Class */}
                 <div className="bg-red-50/60 rounded-2xl border border-red-200 p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

@@ -144,4 +144,12 @@ class User extends Authenticatable
     {
         return $this->hasOne(StudentProfile::class);
     }
+
+    /**
+     * Class comments authored by this user.
+     */
+    public function classComments(): HasMany
+    {
+        return $this->hasMany(ClassComment::class, 'user_id');
+    }
 }

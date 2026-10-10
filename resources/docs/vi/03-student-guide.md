@@ -26,6 +26,7 @@ Sau khi đăng nhập thành công:
   - Tên khoá học & Giảng viên phụ trách.
   - Thanh tiến độ học tập hiển thị phần trăm (%) hoàn thành.
   - Nút **"Vào học"**: Tiếp tục học các bài học đang dang dở.
+  - Nút **"Chi Tiết & Thảo Luận"**: Mở trang chi tiết lớp học để xem danh mục bài học và tham gia diễn đàn trao đổi.
   - Nút **"Xem Chứng chỉ"**: Xuất hiện khi quý vị đã hoàn thành 100% bài học và thi tốt nghiệp đạt điểm yêu cầu.
 
 ---
@@ -76,7 +77,23 @@ Sau khi đăng nhập thành công:
 
 ---
 
-## 4. Gửi Câu hỏi & Thắc mắc cho Giảng viên
+## 4. Thảo luận Lớp học & Hỏi đáp Phật pháp (Diễn đàn 2 Tầng)
+
+Bên cạnh mục gửi phản hồi riêng ở bài học, học viên có thể tham gia diễn đàn trao đổi chung với bạn học và Giảng viên tại trang Chi tiết Lớp học:
+
+### Truy cập Trang Chi tiết Lớp học
+- Trên **Bảng điều khiển Học viên**, bấm vào nút **"Chi Tiết & Thảo Luận"** (hoặc nhấp vào tên lớp) trên thẻ lớp học đã tham gia.
+- Trang Chi tiết Lớp học hiển thị tổng quan tiến độ, danh mục bài học và khu vực **Thảo luận & Hỏi đáp**.
+
+### Cách Thảo luận Hoạt động (Cấu trúc 2 Tầng)
+- **Đặt Câu hỏi / Ý kiến mới (Tầng 1)**: Sử dụng khung soạn thảo ở đầu trang để đặt câu hỏi thảo luận. Hỗ trợ đầy đủ định dạng chữ đậm, nghiêng, gạch chân, danh sách và trích dẫn.
+- **Trả lời Thảo luận (Tầng 2)**: Nhấn **"Trả lời"** dưới câu hỏi bất kỳ để tham gia đóng góp ý kiến hoặc chia sẻ góc nhìn.
+- **Trả lời một Bạn học khác**: Khi bạn trả lời câu bình luận của một người khác trong cùng chủ đề, câu trả lời sẽ gắn kèm nhãn `@TênBạnHọc` và hiển thị gọn gàng dưới câu hỏi gốc, giúp luồng trò chuyện luôn mạch lạc.
+- **Chỉnh sửa & Xóa**: Bạn có thể chỉnh sửa lại nội dung hoặc xóa bình luận của chính mình bất cứ lúc nào bằng các nút chức năng cạnh bình luận.
+
+---
+
+## 5. Gửi Câu hỏi Riêng cho Giảng viên trong Bài học
 
 - Nếu trong quá trình học tập có điều chưa thấu đáo, ở cuối mỗi bài học có khung **"Gửi câu hỏi / Phản hồi cho Giảng viên"**.
 - Nhập thắc mắc của bạn và nhấn **Gửi**.
@@ -84,7 +101,7 @@ Sau khi đăng nhập thành công:
 
 ---
 
-## 5. Xem, Tải & Xác thực Chứng chỉ Phật học
+## 6. Xem, Tải & Xác thực Chứng chỉ Phật học
 
 Khi Giảng viên hoàn tất chấm điểm và điểm tổng kết đạt từ 50% trở lên (tương đương thang điểm 5.0/10), bạn chính thức được công nhận tốt nghiệp!
 
