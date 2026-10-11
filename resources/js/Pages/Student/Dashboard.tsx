@@ -24,7 +24,7 @@ interface EnrolledClass {
         name: string;
         username: string;
     } | null;
-    is_locked: boolean;
+    is_enrolled?: boolean;
     enrollment_status: string;
     is_graduated: boolean;
     is_all_lessons_completed: boolean;
@@ -151,19 +151,25 @@ export default function StudentDashboard({ auth, enrolledClasses, user, flash }:
                                     <div className="space-y-4">
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="flex items-center gap-1.5 flex-wrap">
-                                                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
-                                                    cls.is_graduated
-                                                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                                        : cls.is_all_lessons_completed
-                                                        ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                                                        : 'bg-stone-100 text-stone-700'
-                                                }`}>
-                                                    {cls.is_graduated
-                                                        ? t('student.status_graduated')
-                                                        : cls.is_all_lessons_completed
-                                                        ? t('student.status_ready_for_exam')
-                                                        : t('student.status_studying')}
-                                                </span>
+                                                {cls.is_enrolled === false ? (
+                                                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-sky-100 text-sky-800 border border-sky-300">
+                                                        {t('student.status_available')}
+                                                    </span>
+                                                ) : (
+                                                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
+                                                        cls.is_graduated
+                                                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                                            : cls.is_all_lessons_completed
+                                                            ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                                            : 'bg-stone-100 text-stone-700'
+                                                    }`}>
+                                                        {cls.is_graduated
+                                                            ? t('student.status_graduated')
+                                                            : cls.is_all_lessons_completed
+                                                            ? t('student.status_ready_for_exam')
+                                                            : t('student.status_studying')}
+                                                    </span>
+                                                )}
 
                                                 {cls.final_grade !== null && cls.final_grade !== undefined && (
                                                     <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
@@ -188,6 +194,18 @@ export default function StudentDashboard({ auth, enrolledClasses, user, flash }:
                                                     </a>
                                                 )}
 
+                                                {cls.is_enrolled === false ? (
+                                                    <Link
+                                                        href={route('student.classes.join', cls.id)}
+                                                        method="post"
+                                                        as="button"
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-semibold text-xs shadow-sm transition"
+                                                    >
+                                                        <span>➕</span>
+                                                        <span>{t('student.join_class')}</span>
+                                                    </Link>
+                                                ) : null}
+
                                                 <Link
                                                     href={route('student.classes.show', cls.id)}
                                                     className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold text-xs border border-amber-200 transition"
@@ -195,10 +213,6 @@ export default function StudentDashboard({ auth, enrolledClasses, user, flash }:
                                                     <span>💬</span>
                                                     <span>{t('student.view_class_detail')}</span>
                                                 </Link>
-
-                                                <span className="text-[11px] text-stone-400">
-                                                    {cls.is_locked ? t('student.class_locked') : t('student.class_open')}
-                                                </span>
                                             </div>
                                         </div>
 

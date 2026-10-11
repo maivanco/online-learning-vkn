@@ -10,7 +10,6 @@ Tài liệu tổng hợp các thắc mắc thực tế thường gặp nhất t�
 Nút làm bài thi chỉ mở khoá khi bạn đã hoàn thành **100% tất cả các bài học** trong lớp đó:
 1. Hãy kiểm tra lại từng bài học trong danh mục xem có bài nào chưa bấm **"Hoàn thành bài đọc"**, chưa bấm **"Hoàn thành video"** hoặc chưa làm bài tập luyện tập trắc nghiệm không.
 2. Khi mọi bài học đều đạt dấu tích xanh hoàn thành, nút thi sẽ sáng màu vàng để bạn nhấn vào.
-3. Ngoài ra, hãy liên hệ với Giảng viên để chắc chắn rằng lớp học không bị bật chế độ "Khoá lớp" (`is_locked`).
 
 ---
 

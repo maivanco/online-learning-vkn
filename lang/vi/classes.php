@@ -84,7 +84,7 @@ return [
     'deleting' => 'Đang xóa...',
     'badge_courses' => 'Khóa Học Phật Pháp',
     'hero_title' => 'Khóa Học Phật Pháp & Tiến Trình Đào Tạo',
-    'hero_description' => 'Theo dõi các khóa học đang diễn ra, chỉ số tiến độ của học viên, khóa/mở khóa lớp học sau chu kỳ 3 tháng và quản lý học liệu theo thanh quy tự viện.',
+    'hero_description' => 'Theo dõi các khóa học đang diễn ra, chỉ số tiến độ của học viên, danh sách lớp học và quản lý học liệu theo thanh quy tự viện.',
     'underway_cycle' => 'Đang diễn ra (chu kỳ 3 tháng)',
     'finished_curriculums' => 'Chương trình đã hoàn tất',
     'enrolling_students' => 'Đang tuyển sinh',

@@ -153,16 +153,27 @@ class BuddhistCoursesTest extends TestCase
         $response->assertRedirect(route('dashboard'));
     }
 
-    public function test_manager_can_toggle_lock_class(): void
+    public function test_student_can_join_class_anytime(): void
     {
-        $this->actingAs($this->admin);
+        $student = User::factory()->create([
+            'role' => 'student',
+        ]);
 
-        $this->assertFalse($this->class->fresh()->is_locked);
+        $this->actingAs($student);
 
-        $response = $this->post(route('admin.classes.toggle-lock', $this->class->id));
-        $response->assertRedirect();
+        $this->assertDatabaseMissing('class_user', [
+            'class_id' => $this->class->id,
+            'user_id' => $student->id,
+        ]);
 
-        $this->assertTrue($this->class->fresh()->is_locked);
+        $response = $this->post(route('student.classes.join', $this->class->id));
+        $response->assertRedirect(route('student.classes.show', $this->class->id));
+
+        $this->assertDatabaseHas('class_user', [
+            'class_id' => $this->class->id,
+            'user_id' => $student->id,
+            'status' => 'enrolled',
+        ]);
     }
 
     public function test_manager_can_delete_class(): void

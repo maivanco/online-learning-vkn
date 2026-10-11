@@ -48,11 +48,9 @@ This manual provides detailed, step-by-step guidance for Instructors and Adminis
   - *Capacity Enforcement*: If the class has already reached its maximum student capacity (`max_students`), the system displays a clear warning banner and blocks over-enrollment.
 - **Removing Students**: If a student drops out or transfers cohorts, click the red **Delete** (trash icon) button on the student row to safely remove them from the cohort.
 
-### Step 3: Class Lock Mechanism (`is_locked`)
-- At the top right of the Class Detail view, toggle the **"Lock Class"** button.
-- **When Unlocked (`is_locked = false`)**: Students can freely read lessons, watch videos, submit practice quizzes, and attempt final exams.
-- **When Locked (`is_locked = true`)**: Enrolled students can still revisit previously completed readings and videos for review, but **cannot confirm new reading/video steps, submit practice quizzes, or start new exam attempts**.
-- *Usage*: Activate this lock when the semester has concluded or while instructors are finalizing official grades.
+### Step 3: Open Enrollment & Student Access
+- **Continuous Access**: Classes do not have lock restrictions. Students can join a class anytime they want from the student dashboard and immediately begin reading lessons, watching video lectures, practicing quizzes, and taking final exams.
+- **Self & Admin Enrollment**: Students can self-enroll into any open class or be enrolled directly by instructors/administrators via the class management roster.
 
 ---
 

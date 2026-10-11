@@ -17,7 +17,6 @@ interface ClassItem {
         name: string;
         username: string;
     } | null;
-    is_locked: boolean;
     students_count: number;
     completed_count: number;
     completion_rate: number;
@@ -175,25 +174,13 @@ export default function Dashboard({ auth, classes, stats, courses, flash }: Dash
                                 {classes.map((cls) => (
                                     <div
                                         key={cls.id}
-                                        className={`rounded-xl border transition-all p-5 flex flex-col justify-between ${
-                                            cls.is_locked
-                                                ? 'bg-stone-50/80 border-stone-300 opacity-90'
-                                                : 'bg-white border-gray-200 hover:border-amber-400 hover:shadow-md'
-                                        }`}
+                                        className="rounded-xl border transition-all p-5 flex flex-col justify-between bg-white border-gray-200 hover:border-amber-400 hover:shadow-md"
                                     >
                                         <div>
                                             <div className="flex items-start justify-between gap-2 mb-2">
                                                 <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
                                                     {cls.course.category}
                                                 </span>
-                                                {cls.is_locked && (
-                                                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700 flex items-center gap-1">
-                                                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                                                        </svg>
-                                                        {t('classes.badge_locked')}
-                                                    </span>
-                                                )}
                                             </div>
 
                                             <h3 className="text-base font-serif font-bold text-gray-900 leading-snug">
@@ -246,19 +233,6 @@ export default function Dashboard({ auth, classes, stats, courses, flash }: Dash
                                             </Link>
 
                                             <div className="flex items-center gap-1.5">
-                                                <Link
-                                                    href={route('admin.classes.toggle-lock', cls.id)}
-                                                    method="post"
-                                                    as="button"
-                                                    className={`text-[11px] font-medium px-2 py-1 rounded transition border ${
-                                                        cls.is_locked
-                                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
-                                                            : 'bg-stone-100 text-stone-700 border-stone-300 hover:bg-stone-200'
-                                                    }`}
-                                                >
-                                                    {cls.is_locked ? t('classes.action_unlock') : t('classes.action_lock')}
-                                                </Link>
-
                                                 <button
                                                     type="button"
                                                     onClick={() => setClassToDelete(cls)}

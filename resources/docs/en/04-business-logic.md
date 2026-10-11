@@ -36,21 +36,21 @@ To protect educational mentoring standards and manageable essay grading queues, 
 
 ---
 
-## 3. Class Lock Mechanism (`is_locked`)
+## 3. Open Enrollment & Continuous Student Access
 
-Instructors and Administrators can toggle the **Lock Class** status (`is_locked = true`):
+Classes remain accessible at all times with open enrollment:
 
-| Action | When Class is OPEN (`is_locked = false`) | When Class is LOCKED (`is_locked = true`) |
-| :--- | :---: | :---: |
-| Review past readings & discourse videos | Allowed | Allowed |
-| Confirm new reading completions | Allowed | **Blocked** |
-| Confirm new video completions | Allowed | **Blocked** |
-| Submit new practice quiz attempts | Allowed | **Blocked** |
-| Submit lesson inquiry reflections | Allowed | **Blocked** |
-| Begin or submit final examinations | Allowed | **Blocked** |
-| View past exam results & Certificates | Allowed | Allowed |
+| Action | Access Policy |
+| :--- | :---: |
+| Self-enroll into classes | Allowed anytime from Student Portal |
+| Review readings & discourse videos | Allowed anytime |
+| Confirm reading & video completions | Allowed anytime |
+| Submit practice quiz attempts | Allowed anytime |
+| Submit lesson inquiry reflections | Allowed anytime |
+| Begin and submit final examinations | Allowed anytime upon fulfilling prerequisites |
+| View exam results & Certificates | Allowed anytime |
 
-> **Purpose**: Freezes class state upon semester graduation or while instructors evaluate final rankings, ensuring student data integrity.
+> **Policy**: There are no lock restrictions on classes. Students are free to enroll and study at their own pace.
 
 ---
 

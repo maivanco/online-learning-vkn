@@ -47,7 +47,7 @@ Hệ thống bao gồm các phân hệ chức năng hoàn chỉnh và liên kế
 
 - **Khoá học (Course) & Cây Danh mục**: Một chủ đề Phật học hoàn chỉnh (ví dụ: *Kinh Trung Bộ*, *Thiền Tứ Niệm Xứ*, *Phật Pháp Căn Bản*). Khoá học hỗ trợ phân cấp cha - con và chứa các bài học tuần tự.
 - **Bài học (Lesson) & Trình soạn thảo Rich Text**: Đơn vị bài giảng trong khoá học. Bài học hỗ trợ định dạng kinh văn phong phú (in đậm, in nghiêng, trích dẫn kệ ngôn, danh sách), nhúng video YouTube bài giảng và bộ câu hỏi luyện tập.
-- **Lớp học (Class) & Giới hạn Sĩ số**: Lớp mở theo đợt thực tế. Mỗi lớp có Giảng viên phụ trách, giới hạn số lượng học viên tối đa (`max_students`), cơ chế Khoá lớp (`is_locked`) để bảo toàn dữ liệu khi kết thúc khoá.
+- **Lớp học (Class) & Tuyển sinh Mở**: Lớp mở theo đợt thực tế. Mỗi lớp có Giảng viên phụ trách, giới hạn số lượng học viên tối đa (`max_students`) và cho phép học viên tự do tham gia bất kỳ lúc nào.
 - **Ngân hàng Đề thi & Nhập liệu Excel**: Kho lưu trữ câu hỏi trắc nghiệm và tự luận phân cấp theo độ khó (Dễ, Trung bình, Khó). Giảng viên có thể nhập hàng trăm câu hỏi nhanh chóng qua file mẫu Excel (.xlsx, .csv).
 - **Lộ trình Học 5 Bước (5-Step Pipeline)**: Đảm bảo học viên không nhảy cóc: Hoàn thành Đọc bài $\rightarrow$ Mở khoá Video $\rightarrow$ Mở khoá Luyện tập $\rightarrow$ Đủ 100% mở khoá Bài thi $\rightarrow$ Ôn tập câu sai.
 - **Bài thi Kết thúc Lớp & Đồng hồ Đếm ngược**: Bài thi tổng hợp có thời gian làm bài xác định (phút), đếm ngược theo máy chủ và **tự động nộp bài khi hết giờ** để bảo vệ kết quả của học viên.

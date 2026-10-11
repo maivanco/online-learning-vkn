@@ -72,10 +72,11 @@ class StudentCourseController extends Controller
 
                 $studentPivot = $cls->students->firstWhere('id', $user->id)?->pivot;
                 $isGraduated = ($studentPivot?->status === 'completed' || ($examAttempt && $examAttempt->total_questions > 0 && $examAttempt->answered_count >= $examAttempt->total_questions));
+                $isEnrolled = $studentPivot !== null && $studentPivot->status !== 'dropped';
 
                 $enrollmentStatus = $isGraduated
                     ? 'completed'
-                    : ($isAllLessonsCompleted ? 'ready_for_exam' : 'studying');
+                    : ($isAllLessonsCompleted ? 'ready_for_exam' : ($isEnrolled ? 'studying' : 'available'));
 
                 return [
                     'id' => $cls->id,
@@ -87,7 +88,7 @@ class StudentCourseController extends Controller
                         'name' => $cls->user->name,
                         'username' => $cls->user->username,
                     ] : null,
-                    'is_locked' => (bool) $cls->is_locked,
+                    'is_enrolled' => $isEnrolled,
                     'enrollment_status' => $enrollmentStatus,
                     'is_graduated' => $isGraduated,
                     'is_all_lessons_completed' => $isAllLessonsCompleted,
@@ -211,7 +212,6 @@ class StudentCourseController extends Controller
                 'id' => $class->id,
                 'name' => $class->name,
                 'description' => $class->description,
-                'is_locked' => $class->is_locked,
                 'course' => [
                     'id' => $class->course?->id,
                     'title' => $class->course?->title,
@@ -244,6 +244,30 @@ class StudentCourseController extends Controller
     }
 
     /**
+     * Explicitly enroll student into a class anytime they want.
+     */
+    public function joinClass(Request $request, int $classId): RedirectResponse
+    {
+        $user = $request->user();
+        $class = CourseClass::findOrFail($classId);
+
+        if (! $user->enrolledClasses()->where('classes.id', $classId)->exists()) {
+            $maxClasses = Setting::getMaxClassesPerStudent();
+            $enrolledCount = $user->enrolledClasses()->wherePivot('status', '!=', 'dropped')->count();
+            if ($maxClasses > 0 && $enrolledCount >= $maxClasses) {
+                return redirect()->route('student.dashboard')->with('error', __('settings.error_student_max_classes', ['max' => $maxClasses]));
+            }
+
+            $user->enrolledClasses()->attach($classId, [
+                'enrolled_at' => now(),
+                'status' => 'enrolled',
+            ]);
+        }
+
+        return redirect()->route('student.classes.show', $classId)->with('success', __('student.join_success'));
+    }
+
+    /**
      * Show lesson player with 3-step learning flow:
      * 1. Self-Study Reading -> 2. Video Lecture -> 3. 10x Practice Quizzes.
      */
@@ -265,11 +289,6 @@ class StudentCourseController extends Controller
                 'enrolled_at' => now(),
                 'status' => 'enrolled',
             ]);
-        }
-
-        // Check if class is locked
-        if ($class->is_locked) {
-            return redirect()->route('student.dashboard')->with('error', 'This class has been locked by the instructor.');
         }
 
         $lesson = Lesson::where('course_id', $class->course_id)->findOrFail($lessonId);
@@ -498,11 +517,6 @@ class StudentCourseController extends Controller
                 'enrolled_at' => now(),
                 'status' => 'enrolled',
             ]);
-        }
-
-        // Check if class is locked
-        if ($class->is_locked) {
-            return redirect()->route('student.dashboard')->with('error', 'This class has been locked by the instructor.');
         }
 
         $allLessons = $class->course?->lessons ?? collect();

@@ -8,14 +8,12 @@ interface ClassCommentsSectionProps {
     classId: number;
     comments: ClassCommentItem[];
     currentUser?: User | null;
-    isLocked?: boolean;
 }
 
 export default function ClassCommentsSection({
     classId,
     comments = [],
     currentUser,
-    isLocked = false,
 }: ClassCommentsSectionProps) {
     const t = useTranslation();
 

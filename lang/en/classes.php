@@ -84,7 +84,7 @@ return [
     'deleting' => 'Deleting...',
     'badge_courses' => 'Buddhist Courses',
     'hero_title' => 'Buddhist Courses & Training Progress',
-    'hero_description' => 'Track active courses, student progress metrics, lock/unlock classes after 3-month durations, and manage study materials according to monastic guidelines.',
+    'hero_description' => 'Track active courses, student progress metrics, class rosters, and manage study materials according to monastic guidelines.',
     'underway_cycle' => 'Underway (3-month cycle)',
     'finished_curriculums' => 'Finished curriculums',
     'enrolling_students' => 'Enrolling students',

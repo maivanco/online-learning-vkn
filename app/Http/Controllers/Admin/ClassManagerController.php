@@ -55,7 +55,6 @@ class ClassManagerController extends Controller
                         'name' => $cls->user->name,
                         'username' => $cls->user->username,
                     ] : null,
-                    'is_locked' => $cls->is_locked,
                     'students_count' => $totalStudents,
                     'completed_count' => $completedStudents,
                     'completion_rate' => $completionRate,
@@ -183,7 +182,6 @@ class ClassManagerController extends Controller
                 'id' => $class->id,
                 'name' => $class->name,
                 'description' => $class->description,
-                'is_locked' => $class->is_locked,
                 'practice_target' => $practiceTarget,
                 'max_classes_per_student' => $maxClasses,
                 'user' => $class->user ? [
@@ -242,19 +240,6 @@ class ClassManagerController extends Controller
         $class->update($validated);
 
         return back()->with('success', 'Class updated successfully.');
-    }
-
-    /**
-     * Lock or unlock a class (e.g. after 3-month course period).
-     */
-    public function toggleLock(int $id): RedirectResponse
-    {
-        $class = CourseClass::findOrFail($id);
-        $class->is_locked = ! $class->is_locked;
-        $class->save();
-
-        $statusMessage = $class->is_locked ? 'Class has been locked.' : 'Class has been unlocked.';
-        return back()->with('success', $statusMessage);
     }
 
     /**

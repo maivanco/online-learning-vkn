@@ -10,7 +10,6 @@ This guide collects real-world questions commonly raised by Instructors and Stud
 The final examination button unlocks only after you achieve **100% completion across all lessons** in that class cohort:
 1. Review each lesson in the curriculum to ensure you clicked **"Complete Reading"**, **"Complete Video"**, and answered the practice quiz questions.
 2. Every lesson in the list must show a green completed checkmark.
-3. Also, check with your instructor to ensure that the class has not been placed in "Lock" status (`is_locked = true`).
 
 ---
 

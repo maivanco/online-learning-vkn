@@ -19,7 +19,6 @@ interface StudentClassItem {
     id: number;
     name: string;
     description: string | null;
-    is_locked: boolean;
     course: {
         id: number;
         title: string;
@@ -301,7 +300,6 @@ export default function StudentClassShow({ auth, classItem, comments = [], pract
                             classId={classItem.id}
                             comments={comments}
                             currentUser={user}
-                            isLocked={classItem.is_locked}
                         />
                     </div>
                 </div>

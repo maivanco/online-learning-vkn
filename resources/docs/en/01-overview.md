@@ -47,7 +47,7 @@ The platform is structured into cohesive modules designed for modern Buddhist ed
 
 - **Courses & Curriculum Hierarchy**: Complete subjects (e.g. *Majjhima Nikaya*, *Satipatthana Meditation*, *Basic Dhamma Fundamentals*) organized in multi-level parent-child categories with ordered lessons.
 - **Lessons & Rich Text Content**: Teaching units formatted with rich text typography (bold, italics, canonical quotes, lists), integrated YouTube video discourses, and lesson-specific practice quizzes.
-- **Classes & Capacity Limits**: Cohorts linked to a course, supervised by an instructor, with defined enrollment limits (`max_students`) and a class lock toggle (`is_locked`) to freeze submissions upon semester completion.
+- **Classes & Open Enrollment**: Cohorts linked to a course, supervised by an instructor, with defined enrollment capacity limits (`max_students`) and continuous student enrollment allowing students to join anytime.
 - **Question Bank & Excel Bulk Import**: Centralized repository of multiple-choice and essay questions tagged by difficulty (`easy`, `medium`, `hard`). Supports bulk import of hundreds of questions via standardized `.xlsx`/`.csv` templates.
 - **5-Step Sequential Learning Pipeline**: Enforces steady learning by preventing skips: Complete Reading $\rightarrow$ Unlock Video $\rightarrow$ Unlock Practice $\rightarrow$ Complete all lessons to Unlock Final Exam $\rightarrow$ Mistake Mastery.
 - **Class Final Exam & Countdown Engine**: Timed summative examination with server-synced countdown timer and **automatic submission upon timeout** to protect student progress.

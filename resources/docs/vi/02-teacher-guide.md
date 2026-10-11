@@ -48,11 +48,9 @@ Sổ tay này hướng dẫn chi tiết từng thao tác dành cho Quý Thầy, 
   - *Kiểm soát sĩ số*: Nếu lớp học đã đạt đến sĩ số tối đa (`max_students`), hệ thống sẽ hiển thị cảnh báo và ngăn chặn ghi danh vượt mức, bảo đảm đúng kế hoạch đào tạo.
 - **Xoá học viên khỏi lớp**: Nếu học viên chuyển lớp hoặc huỷ ghi danh, Giảng viên có thể nhấn nút **"Xoá"** (biểu tượng thùng rác) cạnh tên học viên để loại khỏi danh sách lớp.
 
-### Bước 3: Cơ chế Khoá / Mở Lớp học (`is_locked`)
-- Ở góc trên của trang chi tiết lớp học có nút chuyển đổi **"Khoá lớp học" (Lock Class)**.
-- **Khi lớp MỞ (`is_locked = false`)**: Học viên tự do đọc bài, xem video, làm bài tập và nộp bài thi kết thúc.
-- **Khi lớp KHOÁ (`is_locked = true`)**: Học viên vẫn có thể xem lại toàn bộ bài đọc và video đã học, nhưng **không thể xác nhận hoàn thành bài mới, không thể nộp bài tập và không thể bắt đầu làm bài thi**.
-- *Ứng dụng*: Bật tính năng này khi lớp học kết thúc thời gian học quy định hoặc trong giai đoạn Giảng viên đang chấm điểm tổng kết.
+### Bước 3: Cơ chế Tuyển sinh Mở & Tham gia Lớp học
+- **Tham gia học tập liên tục**: Lớp học không áp dụng cơ chế khóa lớp. Học viên có thể tự do tham gia bất kỳ lớp học nào vào bất kỳ thời điểm nào từ bảng điều khiển học viên và bắt đầu học bài, xem video, làm bài luyện tập và thi kết thúc.
+- **Tự ghi danh & Ghi danh từ Quản trị**: Học viên có thể chủ động nhấn tham gia lớp học hoặc được Giáo thọ/Quản trị viên ghi danh trực tiếp qua danh sách quản lý lớp.
 
 ---
 

@@ -101,7 +101,6 @@ interface ClassShowProps extends PageProps {
         id: number;
         name: string;
         description: string | null;
-        is_locked: boolean;
         user?: {
             id: number;
             name: string;
@@ -352,19 +351,6 @@ export default function ClassShow({ auth, classItem, students: initialStudents, 
                     </div>
 
                     <div className="flex items-center gap-2.5">
-                        <Link
-                            href={route('admin.classes.toggle-lock', classItem.id)}
-                            method="post"
-                            as="button"
-                            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition border ${
-                                classItem.is_locked
-                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-transparent'
-                                    : 'bg-stone-800 hover:bg-stone-900 text-white border-transparent'
-                            }`}
-                        >
-                            {classItem.is_locked ? t('classes.unlock_class') : t('classes.lock_class')}
-                        </Link>
-
                         <button
                             type="button"
                             onClick={() => setIsDeleteModalOpen(true)}
@@ -425,10 +411,8 @@ export default function ClassShow({ auth, classItem, students: initialStudents, 
                                 <span className="font-bold text-gray-900 text-base">{studentsList.length}</span>
                                 <span className="text-xs text-gray-500">{t('classes.students_count', { count: '' }).trim()}</span>
                             </div>
-                            <span className={`inline-block mt-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                                classItem.is_locked ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
-                            }`}>
-                                {classItem.is_locked ? 'LOCKED' : 'ACTIVE'}
+                            <span className="inline-block mt-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                                ACTIVE
                             </span>
                         </div>
 
@@ -654,7 +638,6 @@ export default function ClassShow({ auth, classItem, students: initialStudents, 
                         classId={classItem.id}
                         comments={comments}
                         currentUser={auth.user}
-                        isLocked={classItem.is_locked}
                     />
                 )}
 

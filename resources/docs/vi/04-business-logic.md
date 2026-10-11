@@ -36,21 +36,21 @@ Một bài học chỉ được xem là **Hoàn thành (Completed)** khi học v
 
 ---
 
-## 3. Cơ chế Khoá Lớp học (`is_locked`)
+## 3. Cơ chế Tuyển sinh Mở & Tham gia Học tập Liên tục
 
-Giảng viên hoặc Quản trị viên có thể bật tính năng **Khoá lớp học** (`is_locked = true`):
+Các lớp học luôn ở trạng thái mở để học viên tham gia học tập bất kỳ lúc nào:
 
-| Thao tác | Khi lớp ĐANG MỞ (`is_locked = false`) | Khi lớp BỊ KHOÁ (`is_locked = true`) |
-| :--- | :---: | :---: |
-| Xem lại bài đọc, video đã học | Cho phép | Cho phép |
-| Xác nhận hoàn thành bài đọc mới | Cho phép | **Bị chặn (Blocked)** |
-| Xác nhận hoàn thành video mới | Cho phép | **Bị chặn (Blocked)** |
-| Nộp bài tập luyện tập mới | Cho phép | **Bị chặn (Blocked)** |
-| Gửi câu hỏi thắc mắc mới | Cho phép | **Bị chặn (Blocked)** |
-| Bắt đầu bài thi kết thúc lớp | Cho phép | **Bị chặn (Blocked)** |
-| Xem lại kết quả thi & Chứng chỉ | Cho phép | Cho phép |
+| Thao tác | Quy định truy cập |
+| :--- | :---: |
+| Tự ghi danh vào lớp học | Cho phép bất kỳ lúc nào từ Cổng học viên |
+| Xem lại bài đọc, video đã học | Cho phép bất kỳ lúc nào |
+| Xác nhận hoàn thành bài đọc, video mới | Cho phép bất kỳ lúc nào |
+| Nộp bài tập luyện tập mới | Cho phép bất kỳ lúc nào |
+| Gửi câu hỏi thắc mắc mới | Cho phép bất kỳ lúc nào |
+| Bắt đầu và nộp bài thi kết thúc lớp | Cho phép bất kỳ lúc nào khi đủ điều kiện tiên quyết |
+| Xem lại kết quả thi & Chứng chỉ | Cho phép bất kỳ lúc nào |
 
-> **Ý nghĩa**: Giúp bảo toàn dữ liệu học tập khi kỳ học kết thúc hoặc trong thời gian Giảng viên đang tiến hành chấm thi và xếp loại.
+> **Chính sách**: Nền tảng không áp dụng tính năng khóa lớp. Học viên được quyền ghi danh và học tập chủ động theo thời gian cá nhân.
 
 ---
 

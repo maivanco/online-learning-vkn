@@ -90,7 +90,6 @@ Route::middleware(['auth', 'role:admin,teacher'])->prefix('admin')->name('admin.
     Route::get('/classes/{id}', [ClassManagerController::class, 'show'])->name('classes.show');
     Route::post('/classes', [ClassManagerController::class, 'store'])->name('classes.store');
     Route::put('/classes/{id}', [ClassManagerController::class, 'update'])->name('classes.update');
-    Route::post('/classes/{id}/toggle-lock', [ClassManagerController::class, 'toggleLock'])->name('classes.toggle-lock');
     Route::post('/classes/{id}/students', [ClassManagerController::class, 'addStudent'])->name('classes.add-student');
     Route::delete('/classes/{id}/students/{userId}', [ClassManagerController::class, 'removeStudent'])->name('classes.remove-student');
     Route::get('/classes/{id}/students/{userId}/exam-result', [ClassManagerController::class, 'getStudentExamResult'])->name('classes.student-exam-result');
@@ -160,6 +159,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth'])->prefix('student')->name('student.')->group(function () {
     Route::get('/dashboard', [StudentCourseController::class, 'dashboard'])->name('dashboard');
     Route::get('/classes/{classId}', [StudentCourseController::class, 'showClass'])->name('classes.show');
+    Route::post('/classes/{classId}/join', [StudentCourseController::class, 'joinClass'])->name('classes.join');
     Route::get('/classes/{classId}/lessons/{lessonId}', [StudentCourseController::class, 'showLesson'])->name('lesson');
 
     // Sequential Step Actions

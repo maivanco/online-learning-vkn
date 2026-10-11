@@ -35,8 +35,8 @@ Will be updated by Administrator & Teacher
 
 ### B. Class Manager & Teacher Portal (`/admin/...`)
 1. **Class Management (`/admin/dashboard`, `/admin/classes/{id}`)**:
-   - **Class Overview**: Displays associated course/category, assigned instructor in charge, total enrolled students, completed student count, average completion rate across lessons, and lock status.
-   - **Class Lock / Unlock**: Instructors and administrators can lock or unlock any class to control student progression. Locked classes prevent students from accessing lessons or advancing.
+   - **Class Overview**: Displays associated course/category, assigned instructor in charge, total enrolled students, completed student count, and average completion rate across lessons.
+   - **Open Enrollment**: Students can join a class anytime they want. Classes remain continuously open.
    - **Roster & Progress Tracking**: Enroll students into classes by username/ID or remove them. View detailed per-student progress tables across all lessons and the 5-step learning pipeline.
    - **Class Lifecycle**: Create, update, and delete classes linked to curriculum courses.
 2. **Materials & Curriculum Management (`/admin/materials`)**:
@@ -168,7 +168,6 @@ erDiagram
 - `GET /admin/classes/{id}`: Detailed class roster, individual student progress table, and enrollment controls.
 - `POST /admin/classes`: Create a new class.
 - `PUT /admin/classes/{id}`: Update class information.
-- `POST /admin/classes/{id}/toggle-lock`: Toggle class lock status (lock/unlock to regulate student access).
 - `POST /admin/classes/{id}/students`: Enroll a student into a class by ID or username.
 - `DELETE /admin/classes/{id}/students/{userId}`: Remove a student from a class roster.
 - `DELETE /admin/classes/{id}`: Delete a class.
@@ -197,6 +196,8 @@ erDiagram
 
 ### Student Routes (`middleware: auth`)
 - `GET /student/dashboard`: Student classes overview and progression roadmap.
+- `GET /student/classes/{classId}`: Dedicated student class details with curriculum syllabus and discussion comments.
+- `POST /student/classes/{classId}/join`: Join a class anytime.
 - `GET /student/classes/{classId}/lessons/{lessonId}`: 5-step lesson player.
 - `POST /student/classes/{classId}/lessons/{lessonId}/reading-complete`: Complete Step 1 (unblocks Step 2).
 - `POST /student/classes/{classId}/lessons/{lessonId}/video-complete`: Complete Step 2 (unblocks Step 3).
