@@ -39,6 +39,14 @@ mkdir -p storage/framework/{cache/data,sessions,views,testing} storage/logs boot
 chmod -R 777 storage bootstrap/cache 2>/dev/null || true
 
 # 3. Start Backend via Staging Docker Compose
+if [[ " $* " == *" --no-cache "* ]]; then
+  echo "Rebuilding backend image without cache (--no-cache)..."
+  docker compose -f "$COMPOSE_FILE" build --no-cache laravel.app
+elif [[ " $* " == *" --build "* ]]; then
+  echo "Rebuilding backend image (--build)..."
+  docker compose -f "$COMPOSE_FILE" build laravel.app
+fi
+
 echo "Starting backend containers (Staging)..."
 docker compose -f "$COMPOSE_FILE" up -d
 
