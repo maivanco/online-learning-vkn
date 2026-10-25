@@ -14,6 +14,7 @@ use App\Models\Course;
 use App\Models\CourseClass;
 use App\Models\User;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -28,22 +29,22 @@ Route::get('/', function () {
     $allCourses = Course::with([
         'user:id,name,username',
         'parent:id,title',
-        'lessons' => fn($q) => $q->select(['id', 'course_id', 'title', 'slug', 'order'])->orderBy('order'),
-        'children' => fn($q) => $q->with([
+        'lessons' => fn ($q) => $q->select(['id', 'course_id', 'title', 'slug', 'order'])->orderBy('order'),
+        'children' => fn ($q) => $q->with([
             'user:id,name,username',
-            'lessons' => fn($lq) => $lq->select(['id', 'course_id', 'title', 'slug', 'order'])->orderBy('order'),
-            'children' => fn($cq) => $cq->with([
+            'lessons' => fn ($lq) => $lq->select(['id', 'course_id', 'title', 'slug', 'order'])->orderBy('order'),
+            'children' => fn ($cq) => $cq->with([
                 'user:id,name,username',
-                'lessons' => fn($lq2) => $lq2->select(['id', 'course_id', 'title', 'slug', 'order'])->orderBy('order'),
+                'lessons' => fn ($lq2) => $lq2->select(['id', 'course_id', 'title', 'slug', 'order'])->orderBy('order'),
             ])->withCount(['lessons', 'classes'])->orderBy('order'),
         ])->withCount(['lessons', 'classes'])->orderBy('order'),
     ])
-    ->withCount(['lessons', 'classes'])
-    ->orderBy('order')
-    ->get();
+        ->withCount(['lessons', 'classes'])
+        ->orderBy('order')
+        ->get();
 
     $courseIds = $allCourses->pluck('id')->all();
-    $courses = $allCourses->filter(fn($c) => is_null($c->parent_id) || !in_array($c->parent_id, $courseIds))->values();
+    $courses = $allCourses->filter(fn ($c) => is_null($c->parent_id) || ! in_array($c->parent_id, $courseIds))->values();
     $activeClassesCount = CourseClass::count();
     $hasAdmin = User::where('role', 'admin')->exists();
 
@@ -56,6 +57,7 @@ Route::get('/', function () {
             'tagline' => 'Buddhist Courses – Learning & Practice Path',
             'address' => 'Vien Khong Ni, Hamlet 4, Chau Pha, Ho Chi Minh City',
             'facebook' => 'https://www.facebook.com/share/1DCWqsCZSY/?mibextid=wwXIfr',
+            'zalo' => '+84866232459',
         ],
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
@@ -64,11 +66,12 @@ Route::get('/', function () {
 })->name('home');
 
 // Locale Switcher Route
-Route::post('/locale', function (\Illuminate\Http\Request $request) {
+Route::post('/locale', function (Request $request) {
     $validated = $request->validate([
         'locale' => ['required', 'string', 'in:en,vi'],
     ]);
     session()->put('locale', $validated['locale']);
+
     return back();
 })->name('locale.update');
 
@@ -78,6 +81,7 @@ Route::get('/dashboard', function () {
     if ($user && $user->isTeacherOrAdmin()) {
         return redirect()->route('admin.dashboard');
     }
+
     return redirect()->route('student.dashboard');
 })->middleware(['auth'])->name('dashboard');
 
@@ -189,5 +193,4 @@ Route::middleware(['auth'])->prefix('classes/{classId}/comments')->name('classes
     Route::delete('/{commentId}', [ClassCommentController::class, 'destroy'])->name('destroy');
 });
 
-require __DIR__ . '/auth.php';
-
+require __DIR__.'/auth.php';

@@ -167,6 +167,8 @@ return [
     'footer_view_qr' => 'Mã VietQR',
     'footer_hide_qr' => 'Thu gọn QR',
     'facebook_page' => 'Trang Facebook',
+    'zalo' => 'Zalo',
+    'zalo_contact' => 'Zalo: :number',
     'author' => 'Tác giả',
     'instructor' => 'Giáo thọ / Giảng viên',
     'created_by' => 'Người tạo',

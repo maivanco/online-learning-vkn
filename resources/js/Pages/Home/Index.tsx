@@ -40,6 +40,7 @@ interface MonasteryInfo {
     tagline: string;
     address: string;
     facebook: string;
+    zalo?: string;
 }
 
 interface HomeProps extends PageProps {
@@ -1256,24 +1257,52 @@ export default function Home({
                                         <strong className="text-stone-700">{t('home.footer_address_title')}:</strong> {monastery.address}
                                     </p>
                                 )}
+                                {monastery?.zalo && (
+                                    <p className="text-[11px] text-stone-500">
+                                        <strong className="text-stone-700">Zalo:</strong>{' '}
+                                        <a
+                                            href={`https://zalo.me/${monastery.zalo.replace(/[^0-9]/g, '')}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-amber-700 hover:text-amber-800 hover:underline font-medium"
+                                        >
+                                            {monastery.zalo}
+                                        </a>
+                                    </p>
+                                )}
                             </div>
 
                             {/* Social Connect & Quick Navigation */}
                             <div className="md:col-span-1 lg:col-span-4 space-y-3 text-xs">
                                 <h4 className="font-serif font-bold text-sm text-stone-900">{t('home.footer_connect_title')}</h4>
-                                {monastery?.facebook && (
-                                    <a
-                                        href={monastery.facebook}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition font-medium"
-                                    >
-                                        <svg className="w-4 h-4 fill-current text-blue-600" viewBox="0 0 24 24">
-                                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                                        </svg>
-                                        {t('home.facebook_page')}
-                                    </a>
-                                )}
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {monastery?.facebook && (
+                                        <a
+                                            href={monastery.facebook}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition font-medium"
+                                        >
+                                            <svg className="w-4 h-4 fill-current text-blue-600" viewBox="0 0 24 24">
+                                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                            </svg>
+                                            {t('home.facebook_page')}
+                                        </a>
+                                    )}
+                                    {monastery?.zalo && (
+                                        <a
+                                            href={`https://zalo.me/${monastery.zalo.replace(/[^0-9]/g, '')}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition font-medium"
+                                        >
+                                            <span className="w-4 h-4 rounded-md bg-[#0068FF] text-white flex items-center justify-center font-bold text-[10px] leading-none tracking-tight">
+                                                Z
+                                            </span>
+                                            <span>{t('home.zalo_contact', { number: monastery.zalo })}</span>
+                                        </a>
+                                    )}
+                                </div>
                                 <div className="pt-2 text-stone-500 text-[11px]">
                                     <p>{t('home.footer_address_note')}</p>
                                 </div>

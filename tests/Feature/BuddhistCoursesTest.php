@@ -7,11 +7,11 @@ use App\Models\CourseClass;
 use App\Models\Lesson;
 use App\Models\Question;
 use App\Models\StudentExamAttempt;
-use App\Models\StudentIncorrectQuestion;
 use App\Models\StudentProgress;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
 class BuddhistCoursesTest extends TestCase
@@ -19,11 +19,17 @@ class BuddhistCoursesTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $teacher;
+
     protected User $student;
+
     protected Course $course;
+
     protected CourseClass $class;
+
     protected Lesson $lesson;
+
     protected Question $question;
 
     protected function setUp(): void
@@ -117,7 +123,7 @@ class BuddhistCoursesTest extends TestCase
 
         $response = $this->get('/');
         $response->assertStatus(200);
-        $response->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+        $response->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Home/Index')
             ->has('courses', 1)
             ->where('courses.0.title', $this->course->title)
@@ -128,6 +134,7 @@ class BuddhistCoursesTest extends TestCase
             ->has('courses.0.children.0.lessons', 1)
             ->where('courses.0.children.0.lessons.0.title', 'Lesson 1: Cetasika Overview')
             ->has('monastery')
+            ->where('monastery.zalo', '+84866232459')
         );
     }
 
@@ -238,10 +245,9 @@ class BuddhistCoursesTest extends TestCase
         // 4. Now that all lessons are completed, student can access the Class Final Exam
         $examResponse = $this->get(route('student.class.exam', $this->class->id));
         $examResponse->assertStatus(200);
-        $examResponse->assertInertia(fn ($page) =>
-            $page->component('Student/ClassExam')
-                ->where('classItem.id', $this->class->id)
-                ->where('totalQuestions', 1)
+        $examResponse->assertInertia(fn ($page) => $page->component('Student/ClassExam')
+            ->where('classItem.id', $this->class->id)
+            ->where('totalQuestions', 1)
         );
 
         // 5. Submit single question on the class final exam
@@ -298,10 +304,9 @@ class BuddhistCoursesTest extends TestCase
         // Access exam - total 2 questions (1 quiz + 1 essay)
         $examResponse = $this->get(route('student.class.exam', $this->class->id));
         $examResponse->assertStatus(200);
-        $examResponse->assertInertia(fn ($page) =>
-            $page->component('Student/ClassExam')
-                ->where('classItem.id', $this->class->id)
-                ->where('totalQuestions', 2)
+        $examResponse->assertInertia(fn ($page) => $page->component('Student/ClassExam')
+            ->where('classItem.id', $this->class->id)
+            ->where('totalQuestions', 2)
         );
 
         // Submit quiz question
@@ -350,9 +355,8 @@ class BuddhistCoursesTest extends TestCase
 
         $response = $this->get(route('admin.classes.show', $this->class->id));
         $response->assertStatus(200);
-        $response->assertInertia(fn ($page) =>
-            $page->component('Admin/Classes/Show')
-                ->where('students.0.completed_at', now()->format('Y-m-d'))
+        $response->assertInertia(fn ($page) => $page->component('Admin/Classes/Show')
+            ->where('students.0.completed_at', now()->format('Y-m-d'))
         );
     }
 
@@ -406,9 +410,8 @@ class BuddhistCoursesTest extends TestCase
 
         $response = $this->get(route('student.dashboard'));
         $response->assertStatus(200);
-        $response->assertInertia(fn ($page) =>
-            $page->component('Student/Dashboard')
-                ->has('enrolledClasses', 2)
+        $response->assertInertia(fn ($page) => $page->component('Student/Dashboard')
+            ->has('enrolledClasses', 2)
         );
     }
 
@@ -427,9 +430,8 @@ class BuddhistCoursesTest extends TestCase
         // Access lesson without prior enrollment
         $response = $this->get(route('student.lesson', [$this->class->id, $this->lesson->id]));
         $response->assertStatus(200);
-        $response->assertInertia(fn ($page) =>
-            $page->component('Student/LessonPlayer')
-                ->where('lesson.id', $this->lesson->id)
+        $response->assertInertia(fn ($page) => $page->component('Student/LessonPlayer')
+            ->where('lesson.id', $this->lesson->id)
         );
 
         $this->assertDatabaseHas('class_user', [
@@ -623,11 +625,10 @@ class BuddhistCoursesTest extends TestCase
         // 1. Visit exam page: attempt should be auto-created and remainingSeconds calculated
         $response = $this->get(route('student.class.exam', $this->class->id));
         $response->assertOk();
-        $response->assertInertia(fn ($page) =>
-            $page->component('Student/ClassExam')
-                ->where('examDurationMinutes', 30)
-                ->where('isTimeExpired', false)
-                ->where('remainingSeconds', fn ($sec) => $sec > 1750 && $sec <= 1800)
+        $response->assertInertia(fn ($page) => $page->component('Student/ClassExam')
+            ->where('examDurationMinutes', 30)
+            ->where('isTimeExpired', false)
+            ->where('remainingSeconds', fn ($sec) => $sec > 1750 && $sec <= 1800)
         );
 
         // 2. Fast-forward attempt created_at to 35 minutes ago (expired)
@@ -641,10 +642,9 @@ class BuddhistCoursesTest extends TestCase
         // 3. Visiting exam page now should show isTimeExpired true and 0 remainingSeconds
         $expiredResponse = $this->get(route('student.class.exam', $this->class->id));
         $expiredResponse->assertOk();
-        $expiredResponse->assertInertia(fn ($page) =>
-            $page->component('Student/ClassExam')
-                ->where('isTimeExpired', true)
-                ->where('remainingSeconds', 0)
+        $expiredResponse->assertInertia(fn ($page) => $page->component('Student/ClassExam')
+            ->where('isTimeExpired', true)
+            ->where('remainingSeconds', 0)
         );
 
         // 4. Submitting an answer on expired exam should be rejected with 403
@@ -656,5 +656,3 @@ class BuddhistCoursesTest extends TestCase
         $submitResponse->assertJson(['time_expired' => true]);
     }
 }
-
-

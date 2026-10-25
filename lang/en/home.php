@@ -167,6 +167,8 @@ return [
     'footer_view_qr' => 'VietQR Code',
     'footer_hide_qr' => 'Hide QR',
     'facebook_page' => 'Facebook Page',
+    'zalo' => 'Zalo',
+    'zalo_contact' => 'Zalo: :number',
     'author' => 'Author',
     'instructor' => 'Instructor',
     'created_by' => 'Created by',
