@@ -1,0 +1,20 @@
+{
+    "agents": [
+        "antigravity"
+    ],
+    "cloud": true,
+    "guidelines": true,
+    "mcp": true,
+    "nightwatch": false,
+    "sail": true,
+    "skills": [
+        "infer-conventions",
+        "deploying-to-cloud",
+        "laravel-best-practices",
+        "testing-best-practices",
+        "octane-development",
+        "socialite-development",
+        "tailwindcss-development",
+        "inertia-react-development"
+    ]
+}
