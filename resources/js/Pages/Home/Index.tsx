@@ -1303,9 +1303,6 @@ export default function Home({
                                         </a>
                                     )}
                                 </div>
-                                <div className="pt-2 text-stone-500 text-[11px]">
-                                    <p>{t('home.footer_address_note')}</p>
-                                </div>
                             </div>
 
                             {/* Monastery Donation Section */}

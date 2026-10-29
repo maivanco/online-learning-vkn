@@ -152,7 +152,6 @@ return [
     // Footer
     'footer_desc' => 'UTBSI – Cổng đào tạo Phật học trực tuyến chính thức cung cấp các lớp học căn bản và chuyên sâu về Pháp học, Vi Diệu Pháp, Luật Tạng và Ngôn ngữ Pali.',
     'footer_address_title' => 'Địa Chỉ',
-    'footer_address_note' => 'Mật khẩu truy cập được cấp trực tiếp bởi Người quản lý lớp học.',
     'footer_connect_title' => 'Kết Nối',
     'footer_system_ready' => 'Hệ thống sẵn sàng',
     'footer_donation_title' => 'Cúng Dường Hộ Trì',
