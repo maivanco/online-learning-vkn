@@ -5,6 +5,7 @@ import { PageProps } from '@/types';
 import { useTranslation } from '@/utils/useTranslation';
 import RichTextEditor from '@/Components/RichTextEditor';
 import LessonFormModal, { LessonItem } from './Components/LessonFormModal';
+import ImportLessonsModal from './Components/ImportLessonsModal';
 
 interface Course {
     id: number;
@@ -69,6 +70,7 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
     const [selectedLessonForEdit, setSelectedLessonForEdit] = useState<LessonItem | null>(null);
     const [selectedLessonForDelete, setSelectedLessonForDelete] = useState<LessonItem | null>(null);
     const [isCreateLessonModalOpen, setIsCreateLessonModalOpen] = useState(false);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'materials' | 'feedbacks'>('materials');
 
     // Courses Catalog State
@@ -216,15 +218,27 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                     </div>
 
                     {activeTab === 'materials' && (
-                        <button
-                            onClick={() => setIsCreateLessonModalOpen(true)}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium shadow"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                            </svg>
-                            {t('materials.btn_add_new_lesson')}
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setIsImportModalOpen(true)}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 text-xs font-semibold shadow-xs transition"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                                {t('materials.btn_import_lessons')}
+                            </button>
+                            <button
+                                onClick={() => setIsCreateLessonModalOpen(true)}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium shadow"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                {t('materials.btn_add_new_lesson')}
+                            </button>
+                        </div>
                     )}
                 </div>
 
@@ -981,6 +995,14 @@ export default function MaterialsIndex({ auth, courses, activeCourse, lessons, f
                     </div>
                 </div>
             )}
+
+            {/* Import Course & Lessons Modal */}
+            <ImportLessonsModal
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                courses={courses.map((c) => ({ id: c.id, title: c.title }))}
+                initialCourseId={activeCourse?.id || null}
+            />
         </AuthenticatedLayout>
     );
 }

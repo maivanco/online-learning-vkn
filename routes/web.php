@@ -100,9 +100,12 @@ Route::middleware(['auth', 'role:admin,teacher'])->prefix('admin')->name('admin.
     Route::post('/classes/{id}/students/{userId}/grade-essay', [ClassManagerController::class, 'gradeEssayQuestion'])->name('classes.grade-essay');
     Route::delete('/classes/{id}', [ClassManagerController::class, 'destroy'])->name('classes.destroy');
 
-    // Materials Management (Reading, Videos, Student Feedback)
+    // Materials Management (Reading, Videos, Student Feedback, Import)
     Route::get('/materials', [MaterialController::class, 'index'])->name('materials.index');
     Route::post('/materials', [MaterialController::class, 'store'])->name('materials.store');
+    Route::get('/materials/template', [MaterialController::class, 'downloadTemplate'])->name('materials.template');
+    Route::post('/materials/import/preview', [MaterialController::class, 'previewImport'])->name('materials.import-preview');
+    Route::post('/materials/import', [MaterialController::class, 'import'])->name('materials.import');
     Route::put('/materials/{id}', [MaterialController::class, 'update'])->name('materials.update');
     Route::delete('/materials/{id}', [MaterialController::class, 'destroy'])->name('materials.destroy');
     Route::put('/feedbacks/{id}', [MaterialController::class, 'updateFeedback'])->name('feedbacks.update');

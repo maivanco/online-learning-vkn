@@ -152,7 +152,6 @@ return [
     // Footer
     'footer_desc' => 'UTBSI – Dedicated online education platform offering foundational and advanced Buddhist studies in Dhamma, Abhidhamma, Vinaya, and Pali.',
     'footer_address_title' => 'Address',
-    'footer_address_note' => 'Access credentials are provided directly by the Class Administrator.',
     'footer_connect_title' => 'Connect',
     'footer_system_ready' => 'System Online & Ready',
     'footer_donation_title' => 'Donation & Support',

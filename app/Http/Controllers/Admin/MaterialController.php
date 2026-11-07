@@ -8,14 +8,22 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\MaterialFeedback;
+use App\Services\CourseImportService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MaterialController extends Controller
 {
+    public function __construct(
+        private readonly CourseImportService $courseImportService,
+    ) {}
+
     /**
      * Display list of courses, lessons, and reading materials.
      */
@@ -27,7 +35,7 @@ class MaterialController extends Controller
             ->withCount('lessons')
             ->orderBy('order')
             ->get()
-            ->map(fn($c) => [
+            ->map(fn ($c) => [
                 'id' => $c->id,
                 'title' => $c->title,
                 'slug' => $c->slug,
@@ -56,8 +64,8 @@ class MaterialController extends Controller
                 ->orderBy('order')
                 ->get()
                 ->map(function ($l) {
-                    $docUrls = $l->document_urls ?: (!empty($l->reading_file_url) ? [['title' => 'Tài liệu / Document', 'url' => $l->reading_file_url]] : []);
-                    $vidUrls = $l->video_urls ?: (!empty($l->video_url) ? [['title' => 'Video bài giảng / Lecture Video', 'url' => $l->video_url]] : []);
+                    $docUrls = $l->document_urls ?: (! empty($l->reading_file_url) ? [['title' => 'Tài liệu / Document', 'url' => $l->reading_file_url]] : []);
+                    $vidUrls = $l->video_urls ?: (! empty($l->video_url) ? [['title' => 'Video bài giảng / Lecture Video', 'url' => $l->video_url]] : []);
 
                     return [
                         'id' => $l->id,
@@ -83,7 +91,7 @@ class MaterialController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(20)
             ->get()
-            ->map(fn($fb) => [
+            ->map(fn ($fb) => [
                 'id' => $fb->id,
                 'content' => $fb->content,
                 'status' => $fb->status,
@@ -117,13 +125,13 @@ class MaterialController extends Controller
         // Filter out empty rows from arrays before validation
         $rawDocUrls = $request->input('document_urls');
         if (is_array($rawDocUrls)) {
-            $filteredDocs = array_values(array_filter($rawDocUrls, fn($d) => is_array($d) && !empty(trim($d['url'] ?? ''))));
+            $filteredDocs = array_values(array_filter($rawDocUrls, fn ($d) => is_array($d) && ! empty(trim($d['url'] ?? ''))));
             $request->merge(['document_urls' => $filteredDocs]);
         }
 
         $rawVideoUrls = $request->input('video_urls');
         if (is_array($rawVideoUrls)) {
-            $filteredVideos = array_values(array_filter($rawVideoUrls, fn($v) => is_array($v) && !empty(trim($v['url'] ?? ''))));
+            $filteredVideos = array_values(array_filter($rawVideoUrls, fn ($v) => is_array($v) && ! empty(trim($v['url'] ?? ''))));
             $request->merge(['video_urls' => $filteredVideos]);
         }
 
@@ -147,14 +155,14 @@ class MaterialController extends Controller
             return back()->withErrors(['reading_content' => 'The reading content field cannot be empty.']);
         }
 
-        $validated['slug'] = Str::slug($validated['title']) . '-' . rand(100, 999);
+        $validated['slug'] = Str::slug($validated['title']).'-'.rand(100, 999);
         $validated['order'] = $validated['order'] ?? (Lesson::where('course_id', $validated['course_id'])->max('order') + 1);
 
         // Maintain fallback for single URL columns
-        if (!empty($validated['document_urls'])) {
+        if (! empty($validated['document_urls'])) {
             $validated['reading_file_url'] = $validated['document_urls'][0]['url'] ?? null;
         }
-        if (!empty($validated['video_urls'])) {
+        if (! empty($validated['video_urls'])) {
             $validated['video_url'] = $validated['video_urls'][0]['url'] ?? null;
         }
 
@@ -173,13 +181,13 @@ class MaterialController extends Controller
         // Filter out empty rows from arrays before validation
         $rawDocUrls = $request->input('document_urls');
         if (is_array($rawDocUrls)) {
-            $filteredDocs = array_values(array_filter($rawDocUrls, fn($d) => is_array($d) && !empty(trim($d['url'] ?? ''))));
+            $filteredDocs = array_values(array_filter($rawDocUrls, fn ($d) => is_array($d) && ! empty(trim($d['url'] ?? ''))));
             $request->merge(['document_urls' => $filteredDocs]);
         }
 
         $rawVideoUrls = $request->input('video_urls');
         if (is_array($rawVideoUrls)) {
-            $filteredVideos = array_values(array_filter($rawVideoUrls, fn($v) => is_array($v) && !empty(trim($v['url'] ?? ''))));
+            $filteredVideos = array_values(array_filter($rawVideoUrls, fn ($v) => is_array($v) && ! empty(trim($v['url'] ?? ''))));
             $request->merge(['video_urls' => $filteredVideos]);
         }
 
@@ -204,10 +212,10 @@ class MaterialController extends Controller
 
         // Maintain fallback for single URL columns
         if (isset($validated['document_urls'])) {
-            $validated['reading_file_url'] = !empty($validated['document_urls']) ? ($validated['document_urls'][0]['url'] ?? null) : null;
+            $validated['reading_file_url'] = ! empty($validated['document_urls']) ? ($validated['document_urls'][0]['url'] ?? null) : null;
         }
         if (isset($validated['video_urls'])) {
-            $validated['video_url'] = !empty($validated['video_urls']) ? ($validated['video_urls'][0]['url'] ?? null) : null;
+            $validated['video_url'] = ! empty($validated['video_urls']) ? ($validated['video_urls'][0]['url'] ?? null) : null;
         }
 
         $lesson->update($validated);
@@ -260,11 +268,11 @@ class MaterialController extends Controller
             $validated['description'] = null;
         }
 
-        $slug = !empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($validated['title']);
+        $slug = ! empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($validated['title']);
         $originalSlug = $slug;
         $counter = 1;
         while (Course::where('slug', $slug)->exists()) {
-            $slug = $originalSlug . '-' . $counter;
+            $slug = $originalSlug.'-'.$counter;
             $counter++;
         }
         $validated['slug'] = $slug;
@@ -287,7 +295,7 @@ class MaterialController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:courses,slug,' . $id,
+            'slug' => 'required|string|max:255|unique:courses,slug,'.$id,
             'description' => 'nullable|string',
             'parent_id' => 'nullable|exists:courses,id',
             'exam_duration_minutes' => 'nullable|integer|min:1|max:1440',
@@ -297,11 +305,11 @@ class MaterialController extends Controller
             $validated['description'] = null;
         }
 
-        if (!empty($validated['parent_id']) && (int) $validated['parent_id'] === $id) {
+        if (! empty($validated['parent_id']) && (int) $validated['parent_id'] === $id) {
             return back()->withErrors(['parent_id' => 'A course catalog cannot be its own parent.']);
         }
 
-        if (!empty($validated['parent_id'])) {
+        if (! empty($validated['parent_id'])) {
             $descendants = $course->allDescendantIds();
             if (in_array((int) $validated['parent_id'], $descendants, true)) {
                 return back()->withErrors(['parent_id' => 'Cannot set a descendant catalog as the parent.']);
@@ -338,5 +346,99 @@ class MaterialController extends Controller
 
         return redirect()->route('admin.materials.index')->with('success', 'Courses Catalog deleted successfully.');
     }
-}
 
+    /**
+     * Download sample Excel template for course & lessons import.
+     */
+    public function downloadTemplate(): StreamedResponse
+    {
+        $spreadsheet = $this->courseImportService->generateTemplate();
+
+        $response = new StreamedResponse(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        });
+
+        $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $response->headers->set('Content-Disposition', 'attachment;filename="course_lessons_import_template.xlsx"');
+        $response->headers->set('Cache-Control', 'max-age=0');
+
+        return $response;
+    }
+
+    /**
+     * Preview an uploaded course/lessons spreadsheet and return extracted columns and rows.
+     */
+    public function previewImport(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:20480',
+        ]);
+
+        $file = $request->file('file');
+        $previewData = $this->courseImportService->preview($file);
+
+        if (! $previewData['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $previewData['error'] ?? 'Failed to preview the uploaded file.',
+            ], 422);
+        }
+
+        return response()->json($previewData);
+    }
+
+    /**
+     * Import courses & lessons using configured field mappings.
+     */
+    public function import(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:20480',
+            'course_mode' => 'required|in:existing,new',
+            'course_id' => 'nullable|required_if:course_mode,existing|exists:courses,id',
+            'new_course_title' => 'nullable|required_if:course_mode,new|string|max:255',
+            'new_course_category' => 'nullable|string|in:dhamma,vinaya,abhidhamma,pali,general',
+            'new_course_description' => 'nullable|string',
+            'mappings' => 'required|array',
+        ]);
+
+        $courseId = null;
+
+        if ($validated['course_mode'] === 'new') {
+            $title = trim($validated['new_course_title']);
+            $order = (int) (Course::max('order') ?? 0) + 1;
+
+            $course = Course::create([
+                'title' => $title,
+                'slug' => Str::slug($title).'-'.rand(100, 999),
+                'category' => $validated['new_course_category'] ?? 'dhamma',
+                'description' => $validated['new_course_description'] ?? null,
+                'user_id' => auth()->id(),
+                'order' => $order,
+            ]);
+
+            $courseId = $course->id;
+        } else {
+            $courseId = (int) $validated['course_id'];
+        }
+
+        $result = $this->courseImportService->import(
+            $request->file('file'),
+            $courseId,
+            $validated['mappings']
+        );
+
+        if (! $result['success']) {
+            return back()->with('error', ! empty($result['errors']) ? implode(', ', $result['errors']) : 'Import failed.');
+        }
+
+        $message = "Successfully imported {$result['imported_count']} lesson(s).";
+        if ($result['skipped_count'] > 0) {
+            $message .= " ({$result['skipped_count']} row(s) skipped).";
+        }
+
+        return redirect()->route('admin.materials.index', ['course_id' => $courseId])
+            ->with('success', $message);
+    }
+}
