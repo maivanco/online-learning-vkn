@@ -10,6 +10,7 @@ use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Question;
 use App\Services\QuestionImportService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -61,7 +62,7 @@ class QuestionBankController extends Controller
             }
         }
 
-        $questions = $questionsQuery->orderBy('id', 'desc')->get()->map(fn($q) => [
+        $questions = $questionsQuery->orderBy('id', 'desc')->get()->map(fn ($q) => [
             'id' => $q->id,
             'course_id' => $q->course_id,
             'lesson_id' => $q->lesson_id,
@@ -124,6 +125,28 @@ class QuestionBankController extends Controller
     }
 
     /**
+     * Preview an uploaded question spreadsheet and return extracted columns and sample rows.
+     */
+    public function previewImport(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
+        ]);
+
+        $file = $request->file('file');
+        $previewData = $this->importService->preview($file);
+
+        if (! $previewData['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $previewData['error'] ?? 'Failed to preview the uploaded file.',
+            ], 422);
+        }
+
+        return response()->json($previewData);
+    }
+
+    /**
      * Import questions from uploaded Excel spreadsheet into a selected lesson.
      */
     public function import(ImportQuestionsRequest $request): RedirectResponse
@@ -131,10 +154,11 @@ class QuestionBankController extends Controller
         $courseId = (int) $request->validated('course_id');
         $lessonId = (int) $request->validated('lesson_id');
         $file = $request->file('file');
+        $mappings = $request->validated('mappings');
 
-        $result = $this->importService->import($file, $courseId, $lessonId);
+        $result = $this->importService->import($file, $courseId, $lessonId, $mappings);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return back()
                 ->with('error', __('questions.import_failed_msg', ['count' => count($result['errors'])]))
                 ->with('import_errors', $result['errors']);
@@ -161,7 +185,7 @@ class QuestionBankController extends Controller
             'question_type' => 'required|in:quiz,essay',
             'question_text' => 'required|string',
             'type' => 'required|in:practice,exam,both',
-            'explanation' => 'nullable|string'
+            'explanation' => 'nullable|string',
         ];
 
         if ($questionType === Question::TYPE_ESSAY) {
@@ -252,5 +276,20 @@ class QuestionBankController extends Controller
         $question->delete();
 
         return back()->with('success', 'Question deleted successfully.');
+    }
+
+    /**
+     * Delete multiple questions in bulk.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:questions,id',
+        ]);
+
+        $count = Question::whereIn('id', $validated['ids'])->delete();
+
+        return back()->with('success', __('questions.bulk_delete_success', ['count' => $count]));
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Admin;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ImportQuestionsRequest extends FormRequest
@@ -19,7 +20,7 @@ class ImportQuestionsRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -27,6 +28,7 @@ class ImportQuestionsRequest extends FormRequest
             'course_id' => ['required', 'integer', 'exists:courses,id'],
             'lesson_id' => ['required', 'integer', 'exists:lessons,id'],
             'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
+            'mappings' => ['nullable', 'array'],
         ];
     }
 

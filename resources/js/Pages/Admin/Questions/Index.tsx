@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
@@ -57,6 +57,10 @@ export default function QuestionBankIndex({
     const t = useTranslation();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [selectedQuestionForEdit, setSelectedQuestionForEdit] = useState<QuestionItem | null>(null);
+    const [selectedQuestionIds, setSelectedQuestionIds] = useState<number[]>([]);
+    const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+    const selectAllCheckboxRef = useRef<HTMLInputElement>(null);
 
     const questionForm = useForm({
         course_id: selectedCourseId || courses[0]?.id || '',
@@ -122,6 +126,7 @@ export default function QuestionBankIndex({
     const currentCourse = courses.find((c) => c.id === selectedCourseId) || courses[0];
 
     const applyFilter = (params: { course_id?: number | string; lesson_id?: number | string; question_type?: string }) => {
+        setSelectedQuestionIds([]);
         router.get(
             route('admin.questions.index'),
             {
@@ -131,6 +136,47 @@ export default function QuestionBankIndex({
             },
             { preserveState: true }
         );
+    };
+
+    const allSelected = questions.length > 0 && selectedQuestionIds.length === questions.length;
+    const someSelected = selectedQuestionIds.length > 0 && !allSelected;
+
+    useEffect(() => {
+        if (selectAllCheckboxRef.current) {
+            selectAllCheckboxRef.current.indeterminate = someSelected;
+        }
+    }, [someSelected]);
+
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedQuestionIds(questions.map((q) => q.id));
+        } else {
+            setSelectedQuestionIds([]);
+        }
+    };
+
+    const handleToggleQuestion = (id: number) => {
+        setSelectedQuestionIds((prev) =>
+            prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+        );
+    };
+
+    const handleBulkDelete = () => {
+        if (selectedQuestionIds.length === 0) return;
+
+        setIsBulkDeleting(true);
+        router.delete(route('admin.questions.bulk-destroy'), {
+            data: {
+                ids: selectedQuestionIds,
+            },
+            onSuccess: () => {
+                setSelectedQuestionIds([]);
+                setShowBulkDeleteModal(false);
+            },
+            onFinish: () => {
+                setIsBulkDeleting(false);
+            },
+        });
     };
 
     const totalCount = counts?.all ?? questions.length;
@@ -250,22 +296,20 @@ export default function QuestionBankIndex({
                         <button
                             type="button"
                             onClick={() => applyFilter({ question_type: 'all' })}
-                            className={`px-3 py-1.5 rounded-md font-medium transition ${
-                                selectedQuestionType === 'all'
+                            className={`px-3 py-1.5 rounded-md font-medium transition ${selectedQuestionType === 'all'
                                     ? 'bg-white text-stone-900 shadow-sm'
                                     : 'text-stone-600 hover:text-stone-900'
-                            }`}
+                                }`}
                         >
                             {t('questions.filter_all_types')} ({totalCount})
                         </button>
                         <button
                             type="button"
                             onClick={() => applyFilter({ question_type: 'quiz' })}
-                            className={`px-3 py-1.5 rounded-md font-medium flex items-center gap-1.5 transition ${
-                                selectedQuestionType === 'quiz'
+                            className={`px-3 py-1.5 rounded-md font-medium flex items-center gap-1.5 transition ${selectedQuestionType === 'quiz'
                                     ? 'bg-blue-600 text-white shadow-sm'
                                     : 'text-stone-600 hover:text-blue-700'
-                            }`}
+                                }`}
                         >
                             <span className="w-2 h-2 rounded-full bg-blue-400"></span>
                             {t('questions.filter_quiz')} ({quizCount})
@@ -273,11 +317,10 @@ export default function QuestionBankIndex({
                         <button
                             type="button"
                             onClick={() => applyFilter({ question_type: 'essay' })}
-                            className={`px-3 py-1.5 rounded-md font-medium flex items-center gap-1.5 transition ${
-                                selectedQuestionType === 'essay'
+                            className={`px-3 py-1.5 rounded-md font-medium flex items-center gap-1.5 transition ${selectedQuestionType === 'essay'
                                     ? 'bg-amber-700 text-white shadow-sm'
                                     : 'text-stone-600 hover:text-amber-800'
-                            }`}
+                                }`}
                         >
                             <span className="w-2 h-2 rounded-full bg-amber-400"></span>
                             {t('questions.filter_essay')} ({essayCount})
@@ -302,6 +345,57 @@ export default function QuestionBankIndex({
                     </div>
                 </div>
 
+                {/* Bulk Selection Bar */}
+                {questions.length > 0 && (
+                    <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
+                        <div className="flex items-center gap-3">
+                            <label className="inline-flex items-center gap-2 cursor-pointer font-medium text-gray-700 select-none">
+                                <input
+                                    ref={selectAllCheckboxRef}
+                                    type="checkbox"
+                                    checked={allSelected}
+                                    onChange={(e) => handleSelectAll(e.target.checked)}
+                                    className="w-4 h-4 rounded border-gray-300 text-amber-700 focus:ring-amber-500 cursor-pointer"
+                                />
+                                <span>
+                                    {allSelected ? t('questions.deselect_all') : t('questions.select_all')} ({questions.length})
+                                </span>
+                            </label>
+
+                            {selectedQuestionIds.length > 0 && (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+                                    {t('questions.selected_count', { count: String(selectedQuestionIds.length) })}
+                                </span>
+                            )}
+                        </div>
+
+                        {selectedQuestionIds.length > 0 && (
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedQuestionIds([])}
+                                    className="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 font-medium transition"
+                                >
+                                    {t('questions.deselect_all')}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setShowBulkDeleteModal(true)}
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium shadow-sm transition"
+                                >
+                                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    <span>
+                                        {t('questions.bulk_delete')} ({selectedQuestionIds.length})
+                                    </span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Questions List */}
                 <div className="space-y-4">
                     {questions.length === 0 ? (
@@ -311,60 +405,75 @@ export default function QuestionBankIndex({
                     ) : (
                         questions.map((q, idx) => {
                             const isEssay = q.question_type === 'essay';
+                            const isSelected = selectedQuestionIds.includes(q.id);
 
                             return (
                                 <div
                                     key={q.id}
-                                    className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:border-amber-400 transition space-y-4 text-xs"
+                                    className={`bg-white rounded-2xl border p-6 shadow-sm transition space-y-4 text-xs ${isSelected
+                                            ? 'border-amber-500 ring-1 ring-amber-500 bg-amber-50/20'
+                                            : 'border-gray-200 hover:border-amber-400'
+                                        }`}
                                 >
                                     <div className="flex items-start justify-between gap-4">
-                                        <div className="space-y-1.5">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <span className="font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded text-[11px]">
-                                                    {t('questions.question_prefix')} {idx + 1}
-                                                </span>
-
-                                                {isEssay ? (
-                                                    <span className="font-semibold text-amber-900 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded text-[11px] flex items-center gap-1">
-                                                        <svg className="w-3 h-3 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                        </svg>
-                                                        {t('questions.badge_essay')}
-                                                    </span>
-                                                ) : (
-                                                    <span className="font-semibold text-blue-900 bg-blue-100 border border-blue-200 px-2 py-0.5 rounded text-[11px] flex items-center gap-1">
-                                                        <svg className="w-3 h-3 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                                        </svg>
-                                                        {t('questions.badge_quiz')}
-                                                    </span>
-                                                )}
-
-                                                {q.lesson_title ? (
-                                                    <span className="text-[11px] text-gray-600 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded">
-                                                        {q.lesson_title}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-[11px] text-gray-400 italic">
-                                                        {t('questions.all_general_course')}
-                                                    </span>
-                                                )}
-
-                                                <span className="text-[10px] text-stone-500 uppercase tracking-wider bg-stone-100 px-1.5 py-0.5 rounded">
-                                                    {q.type === 'both' ? t('questions.both_practice_exam') : q.type === 'practice' ? t('questions.practice_only') : t('questions.exam_only')}
-                                                </span>
-                                            </div>
-
-                                            {/<[a-z][\s\S]*>/i.test(q.question_text) ? (
-                                                <div
-                                                    className="font-medium text-gray-900 text-sm pt-1 leading-relaxed prose prose-stone prose-sm max-w-none [&>p]:mb-1 [&>p:last-child]:mb-0"
-                                                    dangerouslySetInnerHTML={{ __html: q.question_text }}
+                                        <div className="flex items-start gap-3">
+                                            <div className="pt-0.5 shrink-0">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    onChange={() => handleToggleQuestion(q.id)}
+                                                    className="w-4 h-4 rounded border-gray-300 text-amber-700 focus:ring-amber-500 cursor-pointer"
+                                                    aria-label={`${t('questions.question_prefix')} ${idx + 1}`}
                                                 />
-                                            ) : (
-                                                <h4 className="font-medium text-gray-900 text-sm pt-1 whitespace-pre-line leading-relaxed">
-                                                    {q.question_text}
-                                                </h4>
-                                            )}
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <span className="font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded text-[11px]">
+                                                        {t('questions.question_prefix')} {idx + 1}
+                                                    </span>
+
+                                                    {isEssay ? (
+                                                        <span className="font-semibold text-amber-900 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded text-[11px] flex items-center gap-1">
+                                                            <svg className="w-3 h-3 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                            </svg>
+                                                            {t('questions.badge_essay')}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="font-semibold text-blue-900 bg-blue-100 border border-blue-200 px-2 py-0.5 rounded text-[11px] flex items-center gap-1">
+                                                            <svg className="w-3 h-3 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                                            </svg>
+                                                            {t('questions.badge_quiz')}
+                                                        </span>
+                                                    )}
+
+                                                    {q.lesson_title ? (
+                                                        <span className="text-[11px] text-gray-600 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded">
+                                                            {q.lesson_title}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[11px] text-gray-400 italic">
+                                                            {t('questions.all_general_course')}
+                                                        </span>
+                                                    )}
+
+                                                    <span className="text-[10px] text-stone-500 uppercase tracking-wider bg-stone-100 px-1.5 py-0.5 rounded">
+                                                        {q.type === 'both' ? t('questions.both_practice_exam') : q.type === 'practice' ? t('questions.practice_only') : t('questions.exam_only')}
+                                                    </span>
+                                                </div>
+
+                                                {/<[a-z][\s\S]*>/i.test(q.question_text) ? (
+                                                    <div
+                                                        className="font-medium text-gray-900 text-sm pt-1 leading-relaxed prose prose-stone prose-sm max-w-none [&>p]:mb-1 [&>p:last-child]:mb-0"
+                                                        dangerouslySetInnerHTML={{ __html: q.question_text }}
+                                                    />
+                                                ) : (
+                                                    <h4 className="font-medium text-gray-900 text-sm pt-1 whitespace-pre-line leading-relaxed">
+                                                        {q.question_text}
+                                                    </h4>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className="flex items-center gap-2 shrink-0">
@@ -447,11 +556,10 @@ export default function QuestionBankIndex({
                                     <button
                                         type="button"
                                         onClick={() => questionForm.setData('question_type', 'quiz')}
-                                        className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition ${
-                                            questionForm.data.question_type === 'quiz'
+                                        className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition ${questionForm.data.question_type === 'quiz'
                                                 ? 'border-blue-500 bg-blue-50/50 ring-2 ring-blue-500/20'
                                                 : 'border-gray-200 hover:border-gray-300'
-                                        }`}
+                                            }`}
                                     >
                                         <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center ${questionForm.data.question_type === 'quiz' ? 'border-blue-600 bg-blue-600' : 'border-gray-400'}`}>
                                             {questionForm.data.question_type === 'quiz' && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
@@ -465,11 +573,10 @@ export default function QuestionBankIndex({
                                     <button
                                         type="button"
                                         onClick={() => questionForm.setData('question_type', 'essay')}
-                                        className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition ${
-                                            questionForm.data.question_type === 'essay'
+                                        className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition ${questionForm.data.question_type === 'essay'
                                                 ? 'border-amber-600 bg-amber-50/50 ring-2 ring-amber-600/20'
                                                 : 'border-gray-200 hover:border-gray-300'
-                                        }`}
+                                            }`}
                                     >
                                         <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center ${questionForm.data.question_type === 'essay' ? 'border-amber-700 bg-amber-700' : 'border-gray-400'}`}>
                                             {questionForm.data.question_type === 'essay' && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
@@ -664,11 +771,10 @@ export default function QuestionBankIndex({
                                 <h3 className="font-serif font-bold text-base text-gray-900">
                                     {t('questions.edit_modal_title')}
                                 </h3>
-                                <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                                    editForm.data.question_type === 'essay'
+                                <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${editForm.data.question_type === 'essay'
                                         ? 'bg-amber-100 text-amber-900 border border-amber-200'
                                         : 'bg-blue-100 text-blue-900 border border-blue-200'
-                                }`}>
+                                    }`}>
                                     {editForm.data.question_type === 'essay' ? t('questions.badge_essay') : t('questions.badge_quiz')}
                                 </span>
                             </div>
@@ -687,11 +793,10 @@ export default function QuestionBankIndex({
                                     <button
                                         type="button"
                                         onClick={() => editForm.setData('question_type', 'quiz')}
-                                        className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition ${
-                                            editForm.data.question_type === 'quiz'
+                                        className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition ${editForm.data.question_type === 'quiz'
                                                 ? 'border-blue-500 bg-blue-50/50 font-semibold text-blue-900'
                                                 : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                                        }`}
+                                            }`}
                                     >
                                         <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${editForm.data.question_type === 'quiz' ? 'border-blue-600 bg-blue-600' : 'border-gray-400'}`}>
                                             {editForm.data.question_type === 'quiz' && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
@@ -702,11 +807,10 @@ export default function QuestionBankIndex({
                                     <button
                                         type="button"
                                         onClick={() => editForm.setData('question_type', 'essay')}
-                                        className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition ${
-                                            editForm.data.question_type === 'essay'
+                                        className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition ${editForm.data.question_type === 'essay'
                                                 ? 'border-amber-600 bg-amber-50/50 font-semibold text-amber-900'
                                                 : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                                        }`}
+                                            }`}
                                     >
                                         <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${editForm.data.question_type === 'essay' ? 'border-amber-700 bg-amber-700' : 'border-gray-400'}`}>
                                             {editForm.data.question_type === 'essay' && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
@@ -881,6 +985,51 @@ export default function QuestionBankIndex({
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Bulk Delete Confirmation Modal */}
+            {showBulkDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-xs">
+                        <div className="flex items-center gap-3 text-red-600">
+                            <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </div>
+                            <h3 className="font-serif font-bold text-base text-gray-900">
+                                {t('questions.bulk_delete_title')}
+                            </h3>
+                        </div>
+
+                        <p className="text-gray-600 leading-relaxed">
+                            {t('questions.bulk_delete_confirm', { count: String(selectedQuestionIds.length) })}
+                        </p>
+
+                        <div className="flex justify-end gap-2 pt-3 border-t">
+                            <button
+                                type="button"
+                                disabled={isBulkDeleting}
+                                onClick={() => setShowBulkDeleteModal(false)}
+                                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition disabled:opacity-50"
+                            >
+                                {t('questions.cancel')}
+                            </button>
+                            <button
+                                type="button"
+                                disabled={isBulkDeleting}
+                                onClick={handleBulkDelete}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium shadow transition disabled:opacity-50"
+                            >
+                                {isBulkDeleting ? (
+                                    <span>...</span>
+                                ) : (
+                                    <span>{t('questions.confirm_delete_btn')}</span>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

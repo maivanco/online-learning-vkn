@@ -8,7 +8,6 @@ use App\Models\Lesson;
 use App\Models\Question;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -22,7 +21,7 @@ class QuestionImportService
      */
     public function generateTemplate(): Spreadsheet
     {
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet;
 
         // ----------------------------------------------------
         // Sheet 1: Questions Template
@@ -142,7 +141,7 @@ class QuestionImportService
 
         $instructions = [
             ['Column Name', 'Required?', 'Allowed Values', 'Description & Rules'],
-            ['question_type', 'YES', 'quiz, essay', '"quiz" for Multiple Choice questions. "essay" for Essay questions.'],
+            ['question_type', 'NO', 'quiz, essay', '"quiz" (default) for Multiple Choice questions. "essay" for Essay questions.'],
             ['question_text', 'YES', 'Text / HTML', 'The question content or prompt.'],
             ['option_a', 'Quiz only', 'Text', 'Required if question_type is "quiz". Leave empty for "essay".'],
             ['option_b', 'Quiz only', 'Text', 'Required if question_type is "quiz". Leave empty for "essay".'],
@@ -190,11 +189,131 @@ class QuestionImportService
     }
 
     /**
+     * Parse an uploaded spreadsheet file and extract headers, sample rows, and suggested mappings for questions.
+     *
+     * @return array{
+     *     success: bool,
+     *     error?: string,
+     *     headers: array<string>,
+     *     preview_rows: array<int, array<string, string|null>>,
+     *     total_rows: int,
+     *     suggested_mappings: array<string, string>,
+     * }
+     */
+    public function preview(UploadedFile $file): array
+    {
+        try {
+            $spreadsheet = IOFactory::load($file->getRealPath());
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error' => 'Failed to read file: '.$e->getMessage(),
+                'headers' => [],
+                'preview_rows' => [],
+                'total_rows' => 0,
+                'suggested_mappings' => [],
+            ];
+        }
+
+        $sheet = $spreadsheet->getSheetByName('Questions') ?? $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray(null, true, true, false);
+
+        if (empty($rows) || count($rows) < 2) {
+            return [
+                'success' => false,
+                'error' => 'The uploaded file does not contain any data rows.',
+                'headers' => [],
+                'preview_rows' => [],
+                'total_rows' => 0,
+                'suggested_mappings' => [],
+            ];
+        }
+
+        // Row 0 is headers
+        $rawHeaders = $rows[0];
+        $headers = [];
+        foreach ($rawHeaders as $idx => $h) {
+            $trimmed = trim((string) ($h ?? ''));
+            $headers[] = $trimmed !== '' ? $trimmed : 'Column_'.($idx + 1);
+        }
+
+        // Preview up to 5 data rows
+        $previewRows = [];
+        $dataRowCount = count($rows) - 1;
+        $maxPreview = min(5, $dataRowCount);
+
+        for ($i = 1; $i <= $maxPreview; $i++) {
+            $rowObj = [];
+            foreach ($headers as $colIdx => $headerName) {
+                $val = $rows[$i][$colIdx] ?? null;
+                $rowObj[$headerName] = $val !== null ? (string) $val : null;
+            }
+            $previewRows[] = $rowObj;
+        }
+
+        // Detect suggested mappings
+        $suggestedMappings = [];
+        foreach ($headers as $headerName) {
+            $norm = mb_strtolower(trim($headerName), 'UTF-8');
+            $normSimplified = str_replace(['_', '-', ' '], '', $norm);
+
+            if ($norm === 'question_type' || $norm === 'loai_cau_hoi' || $this->matchesKeyword($norm, ['question_type', 'loai_cau_hoi', 'loại câu hỏi', 'dang_cau_hoi', 'dạng câu hỏi'])) {
+                $suggestedMappings[$headerName] = 'question_type';
+            } elseif ($norm === 'correct_option' || $norm === 'correct_answer' || $norm === 'dap_an_dung' || $this->matchesKeyword($norm, ['correct_option', 'correct_answer', 'correct', 'dap_an_dung', 'đáp án đúng', 'dap an dung', 'answer_key'])) {
+                $suggestedMappings[$headerName] = 'correct_option';
+            } elseif ($norm === 'question_text' || $norm === 'cau_hoi' || $this->matchesKeyword($norm, ['question_text', 'question', 'cau_hoi', 'cau hoi', 'câu hỏi', 'noi_dung', 'nội dung', 'noi dung', 'prompt', 'de bai', 'đề bài'])) {
+                $suggestedMappings[$headerName] = 'question_text';
+            } elseif ($norm === 'option_a' || $norm === 'phuong_an_a' || $norm === 'dap_an_a' || $norm === 'a' || $normSimplified === 'optiona' || $this->matchesKeyword($norm, ['option_a', 'phuong_an_a', 'phương án a', 'dap_an_a', 'đáp án a', 'cau_a', 'câu a', 'lựa chọn a'])) {
+                $suggestedMappings[$headerName] = 'option_a';
+            } elseif ($norm === 'option_b' || $norm === 'phuong_an_b' || $norm === 'dap_an_b' || $norm === 'b' || $normSimplified === 'optionb' || $this->matchesKeyword($norm, ['option_b', 'phuong_an_b', 'phương án b', 'dap_an_b', 'đáp án b', 'cau_b', 'câu b', 'lựa chọn b'])) {
+                $suggestedMappings[$headerName] = 'option_b';
+            } elseif ($norm === 'option_c' || $norm === 'phuong_an_c' || $norm === 'dap_an_c' || $norm === 'c' || $normSimplified === 'optionc' || $this->matchesKeyword($norm, ['option_c', 'phuong_an_c', 'phương án c', 'dap_an_c', 'đáp án c', 'cau_c', 'câu c', 'lựa chọn c'])) {
+                $suggestedMappings[$headerName] = 'option_c';
+            } elseif ($norm === 'option_d' || $norm === 'phuong_an_d' || $norm === 'dap_an_d' || $norm === 'd' || $normSimplified === 'optiond' || $this->matchesKeyword($norm, ['option_d', 'phuong_an_d', 'phương án d', 'dap_an_d', 'đáp án d', 'cau_d', 'câu d', 'lựa chọn d'])) {
+                $suggestedMappings[$headerName] = 'option_d';
+            } elseif ($norm === 'explanation' || $norm === 'giai_thich' || $this->matchesKeyword($norm, ['explanation', 'giai_thich', 'giải thích', 'giai thich', 'dap_an_mau', 'đáp án mẫu', 'sample_answer', 'huong_dan_cham', 'hướng dẫn chấm', 'ghi chu', 'ghi chú', 'rubric'])) {
+                $suggestedMappings[$headerName] = 'explanation';
+            } elseif ($norm === 'type' || $norm === 'usage_type' || $this->matchesKeyword($norm, ['usage_type', 'muc_dich', 'mục đích', 'muc dich', 'su_dung', 'sử dụng', 'su dung', 'usage'])) {
+                $suggestedMappings[$headerName] = 'type';
+            } elseif ($norm === 'loai' || $norm === 'loại') {
+                $suggestedMappings[$headerName] = 'question_type';
+            } else {
+                $suggestedMappings[$headerName] = 'ignore';
+            }
+        }
+
+        return [
+            'success' => true,
+            'headers' => $headers,
+            'preview_rows' => $previewRows,
+            'total_rows' => $dataRowCount,
+            'suggested_mappings' => $suggestedMappings,
+        ];
+    }
+
+    /**
+     * Check if a text contains any of the given keywords.
+     *
+     * @param  array<int, string>  $keywords
+     */
+    protected function matchesKeyword(string $text, array $keywords): bool
+    {
+        foreach ($keywords as $kw) {
+            if (str_contains($text, $kw)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Parse and import questions from uploaded Excel or CSV file into a specified lesson.
      *
+     * @param  array<string, string>|null  $fieldMappings  Map of FileHeaderName => targetField
      * @return array{success: bool, imported_count: int, errors: array<string>}
      */
-    public function import(UploadedFile $file, int $courseId, int $lessonId): array
+    public function import(UploadedFile $file, int $courseId, int $lessonId, ?array $fieldMappings = null): array
     {
         try {
             $spreadsheet = IOFactory::load($file->getRealPath());
@@ -202,13 +321,13 @@ class QuestionImportService
             return [
                 'success' => false,
                 'imported_count' => 0,
-                'errors' => ['Failed to read Excel file: ' . $e->getMessage()],
+                'errors' => ['Failed to read Excel file: '.$e->getMessage()],
             ];
         }
 
         // Verify lesson belongs to the selected course
         $lessonExists = Lesson::where('course_id', $courseId)->where('id', $lessonId)->exists();
-        if (!$lessonExists) {
+        if (! $lessonExists) {
             return [
                 'success' => false,
                 'imported_count' => 0,
@@ -228,18 +347,48 @@ class QuestionImportService
             ];
         }
 
-        // Normalize header row
-        $rawHeaders = array_map(function ($val) {
-            return strtolower(trim((string) $val));
-        }, $rows[0]);
+        if ($fieldMappings !== null && ! empty($fieldMappings)) {
+            $headerMap = [];
+            $headers = [];
+            $headerNameToIndex = [];
 
-        $headerMap = $this->buildHeaderMap($rawHeaders);
+            foreach ($rows[0] as $idx => $h) {
+                $trimmed = trim((string) ($h ?? ''));
+                $colName = $trimmed !== '' ? $trimmed : 'Column_'.($idx + 1);
+                $headers[$idx] = $colName;
+                $headerNameToIndex[$colName] = $idx;
+                $headerNameToIndex[mb_strtolower($colName, 'UTF-8')] = $idx;
+            }
 
-        if (!isset($headerMap['question_text'])) {
+            foreach ($fieldMappings as $hName => $targetField) {
+                $targetField = trim((string) $targetField);
+                if ($targetField === '' || $targetField === 'ignore') {
+                    continue;
+                }
+
+                $trimmedName = trim((string) $hName);
+                $idx = $headerNameToIndex[$trimmedName]
+                    ?? $headerNameToIndex[mb_strtolower($trimmedName, 'UTF-8')]
+                    ?? null;
+
+                if ($idx !== null) {
+                    $headerMap[$targetField] = (int) $idx;
+                }
+            }
+        } else {
+            // Normalize header row with default auto-mapping
+            $rawHeaders = array_map(function ($val) {
+                return strtolower(trim((string) $val));
+            }, $rows[0]);
+
+            $headerMap = $this->buildHeaderMap($rawHeaders);
+        }
+
+        if (! isset($headerMap['question_text'])) {
             return [
                 'success' => false,
                 'imported_count' => 0,
-                'errors' => ['Required column "question_text" (or "cau_hoi") was not found in the header row.'],
+                'errors' => ['Required column "question_text" (or "cau_hoi") was not found in the header row or mapping.'],
             ];
         }
 
@@ -252,7 +401,7 @@ class QuestionImportService
             $row = $rows[$i];
 
             // Check if entire row is empty
-            $nonEmptyCells = array_filter($row, fn($val) => $val !== null && trim((string) $val) !== '');
+            $nonEmptyCells = array_filter($row, fn ($val) => $val !== null && trim((string) $val) !== '');
             if (empty($nonEmptyCells)) {
                 continue;
             }
@@ -260,22 +409,20 @@ class QuestionImportService
             $questionText = $this->getCellString($row, $headerMap, 'question_text');
             if ($questionText === '') {
                 $errors[] = "Row {$rowNum}: Question text is required.";
+
                 continue;
             }
 
-            // Determine question type (quiz or essay)
+            // Determine question type (quiz or essay - defaults to quiz if not set)
             $rawType = strtolower($this->getCellString($row, $headerMap, 'question_type'));
             $questionType = Question::TYPE_QUIZ;
             if (str_contains($rawType, 'essay') || str_contains($rawType, 'luan')) {
                 $questionType = Question::TYPE_ESSAY;
-            } elseif (str_contains($rawType, 'quiz') || str_contains($rawType, 'nghiem')) {
+            } elseif (str_contains($rawType, 'quiz') || str_contains($rawType, 'nghiem') || $rawType === '') {
                 $questionType = Question::TYPE_QUIZ;
-            } elseif ($rawType === '') {
-                // If type is empty, check if option_a is present to infer
-                $optA = $this->getCellString($row, $headerMap, 'option_a');
-                $questionType = $optA !== '' ? Question::TYPE_QUIZ : Question::TYPE_ESSAY;
             } else {
                 $errors[] = "Row {$rowNum}: Invalid question_type '{$rawType}'. Must be 'quiz' or 'essay'.";
+
                 continue;
             }
 
@@ -290,6 +437,7 @@ class QuestionImportService
                 $usageType = 'both';
             } else {
                 $errors[] = "Row {$rowNum}: Invalid usage type '{$rawUsage}'. Must be 'both', 'practice', or 'exam'.";
+
                 continue;
             }
 
@@ -304,11 +452,13 @@ class QuestionImportService
 
                 if ($optA === '' || $optB === '' || $optC === '' || $optD === '') {
                     $errors[] = "Row {$rowNum}: All options (A, B, C, D) are required for multiple choice questions.";
+
                     continue;
                 }
 
-                if (!in_array($rawCorrect, ['A', 'B', 'C', 'D'], true)) {
+                if (! in_array($rawCorrect, ['A', 'B', 'C', 'D'], true)) {
                     $errors[] = "Row {$rowNum}: Correct option must be A, B, C, or D (got '{$rawCorrect}').";
+
                     continue;
                 }
 
@@ -347,7 +497,7 @@ class QuestionImportService
             }
         }
 
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             return [
                 'success' => false,
                 'imported_count' => 0,
@@ -379,7 +529,7 @@ class QuestionImportService
     /**
      * Map column indexes based on header names and aliases.
      *
-     * @param array<int, string> $rawHeaders
+     * @param  array<int, string>  $rawHeaders
      * @return array<string, int>
      */
     protected function buildHeaderMap(array $rawHeaders): array
@@ -407,7 +557,7 @@ class QuestionImportService
                 $map['explanation'] = $index;
             } elseif (in_array($header, ['type', 'usage_type', 'muc_dich', 'su_dung'])) {
                 // Only assign if question_type didn't already claim this index
-                if (!isset($map['question_type']) || $map['question_type'] !== $index) {
+                if (! isset($map['question_type']) || $map['question_type'] !== $index) {
                     $map['type'] = $index;
                 }
             }
@@ -419,12 +569,12 @@ class QuestionImportService
     /**
      * Safely get trimmed string from row by mapped key.
      *
-     * @param array<int, mixed> $row
-     * @param array<string, int> $headerMap
+     * @param  array<int, mixed>  $row
+     * @param  array<string, int>  $headerMap
      */
     protected function getCellString(array $row, array $headerMap, string $key): string
     {
-        if (!isset($headerMap[$key])) {
+        if (! isset($headerMap[$key])) {
             return '';
         }
 
