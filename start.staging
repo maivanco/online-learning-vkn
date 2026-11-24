@@ -88,7 +88,7 @@ echo "Running database migrations (safe incremental migrate, preserves existing 
 docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan migrate --force
 
 echo "Ensuring public storage symlink exists..."
-docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan storage:link --relative --force
+docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan storage:link --force
 
 echo "Clearing and caching routes & views..."
 docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan route:clear
