@@ -35,7 +35,7 @@ export WWWUSER=${WWWUSER:-$(id -u)}
 export WWWGROUP=${WWWGROUP:-$(id -g)}
 
 # Ensure local directories exist before mounting
-mkdir -p storage/framework/{cache/data,sessions,views,testing} storage/logs bootstrap/cache
+mkdir -p storage/app/public storage/framework/{cache/data,sessions,views,testing} storage/logs bootstrap/cache
 chmod -R 777 storage bootstrap/cache 2>/dev/null || true
 
 # 3. Start Backend via Staging Docker Compose
@@ -53,7 +53,7 @@ docker compose -f "$COMPOSE_FILE" up -d
 # Ensure proper ownership and permissions inside the container
 echo "Fixing permissions for storage and bootstrap/cache..."
 docker compose -f "$COMPOSE_FILE" exec -T -u root laravel.app bash -c "
-  mkdir -p storage/framework/{cache/data,sessions,views,testing} storage/logs bootstrap/cache
+  mkdir -p storage/app/public storage/framework/{cache/data,sessions,views,testing} storage/logs bootstrap/cache
   chown -R sail:sail storage bootstrap/cache 2>/dev/null || true
   chmod -R 777 storage bootstrap/cache
 "
@@ -86,6 +86,9 @@ docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan config:clear
 
 echo "Running database migrations (safe incremental migrate, preserves existing data)..."
 docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan migrate --force
+
+echo "Ensuring public storage symlink exists..."
+docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan storage:link --relative --force
 
 echo "Clearing and caching routes & views..."
 docker compose -f "$COMPOSE_FILE" exec -T laravel.app php artisan route:clear
