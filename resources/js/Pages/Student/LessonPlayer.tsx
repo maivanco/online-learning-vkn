@@ -3,6 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { PageProps } from '@/types';
 import { useTranslation } from '@/utils/useTranslation';
+import { toEmbedVideoUrl } from '@/utils/video';
 
 interface Question {
     id: number;
@@ -405,13 +406,10 @@ export default function LessonPlayer({
                             {videos[activeVideoIndex]?.url ? (
                                 <iframe
                                     className="w-full h-full"
-                                    src={
-                                        videos[activeVideoIndex].url.includes('watch?v=')
-                                            ? videos[activeVideoIndex].url.replace('watch?v=', 'embed/')
-                                            : videos[activeVideoIndex].url
-                                    }
+                                    src={toEmbedVideoUrl(videos[activeVideoIndex].url)}
                                     title={videos[activeVideoIndex].title || "Buddhist Courses Lecture"}
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    referrerPolicy="strict-origin-when-cross-origin"
                                     allowFullScreen
                                 ></iframe>
                             ) : (
