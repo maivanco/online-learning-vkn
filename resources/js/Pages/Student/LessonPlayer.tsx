@@ -7,11 +7,21 @@ import { toEmbedVideoUrl } from '@/utils/video';
 
 interface Question {
     id: number;
+    question_type?: 'quiz' | 'essay';
     question_text: string;
-    option_a: string;
-    option_b: string;
-    option_c: string;
-    option_d: string;
+    option_a: string | null;
+    option_b: string | null;
+    option_c: string | null;
+    option_d: string | null;
+}
+
+interface PracticeResult {
+    question_type?: 'quiz' | 'essay';
+    is_correct: boolean;
+    correct_option: string | null;
+    chosen_option?: string | null;
+    essay_answer?: string | null;
+    explanation: string | null;
 }
 
 interface LessonPlayerProps extends PageProps {
@@ -111,24 +121,30 @@ export default function LessonPlayer({
         });
     };
 
-    // Step 3: Interactive Practice Quiz state
+    // Step 3: Interactive Practice Quiz & Essay state
     const [practiceSelections, setPracticeSelections] = useState<Record<number, string>>({});
-    const [practiceResults, setPracticeResults] = useState<Record<number, { is_correct: boolean; correct_option: string; explanation: string }>>({});
+    const [practiceEssayDrafts, setPracticeEssayDrafts] = useState<Record<number, string>>({});
+    const [practiceResults, setPracticeResults] = useState<Record<number, PracticeResult>>({});
     const [isSubmittingPracticeQuestion, setIsSubmittingPracticeQuestion] = useState<number | null>(null);
 
-    const handleConfirmPracticeAnswer = async (questionId: number) => {
-        const chosen = practiceSelections[questionId];
-        if (!chosen) return;
+    const handleConfirmPracticeAnswer = async (question: Question) => {
+        const isEssay = question.question_type === 'essay';
+        const chosen = practiceSelections[question.id];
+        const essayText = practiceEssayDrafts[question.id]?.trim();
 
-        setIsSubmittingPracticeQuestion(questionId);
+        if (isEssay && !essayText) return;
+        if (!isEssay && !chosen) return;
+
+        setIsSubmittingPracticeQuestion(question.id);
         try {
-            const res = await axios.post(route('student.practice.check', [classItem.id, lesson.id]), {
-                question_id: questionId,
-                chosen_option: chosen,
-            });
+            const payload = isEssay
+                ? { question_id: question.id, essay_answer: essayText }
+                : { question_id: question.id, chosen_option: chosen };
+
+            const res = await axios.post(route('student.practice.check', [classItem.id, lesson.id]), payload);
             setPracticeResults((prev) => ({
                 ...prev,
-                [questionId]: res.data,
+                [question.id]: res.data,
             }));
         } catch (err) {
             console.error(err);
@@ -142,6 +158,7 @@ export default function LessonPlayer({
         practiceAttemptForm.post(route('student.practice.record', [classItem.id, lesson.id]), {
             onSuccess: () => {
                 setPracticeSelections({});
+                setPracticeEssayDrafts({});
                 setPracticeResults({});
             },
         });
@@ -205,13 +222,12 @@ export default function LessonPlayer({
                         {/* Step 1: Self-Study */}
                         <button
                             onClick={() => setActiveStep(1)}
-                            className={`p-3 rounded-2xl text-center border transition flex flex-col items-center justify-center ${
-                                activeStep === 1
+                            className={`p-3 rounded-2xl text-center border transition flex flex-col items-center justify-center ${activeStep === 1
                                     ? 'bg-amber-50 border-amber-500 text-amber-900 font-bold shadow-sm'
                                     : progress.reading_completed
-                                    ? 'bg-stone-50 border-emerald-300 text-emerald-800'
-                                    : 'bg-stone-50 border-stone-200 text-stone-500'
-                            }`}
+                                        ? 'bg-stone-50 border-emerald-300 text-emerald-800'
+                                        : 'bg-stone-50 border-stone-200 text-stone-500'
+                                }`}
                         >
                             <span className="text-[10px] uppercase font-semibold">{t('student.step_1')}</span>
                             <span className="text-xs sm:text-sm truncate w-full font-serif font-bold">{t('student.step_1_title')}</span>
@@ -224,15 +240,14 @@ export default function LessonPlayer({
                         <button
                             onClick={() => progress.reading_completed && setActiveStep(2)}
                             disabled={!progress.reading_completed}
-                            className={`p-3 rounded-2xl text-center border transition flex flex-col items-center justify-center ${
-                                activeStep === 2
+                            className={`p-3 rounded-2xl text-center border transition flex flex-col items-center justify-center ${activeStep === 2
                                     ? 'bg-amber-50 border-amber-500 text-amber-900 font-bold shadow-sm'
                                     : progress.video_completed
-                                    ? 'bg-stone-50 border-emerald-300 text-emerald-800'
-                                    : progress.reading_completed
-                                    ? 'bg-stone-50 border-amber-300 text-amber-800'
-                                    : 'bg-stone-100 border-stone-200 text-stone-400 opacity-60 cursor-not-allowed'
-                            }`}
+                                        ? 'bg-stone-50 border-emerald-300 text-emerald-800'
+                                        : progress.reading_completed
+                                            ? 'bg-stone-50 border-amber-300 text-amber-800'
+                                            : 'bg-stone-100 border-stone-200 text-stone-400 opacity-60 cursor-not-allowed'
+                                }`}
                         >
                             <span className="text-[10px] uppercase font-semibold">{t('student.step_2')}</span>
                             <span className="text-xs sm:text-sm truncate w-full font-serif font-bold">{t('student.step_2_title')}</span>
@@ -245,15 +260,14 @@ export default function LessonPlayer({
                         <button
                             onClick={() => progress.video_completed && setActiveStep(3)}
                             disabled={!progress.video_completed}
-                            className={`p-3 rounded-2xl text-center border transition flex flex-col items-center justify-center ${
-                                activeStep === 3
+                            className={`p-3 rounded-2xl text-center border transition flex flex-col items-center justify-center ${activeStep === 3
                                     ? 'bg-amber-50 border-amber-500 text-amber-900 font-bold shadow-sm'
                                     : progress.practice_completed
-                                    ? 'bg-stone-50 border-emerald-300 text-emerald-800'
-                                    : progress.video_completed
-                                    ? 'bg-stone-50 border-amber-300 text-amber-800'
-                                    : 'bg-stone-100 border-stone-200 text-stone-400 opacity-60 cursor-not-allowed'
-                            }`}
+                                        ? 'bg-stone-50 border-emerald-300 text-emerald-800'
+                                        : progress.video_completed
+                                            ? 'bg-stone-50 border-amber-300 text-amber-800'
+                                            : 'bg-stone-100 border-stone-200 text-stone-400 opacity-60 cursor-not-allowed'
+                                }`}
                         >
                             <span className="text-[10px] uppercase font-semibold">{t('student.step_3')}</span>
                             <span className="text-xs sm:text-sm truncate w-full font-serif font-bold">{t('student.step_3_title', { target: practiceTarget.toString() })}</span>
@@ -385,11 +399,10 @@ export default function LessonPlayer({
                                             key={idx}
                                             type="button"
                                             onClick={() => setActiveVideoIndex(idx)}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
-                                                activeVideoIndex === idx
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${activeVideoIndex === idx
                                                     ? 'bg-amber-700 text-white border-amber-800 shadow-sm'
                                                     : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
-                                            }`}
+                                                }`}
                                         >
                                             {t('student.video_part_label', {
                                                 number: (idx + 1).toString(),
@@ -521,92 +534,177 @@ export default function LessonPlayer({
                         {/* Questions List */}
                         <div className="space-y-6">
                             {questions.map((q, idx) => {
+                                const isEssay = q.question_type === 'essay';
                                 const result = practiceResults[q.id];
                                 const currentChosen = practiceSelections[q.id];
+                                const essayDraft = practiceEssayDrafts[q.id] ?? '';
 
                                 return (
                                     <div
                                         key={q.id}
-                                        className={`p-6 rounded-2xl border transition space-y-4 ${
-                                            result
-                                                ? result.is_correct
-                                                    ? 'bg-emerald-50/40 border-emerald-300'
-                                                    : 'bg-red-50/40 border-red-300'
+                                        className={`p-6 rounded-2xl border transition space-y-4 ${result
+                                                ? isEssay
+                                                    ? 'bg-teal-50/40 border-teal-300'
+                                                    : result.is_correct
+                                                        ? 'bg-emerald-50/40 border-emerald-300'
+                                                        : 'bg-red-50/40 border-red-300'
                                                 : 'bg-stone-50/60 border-stone-200'
-                                        }`}
+                                            }`}
                                     >
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="font-medium text-stone-900 text-sm">
-                                                <span className="font-bold text-amber-900 mr-2">{t('student.question_prefix', { number: (idx + 1).toString() })}</span>
-                                                <div
-                                                    className="font-medium text-gray-900 text-sm pt-1 leading-relaxed prose prose-stone prose-sm max-w-none [&>p]:mb-1 [&>p:last-child]:mb-0"
-                                                    dangerouslySetInnerHTML={{ __html: q.question_text }}
-                                                />
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <span className={`font-bold ${isEssay ? 'text-teal-800' : 'text-amber-900'}`}>
+                                                        {t('student.question_prefix', { number: (idx + 1).toString() })}
+                                                    </span>
+                                                    {isEssay && (
+                                                        <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-900 border border-amber-200">
+                                                            {t('questions.badge_essay')}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {/<[a-z][\s\S]*>/i.test(q.question_text) ? (
+                                                    <div
+                                                        className="font-medium text-gray-900 text-sm pt-1 leading-relaxed prose prose-stone prose-sm max-w-none [&>p]:mb-1 [&>p:last-child]:mb-0"
+                                                        dangerouslySetInnerHTML={{ __html: q.question_text }}
+                                                    />
+                                                ) : (
+                                                    <p className="font-medium text-gray-900 text-sm pt-1 leading-relaxed whitespace-pre-line">
+                                                        {q.question_text}
+                                                    </p>
+                                                )}
                                             </div>
 
                                             {result && (
-                                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold shrink-0 ${
-                                                    result.is_correct ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                                                }`}>
-                                                    {result.is_correct ? t('student.correct_badge') : t('student.incorrect_badge')}
+                                                <span
+                                                    className={`px-2.5 py-0.5 rounded-full text-xs font-bold shrink-0 ${isEssay
+                                                            ? 'bg-teal-100 text-teal-800 border border-teal-200'
+                                                            : result.is_correct
+                                                                ? 'bg-emerald-100 text-emerald-800'
+                                                                : 'bg-red-100 text-red-800'
+                                                        }`}
+                                                >
+                                                    {isEssay
+                                                        ? t('student.essay_submitted_badge')
+                                                        : result.is_correct
+                                                            ? t('student.correct_badge')
+                                                            : t('student.incorrect_badge')}
                                                 </span>
                                             )}
                                         </div>
 
-                                        {/* Options */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                                            {(['A', 'B', 'C', 'D'] as const).map((opt) => {
-                                                const text = opt === 'A' ? q.option_a : opt === 'B' ? q.option_b : opt === 'C' ? q.option_c : q.option_d;
-                                                const isSelected = currentChosen === opt;
+                                        {isEssay ? (
+                                            /* Essay Question Input / Submitted Answer View */
+                                            !result ? (
+                                                <div className="space-y-3">
+                                                    <textarea
+                                                        rows={5}
+                                                        value={essayDraft}
+                                                        onChange={(e) =>
+                                                            setPracticeEssayDrafts((prev) => ({
+                                                                ...prev,
+                                                                [q.id]: e.target.value,
+                                                            }))
+                                                        }
+                                                        placeholder={t('student.essay_answer_placeholder')}
+                                                        className="w-full rounded-xl border-stone-300 bg-white p-3.5 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-teal-600 focus:ring-teal-600 shadow-inner resize-y transition leading-relaxed"
+                                                    />
 
-                                                return (
-                                                    <label
-                                                        key={opt}
-                                                        className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition ${
-                                                            isSelected
-                                                                ? 'bg-amber-100/70 border-amber-500 font-semibold text-amber-950 shadow-sm'
-                                                                : 'bg-white border-stone-200 hover:border-stone-300 text-stone-700'
-                                                        }`}
-                                                    >
-                                                        <input
-                                                            type="radio"
-                                                            name={`practice-${q.id}`}
-                                                            value={opt}
-                                                            checked={isSelected}
-                                                            onChange={() => setPracticeSelections((prev) => ({ ...prev, [q.id]: opt }))}
-                                                            className="text-amber-600 focus:ring-amber-500"
-                                                        />
-                                                        <span><strong className="mr-1">{opt}.</strong> {text}</span>
-                                                    </label>
-                                                );
-                                            })}
-                                        </div>
-
-                                        {/* Action: Confirm Answer */}
-                                        {!result && (
-                                            <div className="flex justify-end pt-1">
-                                                <button
-                                                    type="button"
-                                                    disabled={!currentChosen || isSubmittingPracticeQuestion === q.id}
-                                                    onClick={() => handleConfirmPracticeAnswer(q.id)}
-                                                    className="px-4 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs disabled:opacity-50 transition"
-                                                >
-                                                    {isSubmittingPracticeQuestion === q.id ? t('student.checking') : t('student.confirm_answer')}
-                                                </button>
-                                            </div>
-                                        )}
-
-                                        {/* Display result and explanation after choosing */}
-                                        {result && (
-                                            <div className="bg-white/80 p-4 rounded-xl border border-stone-200 space-y-1.5 text-xs">
-                                                <div className="flex items-center gap-2 font-semibold text-stone-900">
-                                                    <span>{t('student.correct_answer_label')} <strong className="text-emerald-700 font-bold">{result.correct_option}</strong></span>
+                                                    <div className="flex justify-end pt-1">
+                                                        <button
+                                                            type="button"
+                                                            disabled={!essayDraft.trim() || isSubmittingPracticeQuestion === q.id}
+                                                            onClick={() => handleConfirmPracticeAnswer(q)}
+                                                            className="px-4 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-medium text-xs disabled:opacity-50 transition"
+                                                        >
+                                                            {isSubmittingPracticeQuestion === q.id ? t('student.checking') : t('student.confirm_answer')}
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <p className="text-stone-700 text-xs italic">
-                                                    <span className="font-semibold text-amber-900 not-italic mr-1">{t('student.explanation_label')}</span>
-                                                    {result.explanation}
-                                                </p>
-                                            </div>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    <div className="bg-white/90 p-4 rounded-xl border border-stone-200 space-y-1.5 text-xs">
+                                                        <div className="font-semibold text-stone-800">
+                                                            {t('student.your_essay_answer')}
+                                                        </div>
+                                                        <div className="text-stone-700 whitespace-pre-wrap leading-relaxed pt-1 border-t border-stone-100">
+                                                            {result.essay_answer ?? essayDraft}
+                                                        </div>
+                                                    </div>
+
+                                                    {result.explanation && (
+                                                        <div className="bg-amber-50/70 p-4 rounded-xl border border-amber-200 space-y-1.5 text-xs text-amber-950">
+                                                            <div className="font-semibold text-amber-900">
+                                                                {t('student.essay_sample_guide')}
+                                                            </div>
+                                                            <p className="text-stone-700 italic whitespace-pre-line leading-relaxed">
+                                                                {result.explanation}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )
+                                        ) : (
+                                            /* Multiple Choice Options */
+                                            <>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                                    {(['A', 'B', 'C', 'D'] as const).map((opt) => {
+                                                        const text = opt === 'A' ? q.option_a : opt === 'B' ? q.option_b : opt === 'C' ? q.option_c : q.option_d;
+                                                        const isSelected = currentChosen === opt;
+
+                                                        return (
+                                                            <label
+                                                                key={opt}
+                                                                className={`p-3 rounded-xl border flex items-center gap-3 transition ${result ? 'cursor-default' : 'cursor-pointer'
+                                                                    } ${isSelected
+                                                                        ? 'bg-amber-100/70 border-amber-500 font-semibold text-amber-950 shadow-sm'
+                                                                        : 'bg-white border-stone-200 hover:border-stone-300 text-stone-700'
+                                                                    }`}
+                                                            >
+                                                                <input
+                                                                    type="radio"
+                                                                    name={`practice-${q.id}`}
+                                                                    value={opt}
+                                                                    checked={isSelected}
+                                                                    disabled={Boolean(result)}
+                                                                    onChange={() => setPracticeSelections((prev) => ({ ...prev, [q.id]: opt }))}
+                                                                    className="text-amber-600 focus:ring-amber-500"
+                                                                />
+                                                                <span><strong className="mr-1">{opt}.</strong> {text}</span>
+                                                            </label>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                {/* Action: Confirm Answer */}
+                                                {!result && (
+                                                    <div className="flex justify-end pt-1">
+                                                        <button
+                                                            type="button"
+                                                            disabled={!currentChosen || isSubmittingPracticeQuestion === q.id}
+                                                            onClick={() => handleConfirmPracticeAnswer(q)}
+                                                            className="px-4 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs disabled:opacity-50 transition"
+                                                        >
+                                                            {isSubmittingPracticeQuestion === q.id ? t('student.checking') : t('student.confirm_answer')}
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                {/* Display result and explanation after choosing */}
+                                                {result && (
+                                                    <div className="bg-white/80 p-4 rounded-xl border border-stone-200 space-y-1.5 text-xs">
+                                                        <div className="flex items-center gap-2 font-semibold text-stone-900">
+                                                            <span>{t('student.correct_answer_label')} <strong className="text-emerald-700 font-bold">{result.correct_option}</strong></span>
+                                                        </div>
+                                                        {result.explanation && (
+                                                            <p className="text-stone-700 text-xs italic">
+                                                                <span className="font-semibold text-amber-900 not-italic mr-1">{t('student.explanation_label')}</span>
+                                                                {result.explanation}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                 );

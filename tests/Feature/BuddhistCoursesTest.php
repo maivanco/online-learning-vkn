@@ -655,4 +655,131 @@ class BuddhistCoursesTest extends TestCase
         $submitResponse->assertStatus(403);
         $submitResponse->assertJson(['time_expired' => true]);
     }
+
+    public function test_lesson_player_displays_questions_in_admin_order_with_question_type(): void
+    {
+        $essayQuestion = Question::create([
+            'course_id' => $this->course->id,
+            'lesson_id' => $this->lesson->id,
+            'question_type' => Question::TYPE_ESSAY,
+            'question_text' => 'Explain the four ultimate realities.',
+            'explanation' => 'Reference guide for Paramattha Dhamma.',
+            'type' => 'both',
+        ]);
+
+        $newerQuizQuestion = Question::create([
+            'course_id' => $this->course->id,
+            'lesson_id' => $this->lesson->id,
+            'question_type' => Question::TYPE_QUIZ,
+            'question_text' => 'Which one is an unconditioned ultimate reality?',
+            'option_a' => 'Citta',
+            'option_b' => 'Cetasika',
+            'option_c' => 'Rupa',
+            'option_d' => 'Nibbana',
+            'correct_option' => 'D',
+            'explanation' => 'Nibbana is unconditioned.',
+            'type' => 'both',
+        ]);
+
+        // Verify Admin Question Bank order (id DESC)
+        $this->actingAs($this->admin);
+        $adminResponse = $this->get(route('admin.questions.index', [
+            'course_id' => $this->course->id,
+            'lesson_id' => $this->lesson->id,
+        ]));
+        $adminResponse->assertOk();
+        $adminResponse->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Admin/Questions/Index')
+            ->has('questions', 3)
+            ->where('questions.0.id', $newerQuizQuestion->id)
+            ->where('questions.1.id', $essayQuestion->id)
+            ->where('questions.2.id', $this->question->id)
+        );
+
+        // Verify Student Lesson Player matches exact Admin Question Bank order and exposes question_type
+        $this->actingAs($this->student);
+        $studentResponse = $this->get(route('student.lesson', [$this->class->id, $this->lesson->id]));
+        $studentResponse->assertOk();
+        $studentResponse->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Student/LessonPlayer')
+            ->has('questions', 3)
+            ->where('questions.0.id', $newerQuizQuestion->id)
+            ->where('questions.0.question_type', Question::TYPE_QUIZ)
+            ->where('questions.1.id', $essayQuestion->id)
+            ->where('questions.1.question_type', Question::TYPE_ESSAY)
+            ->where('questions.1.option_a', null)
+            ->where('questions.2.id', $this->question->id)
+            ->where('questions.2.question_type', Question::TYPE_QUIZ)
+        );
+    }
+
+    public function test_student_practice_check_supports_both_quiz_and_essay_questions(): void
+    {
+        $essayQuestion = Question::create([
+            'course_id' => $this->course->id,
+            'lesson_id' => $this->lesson->id,
+            'question_type' => Question::TYPE_ESSAY,
+            'question_text' => 'Reflect on the nature of Citta.',
+            'explanation' => 'Citta is the knowing of an object.',
+            'type' => 'both',
+        ]);
+
+        $otherCourse = Course::create([
+            'title' => 'Other Course',
+            'slug' => 'other-course',
+            'category' => 'sutta',
+        ]);
+        $otherQuestion = Question::create([
+            'course_id' => $otherCourse->id,
+            'question_type' => Question::TYPE_ESSAY,
+            'question_text' => 'Unrelated course question.',
+            'type' => 'both',
+        ]);
+
+        $this->actingAs($this->student);
+
+        // Quiz answer check
+        $quizResponse = $this->postJson(route('student.practice.check', [$this->class->id, $this->lesson->id]), [
+            'question_id' => $this->question->id,
+            'chosen_option' => 'C',
+        ]);
+        $quizResponse->assertOk()->assertJson([
+            'question_id' => $this->question->id,
+            'question_type' => Question::TYPE_QUIZ,
+            'is_correct' => true,
+            'correct_option' => 'C',
+            'chosen_option' => 'C',
+            'essay_answer' => null,
+            'explanation' => $this->question->explanation,
+        ]);
+
+        // Essay answer check
+        $essayResponse = $this->postJson(route('student.practice.check', [$this->class->id, $this->lesson->id]), [
+            'question_id' => $essayQuestion->id,
+            'essay_answer' => 'Citta arises and passes away momentarily while cognizing objects.',
+        ]);
+        $essayResponse->assertOk()->assertJson([
+            'question_id' => $essayQuestion->id,
+            'question_type' => Question::TYPE_ESSAY,
+            'is_correct' => true,
+            'correct_option' => null,
+            'chosen_option' => null,
+            'essay_answer' => 'Citta arises and passes away momentarily while cognizing objects.',
+            'explanation' => $essayQuestion->explanation,
+        ]);
+
+        // Blank essay answer is rejected
+        $emptyEssayResponse = $this->postJson(route('student.practice.check', [$this->class->id, $this->lesson->id]), [
+            'question_id' => $essayQuestion->id,
+            'essay_answer' => '   ',
+        ]);
+        $emptyEssayResponse->assertStatus(422)->assertJsonValidationErrors(['essay_answer']);
+
+        // Question belonging to another course is rejected
+        $otherCourseResponse = $this->postJson(route('student.practice.check', [$this->class->id, $this->lesson->id]), [
+            'question_id' => $otherQuestion->id,
+            'essay_answer' => 'Attempting cross-course lookup.',
+        ]);
+        $otherCourseResponse->assertNotFound();
+    }
 }

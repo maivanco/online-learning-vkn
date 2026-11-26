@@ -128,7 +128,7 @@ class StudentCourseController extends Controller
         $user = $request->user();
 
         $class = CourseClass::with([
-            'course.lessons' => fn($q) => $q->orderBy('order'),
+            'course.lessons' => fn ($q) => $q->orderBy('order'),
             'user:id,name,username,email',
         ])->findOrFail($classId);
 
@@ -197,15 +197,15 @@ class StudentCourseController extends Controller
         $comments = ClassComment::with([
             'user:id,name,username,role',
             'replyToUser:id,name,username',
-            'replies' => fn($q) => $q->with([
+            'replies' => fn ($q) => $q->with([
                 'user:id,name,username,role',
                 'replyToUser:id,name,username',
             ])->orderBy('created_at', 'asc'),
         ])
-        ->where('class_id', $classId)
-        ->whereNull('parent_id')
-        ->latest('created_at')
-        ->get();
+            ->where('class_id', $classId)
+            ->whereNull('parent_id')
+            ->latest('created_at')
+            ->get();
 
         return Inertia::render('Student/Classes/Show', [
             'classItem' => [
@@ -305,16 +305,18 @@ class StudentCourseController extends Controller
             ]
         );
 
-        // All questions for this lesson/course practice
+        // All questions for this lesson/course practice, matching Admin Question Bank order
         $questions = Question::where('course_id', $class->course_id)
             ->where(function ($q) use ($lessonId) {
                 $q->where('lesson_id', $lessonId)->orWhereNull('lesson_id');
             })
+            ->orderBy('id', 'desc')
             ->get();
 
-        // Shuffled practice questions (omit correct_option from initial payload so student can't cheat)
-        $shuffledQuestions = $questions->shuffle()->values()->map(fn($q) => [
+        // Ordered practice questions (omit correct_option from initial payload so student can't cheat)
+        $orderedQuestions = $questions->values()->map(fn ($q) => [
             'id' => $q->id,
+            'question_type' => $q->question_type ?? Question::TYPE_QUIZ,
             'question_text' => $q->question_text,
             'option_a' => $q->option_a,
             'option_b' => $q->option_b,
@@ -354,9 +356,9 @@ class StudentCourseController extends Controller
                 'summary' => $lesson->summary,
                 'reading_content' => $lesson->reading_content,
                 'reading_file_url' => $lesson->reading_file_url,
-                'document_urls' => $lesson->document_urls ?: (!empty($lesson->reading_file_url) ? [['title' => 'Tài liệu / Document', 'url' => $lesson->reading_file_url]] : []),
+                'document_urls' => $lesson->document_urls ?: (! empty($lesson->reading_file_url) ? [['title' => 'Tài liệu / Document', 'url' => $lesson->reading_file_url]] : []),
                 'video_url' => $lesson->video_url,
-                'video_urls' => $lesson->video_urls ?: (!empty($lesson->video_url) ? [['title' => 'Video bài giảng / Lecture Video', 'url' => $lesson->video_url]] : []),
+                'video_urls' => $lesson->video_urls ?: (! empty($lesson->video_url) ? [['title' => 'Video bài giảng / Lecture Video', 'url' => $lesson->video_url]] : []),
                 'order' => $lesson->order,
             ],
             'allLessons' => $allLessons,
@@ -371,7 +373,7 @@ class StudentCourseController extends Controller
                 'practice_completed_at' => $progress->practice_completed_at?->format('Y-m-d H:i'),
                 'is_completed' => (bool) $progress->is_completed,
             ],
-            'questions' => $shuffledQuestions,
+            'questions' => $orderedQuestions,
             'userFeedbacks' => $userFeedbacks,
             'isAllLessonsCompleted' => $isAllLessonsCompleted,
         ]);
@@ -443,19 +445,45 @@ class StudentCourseController extends Controller
      */
     public function checkPracticeAnswer(Request $request, int $classId, int $lessonId): JsonResponse
     {
+        $request->validate([
+            'question_id' => 'required|exists:questions,id',
+        ]);
+
+        $class = CourseClass::findOrFail($classId);
+        $question = Question::where('course_id', $class->course_id)
+            ->findOrFail((int) $request->input('question_id'));
+
+        if ($question->isEssay()) {
+            $validated = $request->validate([
+                'question_id' => 'required|exists:questions,id',
+                'essay_answer' => 'required|string|min:1',
+            ]);
+
+            return response()->json([
+                'question_id' => $question->id,
+                'question_type' => Question::TYPE_ESSAY,
+                'is_correct' => true,
+                'correct_option' => null,
+                'chosen_option' => null,
+                'essay_answer' => $validated['essay_answer'],
+                'explanation' => $question->explanation,
+            ]);
+        }
+
         $validated = $request->validate([
             'question_id' => 'required|exists:questions,id',
             'chosen_option' => 'required|in:A,B,C,D',
         ]);
 
-        $question = Question::findOrFail($validated['question_id']);
         $isCorrect = ($question->correct_option === $validated['chosen_option']);
 
         return response()->json([
             'question_id' => $question->id,
+            'question_type' => Question::TYPE_QUIZ,
             'is_correct' => $isCorrect,
             'correct_option' => $question->correct_option,
             'chosen_option' => $validated['chosen_option'],
+            'essay_answer' => null,
             'explanation' => $question->explanation,
         ]);
     }
