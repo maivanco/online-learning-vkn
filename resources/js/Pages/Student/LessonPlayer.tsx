@@ -222,12 +222,13 @@ export default function LessonPlayer({
                         {/* Step 1: Self-Study */}
                         <button
                             onClick={() => setActiveStep(1)}
-                            className={`p-3 rounded-2xl text-center border transition flex flex-col items-center justify-center ${activeStep === 1
+                            className={`p-3 rounded-2xl text-center border transition flex flex-col items-center justify-center ${
+                                activeStep === 1
                                     ? 'bg-amber-50 border-amber-500 text-amber-900 font-bold shadow-sm'
                                     : progress.reading_completed
-                                        ? 'bg-stone-50 border-emerald-300 text-emerald-800'
-                                        : 'bg-stone-50 border-stone-200 text-stone-500'
-                                }`}
+                                    ? 'bg-stone-50 border-emerald-300 text-emerald-800'
+                                    : 'bg-stone-50 border-stone-200 text-stone-500'
+                            }`}
                         >
                             <span className="text-[10px] uppercase font-semibold">{t('student.step_1')}</span>
                             <span className="text-xs sm:text-sm truncate w-full font-serif font-bold">{t('student.step_1_title')}</span>
@@ -240,14 +241,15 @@ export default function LessonPlayer({
                         <button
                             onClick={() => progress.reading_completed && setActiveStep(2)}
                             disabled={!progress.reading_completed}
-                            className={`p-3 rounded-2xl text-center border transition flex flex-col items-center justify-center ${activeStep === 2
+                            className={`p-3 rounded-2xl text-center border transition flex flex-col items-center justify-center ${
+                                activeStep === 2
                                     ? 'bg-amber-50 border-amber-500 text-amber-900 font-bold shadow-sm'
                                     : progress.video_completed
-                                        ? 'bg-stone-50 border-emerald-300 text-emerald-800'
-                                        : progress.reading_completed
-                                            ? 'bg-stone-50 border-amber-300 text-amber-800'
-                                            : 'bg-stone-100 border-stone-200 text-stone-400 opacity-60 cursor-not-allowed'
-                                }`}
+                                    ? 'bg-stone-50 border-emerald-300 text-emerald-800'
+                                    : progress.reading_completed
+                                    ? 'bg-stone-50 border-amber-300 text-amber-800'
+                                    : 'bg-stone-100 border-stone-200 text-stone-400 opacity-60 cursor-not-allowed'
+                            }`}
                         >
                             <span className="text-[10px] uppercase font-semibold">{t('student.step_2')}</span>
                             <span className="text-xs sm:text-sm truncate w-full font-serif font-bold">{t('student.step_2_title')}</span>
@@ -260,14 +262,15 @@ export default function LessonPlayer({
                         <button
                             onClick={() => progress.video_completed && setActiveStep(3)}
                             disabled={!progress.video_completed}
-                            className={`p-3 rounded-2xl text-center border transition flex flex-col items-center justify-center ${activeStep === 3
+                            className={`p-3 rounded-2xl text-center border transition flex flex-col items-center justify-center ${
+                                activeStep === 3
                                     ? 'bg-amber-50 border-amber-500 text-amber-900 font-bold shadow-sm'
                                     : progress.practice_completed
-                                        ? 'bg-stone-50 border-emerald-300 text-emerald-800'
-                                        : progress.video_completed
-                                            ? 'bg-stone-50 border-amber-300 text-amber-800'
-                                            : 'bg-stone-100 border-stone-200 text-stone-400 opacity-60 cursor-not-allowed'
-                                }`}
+                                    ? 'bg-stone-50 border-emerald-300 text-emerald-800'
+                                    : progress.video_completed
+                                    ? 'bg-stone-50 border-amber-300 text-amber-800'
+                                    : 'bg-stone-100 border-stone-200 text-stone-400 opacity-60 cursor-not-allowed'
+                            }`}
                         >
                             <span className="text-[10px] uppercase font-semibold">{t('student.step_3')}</span>
                             <span className="text-xs sm:text-sm truncate w-full font-serif font-bold">{t('student.step_3_title', { target: practiceTarget.toString() })}</span>
@@ -399,10 +402,11 @@ export default function LessonPlayer({
                                             key={idx}
                                             type="button"
                                             onClick={() => setActiveVideoIndex(idx)}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${activeVideoIndex === idx
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+                                                activeVideoIndex === idx
                                                     ? 'bg-amber-700 text-white border-amber-800 shadow-sm'
                                                     : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
-                                                }`}
+                                            }`}
                                         >
                                             {t('student.video_part_label', {
                                                 number: (idx + 1).toString(),
@@ -542,14 +546,15 @@ export default function LessonPlayer({
                                 return (
                                     <div
                                         key={q.id}
-                                        className={`p-6 rounded-2xl border transition space-y-4 ${result
+                                        className={`p-6 rounded-2xl border transition space-y-4 ${
+                                            result
                                                 ? isEssay
                                                     ? 'bg-teal-50/40 border-teal-300'
                                                     : result.is_correct
-                                                        ? 'bg-emerald-50/40 border-emerald-300'
-                                                        : 'bg-red-50/40 border-red-300'
+                                                    ? 'bg-emerald-50/40 border-emerald-300'
+                                                    : 'bg-red-50/40 border-red-300'
                                                 : 'bg-stone-50/60 border-stone-200'
-                                            }`}
+                                        }`}
                                     >
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="font-medium text-stone-900 text-sm">
@@ -577,18 +582,19 @@ export default function LessonPlayer({
 
                                             {result && (
                                                 <span
-                                                    className={`px-2.5 py-0.5 rounded-full text-xs font-bold shrink-0 ${isEssay
+                                                    className={`px-2.5 py-0.5 rounded-full text-xs font-bold shrink-0 ${
+                                                        isEssay
                                                             ? 'bg-teal-100 text-teal-800 border border-teal-200'
                                                             : result.is_correct
-                                                                ? 'bg-emerald-100 text-emerald-800'
-                                                                : 'bg-red-100 text-red-800'
-                                                        }`}
+                                                            ? 'bg-emerald-100 text-emerald-800'
+                                                            : 'bg-red-100 text-red-800'
+                                                    }`}
                                                 >
                                                     {isEssay
                                                         ? t('student.essay_submitted_badge')
                                                         : result.is_correct
-                                                            ? t('student.correct_badge')
-                                                            : t('student.incorrect_badge')}
+                                                        ? t('student.correct_badge')
+                                                        : t('student.incorrect_badge')}
                                                 </span>
                                             )}
                                         </div>
@@ -655,11 +661,13 @@ export default function LessonPlayer({
                                                         return (
                                                             <label
                                                                 key={opt}
-                                                                className={`p-3 rounded-xl border flex items-center gap-3 transition ${result ? 'cursor-default' : 'cursor-pointer'
-                                                                    } ${isSelected
+                                                                className={`p-3 rounded-xl border flex items-center gap-3 transition ${
+                                                                    result ? 'cursor-default' : 'cursor-pointer'
+                                                                } ${
+                                                                    isSelected
                                                                         ? 'bg-amber-100/70 border-amber-500 font-semibold text-amber-950 shadow-sm'
                                                                         : 'bg-white border-stone-200 hover:border-stone-300 text-stone-700'
-                                                                    }`}
+                                                                }`}
                                                             >
                                                                 <input
                                                                     type="radio"
